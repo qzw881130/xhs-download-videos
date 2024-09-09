@@ -5,6 +5,8 @@ import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import sqlite3 from 'sqlite3';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 
 puppeteer.use(StealthPlugin());
 
@@ -18,7 +20,7 @@ let fetch;
 })();
 
 class XiaohongshuDownloader {
-    constructor() {
+    constructor(scrollAttempts = 0) {
         this.baseUrl = 'https://www.xiaohongshu.com';
         this.loginUrl = `${this.baseUrl}/login`;
         this.likedNotesUrl = `${this.baseUrl}/user/profile/liked`;
@@ -41,6 +43,7 @@ class XiaohongshuDownloader {
         this.deviceId = this.generateDeviceId();
         this.downloadDir = path.join(__dirname, 'downloads');
         this.dbPath = path.join(__dirname, 'xhs-liked-videos.db');
+        this.scrollAttempts = scrollAttempts;
     }
 
     generateDeviceId() {
@@ -202,7 +205,7 @@ class XiaohongshuDownloader {
                 await this.page.waitForSelector('.reds-tabs-list', { visible: true });
                 console.log('标签列表已找到');
 
-                // "点���"标签的索引
+                // "点赞"标签的索引
                 const likedTabIndex = await this.page.evaluate(() => {
                     const tabs = Array.from(document.querySelectorAll('.reds-tabs-list .reds-tab-item'));
                     return tabs.findIndex(tab => tab.textContent.trim() === '点赞');
@@ -248,7 +251,7 @@ class XiaohongshuDownloader {
                 await this.wait(2000);
             }
         }
-        throw new Error('多次尝试后未能成功点击"点赞"标签');
+        throw new Error('多��尝试后未能成功点击"点赞"标签');
     }
 
     async processVideoPage(videoUrl) {
@@ -367,7 +370,7 @@ class XiaohongshuDownloader {
 
             console.log('所有内容处理完成');
 
-            // 等待用户输���以保持浏览器开启
+            // 等待用户输入以保持浏览器开启
             console.log('请在控制台输入任意内容并按回车键来关闭浏览器...');
             await new Promise(resolve => process.stdin.once('data', resolve));
 
@@ -398,8 +401,8 @@ class XiaohongshuDownloader {
     async processLikedVideos() {
         console.log('正在获取点赞的视频...');
         let hasMore = true;
-        let scrollAttempts = 0;
-        const maxScrollAttempts = 30;
+        let scrollAttempts = this.scrollAttempts;  // 使用传入的 scrollAttempts 作为起始点
+        const maxScrollAttempts = 300;  // 保持原有的最大滚动次数
 
         // 获取"点赞"标签的索引
         const likedTabIndex = await this.page.evaluate(() => {
@@ -412,6 +415,29 @@ class XiaohongshuDownloader {
         }
 
         console.log(`"点赞"标签位于第 ${likedTabIndex + 1} 个位置`);
+
+        // 如果 scrollAttempts > 0，先进行指定次数的滚动
+        if (this.scrollAttempts > 0) {
+            console.log(`正在进行 ${this.scrollAttempts} 次预滚动...`);
+            for (let i = 0; i < this.scrollAttempts; i++) {
+                await this.page.evaluate(() => {
+                    window.scrollTo(0, document.body.scrollHeight);
+                });
+                await this.wait(2000);
+                console.log(`完成第 ${i + 1} 次预滚动`);
+
+                // 标记当前已加载的 section 为已处理，除了最后一次滚动
+                if (i < this.scrollAttempts - 1) {
+                    await this.page.evaluate((likedTabIndex) => {
+                        const sections = document.querySelectorAll(`.tab-content-item:nth-child(${likedTabIndex + 1}) .feeds-container section:not(.done)`);
+                        sections.forEach(section => section.classList.add('done'));
+                    }, likedTabIndex);
+                    console.log(`已标记第 ${i + 1} 次滚动加载的内容为已处理`);
+                }
+            }
+
+            console.log('预滚动完成，最后一次滚动的新内容未被标记为已处理');
+        }
 
         while (hasMore && scrollAttempts < maxScrollAttempts) {
             // 获取当前页面上的所有未处理的视频项
@@ -545,5 +571,15 @@ class XiaohongshuDownloader {
     }
 }
 
-const downloader = new XiaohongshuDownloader();
+// 解析命令行参数
+const argv = yargs(hideBin(process.argv))
+    .option('scrollAttempts', {
+        alias: 's',
+        description: '预滚动次数',
+        type: 'number',
+        default: 0
+    })
+    .argv;
+
+const downloader = new XiaohongshuDownloader(argv.scrollAttempts);
 downloader.run().catch(console.error);
