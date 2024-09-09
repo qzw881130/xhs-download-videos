@@ -20,7 +20,7 @@ let fetch;
 })();
 
 class XiaohongshuDownloader {
-    constructor(scrollAttempts = 0) {
+    constructor(scrollAttempts = 0, maxScrollAttempts = 200, type = 'liked') {
         this.baseUrl = 'https://www.xiaohongshu.com';
         this.loginUrl = `${this.baseUrl}/login`;
         this.likedNotesUrl = `${this.baseUrl}/user/profile/liked`;
@@ -44,6 +44,13 @@ class XiaohongshuDownloader {
         this.downloadDir = path.join(__dirname, 'downloads');
         this.dbPath = path.join(__dirname, 'xhs-liked-videos.db');
         this.scrollAttempts = scrollAttempts;
+        this.maxScrollAttempts = maxScrollAttempts;
+        this.type = type;
+        this.tabTextMap = {
+            'liked': '点赞',
+            'collected': '收藏',
+            'post': '笔记'
+        };
     }
 
     generateDeviceId() {
@@ -146,8 +153,9 @@ class XiaohongshuDownloader {
                 page_url TEXT,
                 video_src TEXT,
                 image_src TEXT,
+                type TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
+            );
         `);
     }
 
@@ -180,8 +188,8 @@ class XiaohongshuDownloader {
             console.log('等待页面加载...');
             await this.wait(10000);  // 增加到10秒
 
-            // 点击"点赞"标签
-            await this.clickLikeTab();
+            // 点击目标标签
+            await this.clickTab();
 
             // 保存新的 cookies
             await this.saveCookies();
@@ -192,10 +200,10 @@ class XiaohongshuDownloader {
         }
     }
 
-    async clickLikeTab() {
+    async clickTab() {
         for (let attempt = 1; attempt <= 3; attempt++) {
             try {
-                console.log(`尝试点击"点赞"标签 (尝试 ${attempt}/3)...`);
+                console.log(`尝试点击"${this.tabTextMap[this.type]}"标签 (尝试 ${attempt}/3)...`);
 
                 // 等待页面完全加载
                 await this.page.waitForFunction(() => document.readyState === 'complete');
@@ -205,36 +213,37 @@ class XiaohongshuDownloader {
                 await this.page.waitForSelector('.reds-tabs-list', { visible: true });
                 console.log('标签列表已找到');
 
-                // "点赞"标签的索引
-                const likedTabIndex = await this.page.evaluate(() => {
+                // 获取目标标签的索引
+                const tabIndex = await this.page.evaluate((tabText) => {
                     const tabs = Array.from(document.querySelectorAll('.reds-tabs-list .reds-tab-item'));
-                    return tabs.findIndex(tab => tab.textContent.trim() === '点赞');
-                });
+                    return tabs.findIndex(tab => tab.textContent.trim() === tabText);
+                }, this.tabTextMap[this.type]);
 
-                if (likedTabIndex === -1) {
-                    throw new Error('未找到"点赞"标签');
+                if (tabIndex === -1) {
+                    throw new Error(`未找到"${this.tabTextMap[this.type]}"标签`);
                 }
 
-                console.log(`"点赞"标签位于第 ${likedTabIndex + 1} 个位置`);
+                console.log(`"${this.tabTextMap[this.type]}"标签位于第 ${tabIndex + 1} 个位置`);
 
-                // 点击"点赞"标签
+                // 点击目标标签
                 await this.page.evaluate((index) => {
                     const tabs = document.querySelectorAll('.reds-tabs-list .reds-tab-item');
                     if (tabs[index]) {
                         tabs[index].click();
                     }
-                }, likedTabIndex);
+                }, tabIndex);
 
-                // 等待"点赞"标签激活
+                // 等待目标标签激活
                 await this.page.waitForFunction(
-                    () => {
+                    (tabText) => {
                         const activeTab = document.querySelector('.reds-tabs-list .reds-tab-item.active');
-                        return activeTab && activeTab.textContent.trim() === '点赞';
+                        return activeTab && activeTab.textContent.trim() === tabText;
                     },
-                    { timeout: 10000 }  // 增加到 10 
+                    { timeout: 10000 },
+                    this.tabTextMap[this.type]
                 );
 
-                console.log('成功切换到"点赞"标签');
+                console.log(`成功切换到"${this.tabTextMap[this.type]}"标签`);
 
                 console.log('等待 5 秒以确保页面加载完成...');
                 await this.wait(5000);
@@ -242,7 +251,7 @@ class XiaohongshuDownloader {
                 return;
 
             } catch (error) {
-                console.error(`第 ${attempt} 次尝试点击"点赞"标签失败:`, error);
+                console.error(`第 ${attempt} 次尝试点击"${this.tabTextMap[this.type]}"标签失败:`, error);
                 if (attempt === 3) {
                     throw error;
                 }
@@ -251,7 +260,7 @@ class XiaohongshuDownloader {
                 await this.wait(2000);
             }
         }
-        throw new Error('多��尝试后未能成功点击"点赞"标签');
+        throw new Error(`多次尝试后未能成功点击"${this.tabTextMap[this.type]}"标签`);
     }
 
     async processVideoPage(videoUrl) {
@@ -296,6 +305,7 @@ class XiaohongshuDownloader {
 
             if (!mp4Url) {
                 console.log(`警告: 未找到视频 ${vid} 的 MP4 链接`);
+                return null;
             }
 
             const videoData = {
@@ -304,6 +314,7 @@ class XiaohongshuDownloader {
                 imageSrc: detailInfo.imageSrc,
                 title: detailInfo.title,
                 vid: vid,
+                type: this.type,
                 savePath: path.join(this.downloadDir, `video_${vid}.mp4`)
             };
 
@@ -362,11 +373,11 @@ class XiaohongshuDownloader {
         await this.init();
         try {
             await this.login();
-            console.log('正在获取并处理点赞的视频...');
+            console.log(`正在获取并处理${this.tabTextMap[this.type]}的视频...`);
 
             await this.wait(2000);
 
-            await this.processLikedVideos();
+            await this.processVideos();
 
             console.log('所有内容处理完成');
 
@@ -398,23 +409,23 @@ class XiaohongshuDownloader {
         }
     }
 
-    async processLikedVideos() {
-        console.log('正在获取点赞的视频...');
+    async processVideos() {
+        console.log(`正在获取${this.tabTextMap[this.type]}的视频 (类型: ${this.type})...`);
         let hasMore = true;
         let scrollAttempts = this.scrollAttempts;  // 使用传入的 scrollAttempts 作为起始点
-        const maxScrollAttempts = 300;  // 保持原有的最大滚动次数
+        const maxScrollAttempts = this.maxScrollAttempts;  // 使用传入的 maxScrollAttempts
 
-        // 获取"点赞"标签的索引
-        const likedTabIndex = await this.page.evaluate(() => {
+        // 获取目标标签的索引
+        const tabIndex = await this.page.evaluate((tabText) => {
             const tabs = Array.from(document.querySelectorAll('.reds-tabs-list .reds-tab-item'));
-            return tabs.findIndex(tab => tab.textContent.trim() === '点赞');
-        });
+            return tabs.findIndex(tab => tab.textContent.trim() === tabText);
+        }, this.tabTextMap[this.type]);
 
-        if (likedTabIndex === -1) {
-            throw new Error('未找到"点赞"标签');
+        if (tabIndex === -1) {
+            throw new Error(`未找到"${this.tabTextMap[this.type]}"标签`);
         }
 
-        console.log(`"点赞"标签位于第 ${likedTabIndex + 1} 个位置`);
+        console.log(`"${this.tabTextMap[this.type]}"标签位于第 ${tabIndex + 1} 个位置`);
 
         // 如果 scrollAttempts > 0，先进行指定次数的滚动
         if (this.scrollAttempts > 0) {
@@ -428,10 +439,10 @@ class XiaohongshuDownloader {
 
                 // 标记当前已加载的 section 为已处理，除了最后一次滚动
                 if (i < this.scrollAttempts - 1) {
-                    await this.page.evaluate((likedTabIndex) => {
-                        const sections = document.querySelectorAll(`.tab-content-item:nth-child(${likedTabIndex + 1}) .feeds-container section:not(.done)`);
+                    await this.page.evaluate((tabIndex) => {
+                        const sections = document.querySelectorAll(`.tab-content-item:nth-child(${tabIndex + 1}) .feeds-container section:not(.done)`);
                         sections.forEach(section => section.classList.add('done'));
-                    }, likedTabIndex);
+                    }, tabIndex);
                     console.log(`已标记第 ${i + 1} 次滚动加载的内容为已处理`);
                 }
             }
@@ -441,7 +452,7 @@ class XiaohongshuDownloader {
 
         while (hasMore && scrollAttempts < maxScrollAttempts) {
             // 获取当前页面上的所有未处理的视频项
-            const sections = await this.page.$$(`.tab-content-item:nth-child(${likedTabIndex + 1}) .feeds-container section:not(.done)`);
+            const sections = await this.page.$$(`.tab-content-item:nth-child(${tabIndex + 1}) .feeds-container section:not(.done)`);
             console.log(`当前页面找到 ${sections.length} 个未处理的视频项`);
 
             if (sections.length === 0) {
@@ -557,9 +568,9 @@ class XiaohongshuDownloader {
     async saveVideoData(videoData) {
         return new Promise((resolve, reject) => {
             this.db.run(`
-                INSERT OR REPLACE INTO videos (vid, title, page_url, video_src, image_src)
-                VALUES (?, ?, ?, ?, ?)
-            `, [videoData.vid, videoData.title, videoData.url, videoData.videoSrc, videoData.imageSrc], (err) => {
+                INSERT OR REPLACE INTO videos (vid, title, page_url, video_src, image_src, type)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `, [videoData.vid, videoData.title, videoData.url, videoData.videoSrc, videoData.imageSrc, this.type], (err) => {
                 if (err) {
                     console.error(`保存视频数据到数据库时出错:`, err);
                     reject(err);
@@ -579,7 +590,20 @@ const argv = yargs(hideBin(process.argv))
         type: 'number',
         default: 0
     })
+    .option('maxScrollAttempts', {
+        alias: 'm',
+        description: '最大滚动次数',
+        type: 'number',
+        default: 200
+    })
+    .option('type', {
+        alias: 't',
+        description: '下载类型 (liked, collected, post)',
+        type: 'string',
+        default: 'liked',
+        choices: ['liked', 'collected', 'post']
+    })
     .argv;
 
-const downloader = new XiaohongshuDownloader(argv.scrollAttempts);
+const downloader = new XiaohongshuDownloader(argv.scrollAttempts, argv.maxScrollAttempts, argv.type);
 downloader.run().catch(console.error);
