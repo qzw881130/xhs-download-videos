@@ -3,3 +3,4 @@ node_modules/
 xhs-liked-videos.db
 cookies.json
 design/
+dist
