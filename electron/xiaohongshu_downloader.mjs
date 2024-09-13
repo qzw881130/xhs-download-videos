@@ -20,7 +20,7 @@ let fetch;
 })();
 
 class XiaohongshuDownloader {
-    constructor(scrollAttempts = 0, maxScrollAttempts = 200, type = 'liked') {
+    constructor(scrollAttempts = 0, maxScrollAttempts = 200, type = 'liked', downloadDir, dbPath) {
         this.baseUrl = 'https://www.xiaohongshu.com';
         this.loginUrl = `${this.baseUrl}/login`;
         this.likedNotesUrl = `${this.baseUrl}/user/profile/liked`;
@@ -41,8 +41,8 @@ class XiaohongshuDownloader {
             'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
         };
         this.deviceId = this.generateDeviceId();
-        this.downloadDir = path.join(__dirname, 'downloads');
-        this.dbPath = path.join(__dirname, 'xhs-liked-videos.db');
+        this.downloadDir = downloadDir || path.join(__dirname, 'downloads');
+        this.dbPath = dbPath || path.join(__dirname, 'xhs-liked-videos.db');
         this.scrollAttempts = scrollAttempts;
         this.maxScrollAttempts = maxScrollAttempts;
         this.type = type;
@@ -638,5 +638,5 @@ const argv = yargs(hideBin(process.argv))
     })
     .argv;
 
-const downloader = new XiaohongshuDownloader(argv.scrollAttempts, argv.maxScrollAttempts, argv.type);
+const downloader = new XiaohongshuDownloader(argv.scrollAttempts, argv.maxScrollAttempts, argv.type, argv.downloadDir, argv.dbPath);
 downloader.run().catch(console.error);
