@@ -79,7 +79,7 @@ function createWindow() {
     win.webContents.on('did-finish-load', () => {
         win.webContents.setZoomFactor(1);
         win.webContents.setVisualZoomLevelLimits(1, 1);
-        win.webContents.setLayoutZoomLevelLimits(0, 0);
+        // 移除 setLayoutZoomLevelLimits 方法的调用
     });
 
     win.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {

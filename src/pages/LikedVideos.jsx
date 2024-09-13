@@ -1,10 +1,11 @@
 import React from 'react';
+import FavoriteVideos from '../components/FavoriteVideos';
 
 function LikedVideos() {
     return (
-        <div>
-            <h2 className="text-xl font-semibold mb-4">我的点赞视频</h2>
-            {/* 添加显示点赞视频的列表和逻辑 */}
+        <div className="liked-videos-page">
+            <h1>我喜欢的视频</h1>
+            <FavoriteVideos type="liked" />
         </div>
     );
 }

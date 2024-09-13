@@ -1,24 +1,42 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Menu from './components/Menu';
-import DownloadConfig from './components/DownloadConfig';
-import LikedVideos from './components/LikedVideos';
-import FavoriteVideos from './components/FavoriteVideos';
-import VideoNotes from './components/VideoNotes';
-// import './App.css';  // 暂时注释掉这行
+import { BrowserRouter as Router, Route, Routes, NavLink } from 'react-router-dom';
+import LikedVideos from './pages/LikedVideos';
+import DownloadConfig from './pages/DownloadConfig';
 
 function App() {
     return (
         <Router>
-            <div className="App" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif' }}>
-                <Menu />
-                <Routes>
-                    <Route path="/" element={<DownloadConfig />} />
-                    <Route path="/download-config" element={<DownloadConfig />} />
-                    <Route path="/liked-videos" element={<LikedVideos />} />
-                    <Route path="/favorite-videos" element={<FavoriteVideos />} />
-                    <Route path="/video-notes" element={<VideoNotes />} />
-                </Routes>
+            <div className="App">
+                <nav className="bg-gray-800 p-4">
+                    <ul className="flex justify-center space-x-8">
+                        <li>
+                            <NavLink
+                                to="/"
+                                className={({ isActive }) =>
+                                    isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"
+                                }
+                            >
+                                下载配置
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink
+                                to="/liked"
+                                className={({ isActive }) =>
+                                    isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"
+                                }
+                            >
+                                喜欢的视频
+                            </NavLink>
+                        </li>
+                    </ul>
+                </nav>
+                <div className="container mx-auto mt-8">
+                    <Routes>
+                        <Route path="/liked" element={<LikedVideos />} />
+                        <Route path="/" element={<DownloadConfig />} />
+                    </Routes>
+                </div>
             </div>
         </Router>
     );
