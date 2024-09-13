@@ -7,7 +7,7 @@ console.log('Electron main process starting...');
 function xiaohongshuDownloader(startPosition, endPosition) {
     console.log(`开始下载，从 ${startPosition} 到 ${endPosition}`);
     const { spawn } = require('child_process');
-    const downloaderPath = path.join(__dirname, '..', 'xiaohongshu_downloader.js');
+    const downloaderPath = path.join(__dirname, 'xiaohongshu_downloader.js');
 
     const downloader = spawn('node', [downloaderPath, '--start', startPosition, '--end', endPosition]);
 

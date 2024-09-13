@@ -1,22 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import '../styles/DownloadConfig.css';
 
 function DownloadConfig() {
     const [downloadType, setDownloadType] = useState('all');
     const [startPosition, setStartPosition] = useState(0);
     const [endPosition, setEndPosition] = useState(10);
-    const [logs, setLogs] = useState([]);
+    const [logs, setLogs] = useState('');
+    const logTextareaRef = useRef(null);
 
     useEffect(() => {
         // 添加监听器
-        window.electronAPI.onLogMessage((message) => {
-            setLogs((prevLogs) => [...prevLogs, message]);
-            const logElement = document.getElementById('downloadLogs');
-            if (logElement) {
-                logElement.value += message + '\n';
-                logElement.scrollTop = logElement.scrollHeight;
-            }
-        });
+        if (window.electron && window.electron.onLogMessage) {
+            window.electron.onLogMessage((message) => {
+                setLogs(prevLogs => prevLogs + message + '\n');
+                if (logTextareaRef.current) {
+                    logTextareaRef.current.scrollTop = logTextareaRef.current.scrollHeight;
+                }
+            });
+        } else {
+            console.error('electron API is not available');
+        }
 
         // 清理函数
         return () => {
@@ -27,10 +30,10 @@ function DownloadConfig() {
     const handleStartDownload = () => {
         if (window.electron && window.electron.xiaohongshuDownloader) {
             window.electron.xiaohongshuDownloader(startPosition, endPosition);
-            setLogs(prevLogs => [...prevLogs, `开始下载，类型：${downloadType}，从 ${startPosition} 到 ${endPosition}`]);
+            setLogs(prevLogs => prevLogs + `开始下载，类型：${downloadType}，从 ${startPosition} 到 ${endPosition}\n`);
         } else {
             console.error('xiaohongshuDownloader is not available');
-            setLogs(prevLogs => [...prevLogs, '下载功能暂时不可用']);
+            setLogs(prevLogs => prevLogs + '下载功能暂时不可用\n');
         }
     };
 
@@ -83,11 +86,13 @@ function DownloadConfig() {
             </div>
             <div className="log-area">
                 <h3>下载日志：</h3>
-                <ul>
-                    {logs.map((log, index) => (
-                        <li key={index}>{log}</li>
-                    ))}
-                </ul>
+                <textarea
+                    ref={logTextareaRef}
+                    value={logs}
+                    readOnly
+                    className="log-textarea"
+                    rows="10"
+                />
             </div>
         </div>
     );
