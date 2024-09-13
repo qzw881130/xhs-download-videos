@@ -91,7 +91,7 @@ ipcMain.on('xiaohongshu-download', (event, startPosition, endPosition, downloadD
     const defaultDownloadDir = path.join(__dirname, '..', 'downloads');
     const defaultDbPath = path.join(__dirname, '..', 'xhs-liked-videos.db');
     const downloadDirectory = downloadDir || defaultDownloadDir;
-    const dbFilePath = dbPath || defaultDbPath;
+    const dbFilePath = defaultDbPath;
     xiaohongshuDownloader(startPosition, endPosition, downloadDirectory, dbFilePath);
 });
 
