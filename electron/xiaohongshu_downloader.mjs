@@ -51,6 +51,7 @@ class XiaohongshuDownloader {
             'collected': '收藏',
             'post': '笔记'
         };
+        this.setupLogging();
     }
 
     generateDeviceId() {
@@ -158,6 +159,7 @@ class XiaohongshuDownloader {
             );
         `);
     }
+
     // 设置日志输出函数
     setupLogging() {
         const originalConsoleLog = console.log;
@@ -176,12 +178,6 @@ class XiaohongshuDownloader {
                 process.send({ type: 'error', message: args.join(' ') });
             }
         };
-    }
-
-    constructor(startPosition, endPosition, type = 'notes') {
-        // ... (existing constructor code)
-
-        this.setupLogging();
     }
 
     async login() {

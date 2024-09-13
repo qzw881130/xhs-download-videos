@@ -4,38 +4,47 @@ const isDev = require('electron-is-dev');
 
 console.log('Electron main process starting...');
 
+// 定义全局 win 变量
+let win;
+
 function xiaohongshuDownloader(startPosition, endPosition) {
     console.log(`开始下载，从 ${startPosition} 到 ${endPosition}`);
     const { spawn } = require('child_process');
-    const downloaderPath = path.join(__dirname, 'xiaohongshu_downloader.js');
+    const downloaderPath = path.join(__dirname, 'xiaohongshu_downloader.mjs');
 
     const downloader = spawn('node', [downloaderPath, '--start', startPosition, '--end', endPosition]);
 
     downloader.stdout.on('data', (data) => {
-        const message = `下载器输出: ${data}`;
-        console.log(message);
-        win.webContents.send('log-message', message);
+        const message = `下载器输出: ${data.toString().trim()}`;
+        // console.log(message);
+        if (win && !win.isDestroyed()) {
+            win.webContents.send('log-message', message);
+        }
     });
 
     downloader.stderr.on('data', (data) => {
-        const message = `下载器错误: ${data}`;
+        const message = `下载器错误: ${data.toString().trim()}`;
         console.error(message);
-        win.webContents.send('log-message', message);
+        if (win && !win.isDestroyed()) {
+            win.webContents.send('log-message', message);
+        }
     });
 
     downloader.on('close', (code) => {
         const message = `下载器进程退出，退出码 ${code}`;
         console.log(message);
-        win.webContents.send('log-message', message);
+        if (win && !win.isDestroyed()) {
+            win.webContents.send('log-message', message);
+        }
     });
 }
 
 function createWindow() {
     console.log('Creating Electron window...');
-    const win = new BrowserWindow({
-        width: 1000,
-        height: 600,
-        minWidth: 800,
+    win = new BrowserWindow({
+        width: 2000,
+        height: 1200,
+        minWidth: 1600,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: true,
