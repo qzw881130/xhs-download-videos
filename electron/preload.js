@@ -5,4 +5,5 @@ contextBridge.exposeInMainWorld('electron', {
         ipcRenderer.send('xiaohongshu-download', startPosition, endPosition);
     },
     onLogMessage: (callback) => ipcRenderer.on('log-message', (_, message) => callback(message)),
+    getLikedVideos: (page, pageSize) => ipcRenderer.invoke('get-liked-videos', page, pageSize),
 });

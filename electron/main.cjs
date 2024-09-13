@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const isDev = require('electron-is-dev');
+const sqlite3 = require('sqlite3').verbose();
 
 console.log('Electron main process starting...');
 
@@ -48,7 +49,7 @@ function createWindow() {
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: true,
-            preload: path.join(__dirname, 'preload.cjs')
+            preload: path.join(__dirname, 'preload.js')
         },
     });
 
@@ -86,6 +87,66 @@ function createWindow() {
         console.error('Failed to load:', errorCode, errorDescription);
     });
 }
+
+// 添加这个函数来获取点赞视频列表
+function getLikedVideos(page = 1, pageSize = 20) {
+    return new Promise((resolve, reject) => {
+        const db = new sqlite3.Database(path.join(__dirname, '..', 'xhs-liked-videos.db'), (err) => {
+            if (err) {
+                reject(`Error opening database: ${err.message}`);
+                return;
+            }
+        });
+
+        const offset = (page - 1) * pageSize;
+        const query = `
+            SELECT * FROM videos
+            WHERE type = 'liked'
+            ORDER BY created_at DESC
+            LIMIT ? OFFSET ?
+        `;
+
+        db.all(query, [pageSize, offset], (err, rows) => {
+            if (err) {
+                db.close();
+                reject(`Error querying database: ${err.message}`);
+                return;
+            }
+
+            db.get('SELECT COUNT(*) as total FROM videos WHERE type = "liked"', (err, result) => {
+                db.close();
+                if (err) {
+                    reject(`Error getting total count: ${err.message}`);
+                    return;
+                }
+
+                const totalItems = result.total;
+                const totalPages = Math.ceil(totalItems / pageSize);
+
+                resolve({
+                    videos: rows,
+                    pagination: {
+                        currentPage: page,
+                        totalPages: totalPages,
+                        totalItems: totalItems,
+                        pageSize: pageSize
+                    }
+                });
+            });
+        });
+    });
+}
+
+// 添加 IPC 处理程序
+ipcMain.handle('get-liked-videos', async (event, page, pageSize) => {
+    try {
+        const result = await getLikedVideos(page, pageSize);
+        return result;
+    } catch (error) {
+        console.error('Error getting liked videos:', error);
+        throw error;
+    }
+});
 
 ipcMain.on('xiaohongshu-download', (event, startPosition, endPosition, downloadDir) => {
     const defaultDownloadDir = path.join(__dirname, '..', 'downloads');
