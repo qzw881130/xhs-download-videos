@@ -624,6 +624,18 @@ const argv = yargs(hideBin(process.argv))
         default: 'liked',
         choices: ['liked', 'collected', 'post']
     })
+    .option('downloadDir', {
+        alias: 'd',
+        description: '下载目录路径',
+        type: 'string',
+        default: path.join(__dirname, 'downloads')
+    })
+    .option('dbPath', {
+        alias: 'db',
+        description: '数据库文件路径',
+        type: 'string',
+        default: path.join(__dirname, 'xhs-liked-videos.db')
+    })
     .argv;
 
 const downloader = new XiaohongshuDownloader(argv.scrollAttempts, argv.maxScrollAttempts, argv.type);

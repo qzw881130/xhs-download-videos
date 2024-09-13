@@ -7,12 +7,12 @@ console.log('Electron main process starting...');
 // 定义全局 win 变量
 let win;
 
-function xiaohongshuDownloader(startPosition, endPosition) {
+function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath) {
     console.log(`开始下载，从 ${startPosition} 到 ${endPosition}`);
     const { spawn } = require('child_process');
     const downloaderPath = path.join(__dirname, 'xiaohongshu_downloader.mjs');
 
-    const downloader = spawn('node', [downloaderPath, '--start', startPosition, '--end', endPosition]);
+    const downloader = spawn('node', [downloaderPath, '--start', startPosition, '--end', endPosition, '--downloadDir', downloadDir, '--dbPath', dbPath]);
 
     downloader.stdout.on('data', (data) => {
         const message = `下载器输出: ${data.toString().trim()}`;
@@ -87,8 +87,12 @@ function createWindow() {
     });
 }
 
-ipcMain.on('xiaohongshu-download', (event, startPosition, endPosition) => {
-    xiaohongshuDownloader(startPosition, endPosition);
+ipcMain.on('xiaohongshu-download', (event, startPosition, endPosition, downloadDir) => {
+    const defaultDownloadDir = path.join(__dirname, '..', 'downloads');
+    const defaultDbPath = path.join(__dirname, '..', 'xhs-liked-videos.db');
+    const downloadDirectory = downloadDir || defaultDownloadDir;
+    const dbFilePath = dbPath || defaultDbPath;
+    xiaohongshuDownloader(startPosition, endPosition, downloadDirectory, dbFilePath);
 });
 
 app.on('ready', () => {
