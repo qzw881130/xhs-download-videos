@@ -158,6 +158,31 @@ class XiaohongshuDownloader {
             );
         `);
     }
+    // 设置日志输出函数
+    setupLogging() {
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+
+        console.log = (...args) => {
+            originalConsoleLog.apply(console, args);
+            if (process && process.send) {
+                process.send({ type: 'log', message: args.join(' ') });
+            }
+        };
+
+        console.error = (...args) => {
+            originalConsoleError.apply(console, args);
+            if (process && process.send) {
+                process.send({ type: 'error', message: args.join(' ') });
+            }
+        };
+    }
+
+    constructor(startPosition, endPosition, type = 'notes') {
+        // ... (existing constructor code)
+
+        this.setupLogging();
+    }
 
     async login() {
         try {

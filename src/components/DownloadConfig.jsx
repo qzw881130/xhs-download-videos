@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../styles/DownloadConfig.css';
 
 function DownloadConfig() {
@@ -6,6 +6,23 @@ function DownloadConfig() {
     const [startPosition, setStartPosition] = useState(0);
     const [endPosition, setEndPosition] = useState(10);
     const [logs, setLogs] = useState([]);
+
+    useEffect(() => {
+        // 添加监听器
+        window.electronAPI.onLogMessage((message) => {
+            setLogs((prevLogs) => [...prevLogs, message]);
+            const logElement = document.getElementById('downloadLogs');
+            if (logElement) {
+                logElement.value += message + '\n';
+                logElement.scrollTop = logElement.scrollHeight;
+            }
+        });
+
+        // 清理函数
+        return () => {
+            // 如果有清理监听器的方法，应该在这里调用
+        };
+    }, []);
 
     const handleStartDownload = () => {
         if (window.electron && window.electron.xiaohongshuDownloader) {
@@ -65,12 +82,12 @@ function DownloadConfig() {
                 </div>
             </div>
             <div className="log-area">
-                <h3>下载日志</h3>
-                <div className="logs">
+                <h3>下载日志：</h3>
+                <ul>
                     {logs.map((log, index) => (
-                        <p key={index}>{log}</p>
+                        <li key={index}>{log}</li>
                     ))}
-                </div>
+                </ul>
             </div>
         </div>
     );

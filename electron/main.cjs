@@ -6,7 +6,28 @@ console.log('Electron main process starting...');
 
 function xiaohongshuDownloader(startPosition, endPosition) {
     console.log(`开始下载，从 ${startPosition} 到 ${endPosition}`);
-    // 这里添加实际的下载逻辑
+    const { spawn } = require('child_process');
+    const downloaderPath = path.join(__dirname, '..', 'xiaohongshu_downloader.js');
+
+    const downloader = spawn('node', [downloaderPath, '--start', startPosition, '--end', endPosition]);
+
+    downloader.stdout.on('data', (data) => {
+        const message = `下载器输出: ${data}`;
+        console.log(message);
+        win.webContents.send('log-message', message);
+    });
+
+    downloader.stderr.on('data', (data) => {
+        const message = `下载器错误: ${data}`;
+        console.error(message);
+        win.webContents.send('log-message', message);
+    });
+
+    downloader.on('close', (code) => {
+        const message = `下载器进程退出，退出码 ${code}`;
+        console.log(message);
+        win.webContents.send('log-message', message);
+    });
 }
 
 function createWindow() {
