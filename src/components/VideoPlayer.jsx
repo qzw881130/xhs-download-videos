@@ -18,6 +18,7 @@ function VideoPlayer() {
         const fetchVideoDetails = async () => {
             try {
                 const details = await window.electron.getVideoDetails(vid);
+                console.log(details);
                 setVideoDetails(details);
                 checkAdjacentVideos(vid);
             } catch (error) {

@@ -241,7 +241,7 @@ async function getVideoDetails(vid) {
                     SELECT id, vid, title FROM videos
                     WHERE id < (SELECT id FROM videos WHERE vid = ?)
                     ORDER BY id DESC
-                    LIMIT 5
+                    LIMIT 10
                 `;
 
                 const [row, adjacentVideos] = await Promise.all([
