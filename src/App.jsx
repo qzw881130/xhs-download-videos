@@ -70,8 +70,8 @@ function App() {
                     <Routes>
                         <Route path="/liked" element={<FavoriteVideos type="liked" />} />
                         <Route path="/" element={<DownloadConfig />} />
-                        <Route path="/collected-videos" element={<FavoriteVideos type="collected" />} />
-                        <Route path="/post-videos" element={<FavoriteVideos type="post" />} />
+                        <Route path="/collected" element={<FavoriteVideos type="collected" />} />
+                        <Route path="/post" element={<FavoriteVideos type="post" />} />
                         <Route path="/video-player/:vid" element={<VideoPlayer />} />
                     </Routes>
                 </div>

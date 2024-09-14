@@ -14,7 +14,7 @@ function FavoriteVideos({ type }) {
 
     useEffect(() => {
         fetchVideos(1);
-    }, []);
+    }, [type]);
 
     const fetchVideos = async (page) => {
         setIsLoading(true);
@@ -50,7 +50,7 @@ function FavoriteVideos({ type }) {
     return (
         <div className="favorite-videos">
             <h2 className="text-2xl font-bold mb-4">
-                {type === 'liked' ? '喜欢的视频' : type === 'collected' ? '收藏的视频' : '我的视频笔记'}
+                {type === 'liked' ? '我的点赞视频' : type === 'collected' ? '我的收藏视频' : '我的视频笔记'}
             </h2>
             <div className="relative">
                 <div className="flex flex-col">
