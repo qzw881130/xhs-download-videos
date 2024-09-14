@@ -5,6 +5,7 @@ function VideoPlayer() {
     const [videoDetails, setVideoDetails] = useState(null);
     const [hasPrevious, setHasPrevious] = useState(true);
     const [hasNext, setHasNext] = useState(true);
+    const [autoPlayNext, setAutoPlayNext] = useState(false);
     const { vid } = useParams();
     const navigate = useNavigate();
 
@@ -89,6 +90,33 @@ function VideoPlayer() {
                                         {rate}x
                                     </button>
                                 ))}
+                            </div>
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm mr-2">播放模式：</span>
+                                <div className="flex">
+                                    <label className="inline-flex items-center mr-4">
+                                        <input
+                                            type="radio"
+                                            className="form-radio text-blue-600"
+                                            name="playMode"
+                                            value="loop"
+                                            checked={!autoPlayNext}
+                                            onChange={() => setAutoPlayNext(false)}
+                                        />
+                                        <span className="ml-2 text-sm">单视频循环</span>
+                                    </label>
+                                    <label className="inline-flex items-center">
+                                        <input
+                                            type="radio"
+                                            className="form-radio text-blue-600"
+                                            name="playMode"
+                                            value="autoPlay"
+                                            checked={autoPlayNext}
+                                            onChange={() => setAutoPlayNext(true)}
+                                        />
+                                        <span className="ml-2 text-sm">自动播放下一个</span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
                         <div className="flex justify-between mt-auto">
