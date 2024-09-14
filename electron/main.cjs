@@ -216,7 +216,11 @@ ipcMain.handle('open-video-player', (event, vid) => {
         },
     });
 
-    playerWindow.loadURL(`${app.getAppPath()}/dist/index.html#/video-player/${vid}`);
+    if (isDev) {
+        playerWindow.loadURL(`http://localhost:5173/#/video-player/${vid}`);
+    } else {
+        playerWindow.loadURL(`${app.getAppPath()}/dist/index.html#/video-player/${vid}`);
+    }
 
     // 打开 Chrome 开发者工具
     playerWindow.webContents.openDevTools();
