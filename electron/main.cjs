@@ -347,3 +347,47 @@ ipcMain.handle('navigate-video', async (event, currentVid, direction) => {
         throw error;
     }
 });
+
+// 添加这个函数来获取统计信息
+function getStatistics() {
+    return new Promise((resolve, reject) => {
+        const db = new sqlite3.Database(path.join(__dirname, '..', 'xhs-liked-videos.db'), (err) => {
+            if (err) {
+                reject(`Error opening database: ${err.message}`);
+                return;
+            }
+        });
+
+        const query = `
+            SELECT 
+                SUM(CASE WHEN type = 'liked' THEN 1 ELSE 0 END) as likedCount,
+                SUM(CASE WHEN type = 'collected' THEN 1 ELSE 0 END) as collectedCount,
+                SUM(CASE WHEN type = 'post' THEN 1 ELSE 0 END) as postCount,
+                MAX(created_at) as lastUpdateTime
+            FROM videos
+        `;
+
+        db.get(query, [], (err, row) => {
+            db.close();
+            if (err) {
+                reject(`Error querying database: ${err.message}`);
+                return;
+            }
+            resolve({
+                ...row,
+                lastUpdateTime: new Date().toISOString() // 使用当前时间作为更新时间
+            });
+        });
+    });
+}
+
+// 添加���个 IPC 处理程序
+ipcMain.handle('get-statistics', async (event) => {
+    try {
+        const statistics = await getStatistics();
+        return statistics;
+    } catch (error) {
+        console.error('Error getting statistics:', error);
+        throw error;
+    }
+});

@@ -9,4 +9,5 @@ contextBridge.exposeInMainWorld('electron', {
     openVideoPlayer: (vid) => ipcRenderer.invoke('open-video-player', vid),
     getVideoDetails: (vid) => ipcRenderer.invoke('get-video-details', vid),
     navigateVideo: (currentVid, direction) => ipcRenderer.invoke('navigate-video', currentVid, direction),
+    getStatistics: () => ipcRenderer.invoke('get-statistics'),
 });
