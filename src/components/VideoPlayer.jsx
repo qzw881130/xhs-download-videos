@@ -72,16 +72,16 @@ function VideoPlayer() {
     };
 
     return (
-        <div className="video-player p-4 h-screen flex flex-col">
-            <div className="flex justify-space items-center mb-5">
+        <div className="video-player p-6 h-screen flex flex-col bg-gray-100 rounded-lg">
+            <div className="flex justify-between items-center mb-5 bg-white p-4 rounded-lg shadow-md">
                 <h1 className="text-xl font-bold truncate">{videoDetails.title}</h1>
-                <a href={videoDetails.page_url} target="_blank" rel="noopener noreferrer" className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded hover:bg-blue-200 transition-colors duration-300">
+                <a href={videoDetails.page_url} target="_blank" rel="noopener noreferrer" className="ml-2 px-3 py-2 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-600 transition-colors duration-300">
                     原链接
                 </a>
             </div>
-            <div className="flex mb-2 flex-grow" style={{ minHeight: 0, maxHeight: '60vh' }}>
-                <div className="w-2/3 pr-2">
-                    <div className="h-full">
+            <div className="flex mb-4 flex-grow" style={{ minHeight: 0, maxHeight: '60vh' }}>
+                <div className="w-2/3 pr-4">
+                    <div className="h-full bg-black rounded-lg overflow-hidden shadow-lg">
                         <video
                             src={videoDetails.video_src}
                             controls
@@ -103,17 +103,17 @@ function VideoPlayer() {
                         ></video>
                     </div>
                 </div>
-                <div className="w-1/3 bg-gray-100 p-2 rounded flex flex-col justify-between">
+                <div className="w-1/3 bg-white p-4 rounded-lg shadow-md flex flex-col justify-between">
                     <div className="flex flex-col h-full">
+                        <h2 className="text-lg font-semibold mb-4 pb-2 border-b border-gray-200">控制面板</h2>
                         <div className="flex-grow">
-                            <h2 className="text-base font-semibold mb-2">控制面板</h2>
-                            <div className="flex items-center justify-space mb-2">
-                                <span className="text-sm mr-2">播放倍速：</span>
-                                <div className="flex">
+                            <div className="mb-4">
+                                <span className="text-sm font-medium mb-2 block">播放倍速：</span>
+                                <div className="flex space-x-2">
                                     {[0.5, 1, 1.5, 2].map((rate) => (
                                         <button
                                             key={rate}
-                                            className={`bg-blue-500 text-white px-2 py-1 rounded text-sm mr-2 ${document.querySelector('video')?.playbackRate === rate ? 'bg-blue-700' : ''}`}
+                                            className={`bg-blue-500 text-white px-3 py-1 rounded-md text-sm ${document.querySelector('video')?.playbackRate === rate ? 'bg-blue-700' : 'hover:bg-blue-600'}`}
                                             onClick={() => {
                                                 const video = document.querySelector('video');
                                                 if (video) {
@@ -127,10 +127,10 @@ function VideoPlayer() {
                                     ))}
                                 </div>
                             </div>
-                            <div className="flex items-center justify-space mb-2">
-                                <span className="text-sm mr-2">播放模式：</span>
-                                <div className="flex">
-                                    <label className="inline-flex items-center mr-4">
+                            <div className="mb-4">
+                                <span className="text-sm font-medium mb-2 block">播放模式：</span>
+                                <div className="flex flex-col space-y-2">
+                                    <label className="inline-flex items-center">
                                         <input
                                             type="radio"
                                             className="form-radio text-blue-600"
@@ -169,32 +169,32 @@ function VideoPlayer() {
                                     </label>
                                 </div>
                             </div>
+                            <div className="mb-4">
+                                <label className="inline-flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        className="form-checkbox text-blue-600"
+                                        checked={autoPlay}
+                                        onChange={(e) => {
+                                            const newAutoPlay = e.target.checked;
+                                            setAutoPlay(newAutoPlay);
+                                            localStorage.setItem('autoPlay', JSON.stringify(newAutoPlay));
+                                        }}
+                                    />
+                                    <span className="ml-2 text-sm">自动播放</span>
+                                </label>
+                            </div>
                         </div>
-                        <div className="flex items-center mb-2">
-                            <span className="text-sm">自动播放：</span><label className="inline-flex items-center">
-                                <input
-                                    type="checkbox"
-                                    className="form-checkbox text-blue-600"
-                                    checked={autoPlay}
-                                    onChange={(e) => {
-                                        const newAutoPlay = e.target.checked;
-                                        setAutoPlay(newAutoPlay);
-                                        localStorage.setItem('autoPlay', JSON.stringify(newAutoPlay));
-                                    }}
-                                />
-                                <span className="ml-2 text-sm">启用</span>
-                            </label>
-                        </div>
-                        <div className="flex justify-between mt-auto">
+                        <div className="flex justify-between mt-4 pt-4 border-t border-gray-200">
                             <button
-                                className={`bg-green-500 text-white px-3 py-1 rounded text-sm ${!hasPrevious ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`bg-green-500 text-white px-4 py-2 rounded-md text-sm ${!hasPrevious ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-600'}`}
                                 onClick={() => handleNavigation('prev')}
                                 disabled={!hasPrevious}
                             >
                                 上一个
                             </button>
                             <button
-                                className={`bg-green-500 text-white px-3 py-1 rounded text-sm ${!hasNext ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`bg-green-500 text-white px-4 py-2 rounded-md text-sm ${!hasNext ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-600'}`}
                                 onClick={() => handleNavigation('next')}
                                 disabled={!hasNext}
                             >
@@ -204,23 +204,26 @@ function VideoPlayer() {
                     </div>
                 </div>
             </div>
-            <div className="flex overflow-x-auto mt-4">
-                {videoDetails.adjacentVideos && videoDetails.adjacentVideos.map((video, index) => (
-                    <div
-                        key={video.vid}
-                        className={`flex-shrink-0 w-1/6 px-1 cursor-pointer ${video.vid === videoDetails.vid ? 'border-2 border-blue-500' : ''}`}
-                        onClick={() => handleVideoClick(video.vid)}
-                    >
-                        <div className="relative pb-[177.78%] mb-1">
-                            <img
-                                src={video.image_src}
-                                alt={`Thumbnail for ${video.title}`}
-                                className="absolute top-0 left-0 w-full h-full object-cover"
-                            />
+            <div className="mt-6 bg-white p-4 rounded-lg shadow-md">
+                <h3 className="text-lg font-semibold mb-4">相关视频</h3>
+                <div className="flex overflow-x-auto space-x-4">
+                    {videoDetails.adjacentVideos && videoDetails.adjacentVideos.map((video, index) => (
+                        <div
+                            key={video.vid}
+                            className={`flex-shrink-0 w-1/6 cursor-pointer ${video.vid === videoDetails.vid ? 'ring-2 ring-blue-500 rounded-lg' : ''}`}
+                            onClick={() => handleVideoClick(video.vid)}
+                        >
+                            <div className="relative pb-[177.78%] mb-2 rounded-lg overflow-hidden">
+                                <img
+                                    src={video.image_src}
+                                    alt={`Thumbnail for ${video.title}`}
+                                    className="absolute top-0 left-0 w-full h-full object-cover"
+                                />
+                            </div>
+                            <p className="text-xs truncate">{video.title}</p>
                         </div>
-                        <p className="text-xs truncate">{video.title}</p>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
         </div>
     );
