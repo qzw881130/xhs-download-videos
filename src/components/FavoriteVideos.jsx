@@ -11,6 +11,7 @@ function FavoriteVideos({ type }) {
     });
     const [isLoading, setIsLoading] = useState(true);
     const [inputPage, setInputPage] = useState('');
+    const [keyword, setKeyword] = useState('');
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -20,7 +21,7 @@ function FavoriteVideos({ type }) {
     const fetchVideos = async (page) => {
         setIsLoading(true);
         try {
-            const result = await window.electron.getLikedVideos(page, pagination.pageSize, type);
+            const result = await window.electron.getLikedVideos(page, pagination.pageSize, type, keyword);
             setVideos(result.videos);
             setPagination(result.pagination);
             setInputPage(result.pagination.currentPage.toString());
@@ -47,6 +48,15 @@ function FavoriteVideos({ type }) {
         if (!isNaN(page) && page >= 1 && page <= pagination.totalPages) {
             handlePageChange(page);
         }
+    };
+
+    const handleKeywordChange = (e) => {
+        setKeyword(e.target.value);
+    };
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        fetchVideos(1);
     };
 
     const handleImageError = (e) => {
@@ -113,11 +123,23 @@ function FavoriteVideos({ type }) {
                     (共 {pagination.totalItems} 个)
                 </span>
             </h2>
+            <div className="mb-4 flex justify-between items-center">
+                <form onSubmit={handleSearch} className="flex items-center">
+                    <input
+                        type="text"
+                        value={keyword}
+                        onChange={handleKeywordChange}
+                        placeholder="输入关键词搜索"
+                        className="border rounded px-2 py-1 mr-2"
+                    />
+                    <button type="submit" className="bg-blue-500 text-white px-4 py-1 rounded">
+                        搜索
+                    </button>
+                </form>
+                {renderPagination()}
+            </div>
             <div className="relative">
                 <div className="flex flex-col">
-                    <div className="flex justify-end mb-4">
-                        {renderPagination()}
-                    </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                         {videos.map((video) => (
                             <div key={video.id} className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer" onClick={() => handleVideoClick(video.vid)}>

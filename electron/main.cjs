@@ -90,7 +90,7 @@ function createWindow() {
 }
 
 // 添加这个函数来获取点赞视频列表
-function getLikedVideos(page = 1, pageSize = 20, type = 'liked') {
+function getLikedVideos(page = 1, pageSize = 20, type = 'liked', keyword = '') {
     return new Promise((resolve, reject) => {
         const db = new sqlite3.Database(path.join(__dirname, '..', 'xhs-liked-videos.db'), (err) => {
             if (err) {
@@ -100,21 +100,35 @@ function getLikedVideos(page = 1, pageSize = 20, type = 'liked') {
         });
 
         const offset = (page - 1) * pageSize;
-        const query = `
+        let query = `
             SELECT * FROM videos
             WHERE type = ?
+        `;
+        let countQuery = `
+            SELECT COUNT(*) as total FROM videos
+            WHERE type = ?
+        `;
+        let params = [type];
+
+        if (keyword) {
+            query += ` AND title LIKE ?`;
+            countQuery += ` AND title LIKE ?`;
+            params.push(`%${keyword}%`);
+        }
+
+        query += `
             ORDER BY created_at DESC
             LIMIT ? OFFSET ?
         `;
 
-        db.all(query, [type, pageSize, offset], (err, rows) => {
+        db.all(query, [...params, pageSize, offset], (err, rows) => {
             if (err) {
                 db.close();
                 reject(`Error querying database: ${err.message}`);
                 return;
             }
 
-            db.get('SELECT COUNT(*) as total FROM videos WHERE type = ?', [type], (err, result) => {
+            db.get(countQuery, params, (err, result) => {
                 db.close();
                 if (err) {
                     reject(`Error getting total count: ${err.message}`);
@@ -138,11 +152,11 @@ function getLikedVideos(page = 1, pageSize = 20, type = 'liked') {
     });
 }
 
-// 添加 IPC 处理程序
-ipcMain.handle('get-liked-videos', async (event, page, pageSize, type) => {
+// 更新 IPC 处理程序
+ipcMain.handle('get-liked-videos', async (event, page, pageSize, type, keyword) => {
     try {
         const defaultDownloadDir = path.join(__dirname, '..', 'downloads');
-        const result = await getLikedVideos(page, pageSize, type);
+        const result = await getLikedVideos(page, pageSize, type, keyword);
         const modifiedResult = {
             ...result,
             videos: result.videos.map(video => ({
