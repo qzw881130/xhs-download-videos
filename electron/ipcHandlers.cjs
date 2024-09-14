@@ -1,7 +1,8 @@
-const { ipcMain, shell } = require('electron');
+const { ipcMain, shell, BrowserWindow } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const { getLikedVideos, getVideoDetails, getAdjacentVideo, getStatistics } = require('./database.cjs');
+const isDev = require('electron-is-dev');
 
 function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type) {
     console.log(`开始下载，从 ${startPosition} 到 ${endPosition}`);
@@ -89,6 +90,27 @@ function setupIpcHandlers(win) {
 
     ipcMain.handle('open-external', async (event, url) => {
         await shell.openExternal(url);
+    });
+
+    ipcMain.handle('open-video-player', (event, vid) => {
+        const playerWindow = new BrowserWindow({
+            width: 800,
+            height: 600,
+            webPreferences: {
+                preload: path.join(__dirname, 'preload.js'),
+                contextIsolation: true,
+                nodeIntegration: false,
+            },
+        });
+
+
+        const url = isDev
+            ? `http://localhost:5173/#/video-player/${vid}`
+            : `file://${path.join(__dirname, '../dist/index.html')}#/video-player/${vid}`;
+        playerWindow.loadURL(url);
+
+        // 可选：打开开发者工具
+        playerWindow.webContents.openDevTools();
     });
 
     ipcMain.on('xiaohongshu-download', (event, startPosition, endPosition, type) => {

@@ -85,7 +85,7 @@ function VideoPlayer() {
                         <video
                             src={videoDetails.video_src}
                             controls
-                            autoPlay={localStorage.getItem('autoPlayNext') === 'true'}
+                            autoPlay={localStorage.getItem('autoPlay') === 'true'}
                             className="w-full h-full object-contain"
                             onEnded={() => {
                                 if (localStorage.getItem('autoPlayNext') === 'true' && hasNext) {
