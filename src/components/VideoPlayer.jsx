@@ -63,7 +63,7 @@ function VideoPlayer() {
                     原链接
                 </a>
             </div>
-            <div className="flex mb-2 flex-grow" style={{ minHeight: 0 }}>
+            <div className="flex mb-2 flex-grow" style={{ minHeight: 0, maxHeight: '60vh' }}>
                 <div className="w-2/3 pr-2">
                     <div className="h-full">
                         <video src={videoDetails.video_src} controls className="w-full h-full object-contain"></video>
@@ -114,14 +114,16 @@ function VideoPlayer() {
                 {videoDetails.adjacentVideos && videoDetails.adjacentVideos.map((video, index) => (
                     <div
                         key={video.vid}
-                        className={`flex-shrink-0 w-1/5 px-1 cursor-pointer ${video.vid === videoDetails.vid ? 'border-2 border-blue-500' : ''}`}
+                        className={`flex-shrink-0 w-1/6 px-1 cursor-pointer ${video.vid === videoDetails.vid ? 'border-2 border-blue-500' : ''}`}
                         onClick={() => handleVideoClick(video.vid)}
                     >
-                        <img
-                            src={video.image_src}
-                            alt={`Thumbnail for ${video.title}`}
-                            className="w-full h-16 object-cover mb-1"
-                        />
+                        <div className="relative pb-[177.78%] mb-1">
+                            <img
+                                src={video.image_src}
+                                alt={`Thumbnail for ${video.title}`}
+                                className="absolute top-0 left-0 w-full h-full object-cover"
+                            />
+                        </div>
                         <p className="text-xs truncate">{video.title}</p>
                     </div>
                 ))}
