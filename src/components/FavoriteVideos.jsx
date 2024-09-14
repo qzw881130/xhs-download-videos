@@ -49,8 +49,13 @@ function FavoriteVideos({ type }) {
 
     return (
         <div className="favorite-videos">
-            <h2 className="text-2xl font-bold mb-4">
-                {type === 'liked' ? '我的点赞视频' : type === 'collected' ? '我的收藏视频' : '我的视频笔记'}
+            <h2 className="text-2xl font-bold mb-4 flex items-center">
+                <span>
+                    {type === 'liked' ? '我的点赞视频' : type === 'collected' ? '我的收藏视频' : '我的视频笔记'}
+                </span>
+                <span className="ml-2 text-lg font-normal text-gray-600">
+                    (共 {pagination.totalItems} 个)
+                </span>
             </h2>
             <div className="relative">
                 <div className="flex flex-col">

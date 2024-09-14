@@ -44,8 +44,8 @@ function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, 
 function createWindow() {
     console.log('Creating Electron window...');
     win = new BrowserWindow({
-        width: 2000,
-        height: 1200,
+        width: 1000,
+        height: 1000,
         minWidth: 800,
         webPreferences: {
             nodeIntegration: true,
