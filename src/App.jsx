@@ -4,13 +4,13 @@ import LikedVideos from './pages/LikedVideos';
 import DownloadConfig from './pages/DownloadConfig';
 import FavoriteVideos from './components/FavoriteVideos';
 import VideoPlayer from './components/VideoPlayer';
-
+import packageInfo from '../package.json';
 
 function Footer() {
     return (
         <footer className="bg-gray-800 text-white p-4 mt-8">
             <div className="container mx-auto text-center">
-                <p>Author: qianzhiwei5921@gmail.com</p>
+                <p>Author: <strong className="text-blue-400">qianzhiwei5921@gmail.com</strong> | Version: <strong className="text-green-400">{packageInfo.version}</strong></p>
             </div>
         </footer>
     );
