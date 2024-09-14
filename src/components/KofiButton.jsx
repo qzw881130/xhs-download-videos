@@ -13,8 +13,8 @@ function KofiButton() {
     };
 
     return (
-        <button onClick={onClick} className="bg-transparent hover:bg-blue-100 border-0 p-0">
-            <img src={kofi} alt="Support me on Ko-fi" />
+        <button onClick={onClick} className="bg-transparent hover:bg-blue-100 border-0 p-0 mx-auto">
+            <img src={kofi} alt="Support me on Ko-fi" style={{ transform: 'scale(1.5)' }} />
         </button>
     );
 }
