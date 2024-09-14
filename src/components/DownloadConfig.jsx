@@ -55,7 +55,7 @@ function DownloadConfig() {
                         </select>
                     </div>
                     <div className="form-group">
-                        <label htmlFor="startPosition">开始滚屏位置：</label>
+                        <label htmlFor="startPosition">开始滚屏位置[0~100]：</label>
                         <input
                             type="number"
                             id="startPosition"
@@ -66,7 +66,7 @@ function DownloadConfig() {
                         />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="endPosition">结束滚屏位置：</label>
+                        <label htmlFor="endPosition">结束滚屏位置[0~100]：</label>
                         <input
                             type="number"
                             id="endPosition"
