@@ -6,7 +6,14 @@ function VideoPlayer() {
     const [hasPrevious, setHasPrevious] = useState(true);
     const [hasNext, setHasNext] = useState(true);
     const [autoPlayNext, setAutoPlayNext] = useState(false);
-    const [autoPlay, setAutoPlay] = useState(false);
+    const [autoPlay, setAutoPlay] = useState(() => {
+        const storedAutoPlay = localStorage.getItem('autoPlay');
+        return storedAutoPlay === 'true';
+    });
+
+    useEffect(() => {
+        localStorage.setItem('autoPlay', autoPlay);
+    }, [autoPlay]);
 
     const { vid } = useParams();
     const navigate = useNavigate();
