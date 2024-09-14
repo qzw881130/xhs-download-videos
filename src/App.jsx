@@ -5,10 +5,21 @@ import DownloadConfig from './pages/DownloadConfig';
 import FavoriteVideos from './components/FavoriteVideos';
 import VideoPlayer from './components/VideoPlayer';
 
+
+function Footer() {
+    return (
+        <footer className="bg-gray-800 text-white p-4 mt-8">
+            <div className="container mx-auto text-center">
+                <p>Author: qianzhiwei5921@gmail.com</p>
+            </div>
+        </footer>
+    );
+}
+
 function App() {
     return (
         <Router>
-            <div className="App">
+            <div className="App flex flex-col min-h-screen">
                 {!location.hash.startsWith('#/video-player') && (
                     <nav className="bg-gray-800 p-4">
                         <ul className="flex justify-center space-x-8">
@@ -35,7 +46,7 @@ function App() {
                         </ul>
                     </nav>
                 )}
-                <div className="container mx-auto mt-8">
+                <div className="container mx-auto mt-8 flex-grow">
                     <Routes>
                         <Route path="/liked" element={<LikedVideos />} />
                         <Route path="/" element={<DownloadConfig />} />
@@ -44,6 +55,7 @@ function App() {
                         <Route path="/video-player/:vid" element={<VideoPlayer />} />
                     </Routes>
                 </div>
+                <Footer />
             </div>
         </Router>
     );
