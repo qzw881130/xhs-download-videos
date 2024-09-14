@@ -205,7 +205,7 @@ function VideoPlayer() {
                 </div>
             </div>
             <div className="mt-6 bg-white p-4 rounded-lg shadow-md">
-                <h3 className="text-lg font-semibold mb-4">相关视频</h3>
+                <h3 className="text-lg font-semibold mb-4">其他视频</h3>
                 <div className="flex overflow-x-auto space-x-4">
                     {videoDetails.adjacentVideos && videoDetails.adjacentVideos.map((video, index) => (
                         <div
