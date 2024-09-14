@@ -33,6 +33,10 @@ function FavoriteVideos({ type }) {
         }
     };
 
+    const handleImageError = (e) => {
+        e.target.src = 'https://via.placeholder.com/150x200';
+    };
+
     if (isLoading) {
         return <div>Loading...</div>;
     }
@@ -65,7 +69,12 @@ function FavoriteVideos({ type }) {
                         {videos.map((video) => (
                             <div key={video.id} className="bg-white rounded-lg shadow-md overflow-hidden">
                                 <div className="aspect-[3/4] relative">
-                                    <img src={video.image_src || 'https://via.placeholder.com/150x200'} alt={video.title} className="absolute inset-0 w-full h-full object-cover" />
+                                    <img
+                                        src={video.image_src}
+                                        alt={video.title}
+                                        className="absolute inset-0 w-full h-full object-cover"
+                                        onError={handleImageError}
+                                    />
                                 </div>
                                 <div className="p-2">
                                     <h3 className="text-sm font-semibold truncate">{video.title}</h3>

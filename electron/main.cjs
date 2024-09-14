@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, protocol } = require('electron');
 const path = require('path');
 const isDev = require('electron-is-dev');
 const sqlite3 = require('sqlite3').verbose();
@@ -140,8 +140,17 @@ function getLikedVideos(page = 1, pageSize = 20) {
 // 添加 IPC 处理程序
 ipcMain.handle('get-liked-videos', async (event, page, pageSize) => {
     try {
+        const defaultDownloadDir = path.join(__dirname, '..', 'downloads');
         const result = await getLikedVideos(page, pageSize);
-        return result;
+        const modifiedResult = {
+            ...result,
+            videos: result.videos.map(video => ({
+                ...video,
+                image_src: `local-file://${path.join(defaultDownloadDir, `img_${video.vid}.jpg`).replace(/\\/g, '/')}`
+            }))
+        };
+        console.log('get-liked-videos result:', modifiedResult);
+        return modifiedResult;
     } catch (error) {
         console.error('Error getting liked videos:', error);
         throw error;
@@ -154,6 +163,19 @@ ipcMain.on('xiaohongshu-download', (event, startPosition, endPosition, downloadD
     const downloadDirectory = downloadDir || defaultDownloadDir;
     const dbFilePath = defaultDbPath;
     xiaohongshuDownloader(startPosition, endPosition, downloadDirectory, dbFilePath);
+});
+
+// 在 app.on('ready', ...) 之前添加这段代码
+app.whenReady().then(() => {
+    protocol.registerFileProtocol('local-file', (request, callback) => {
+        const url = request.url.replace('local-file://', '');
+        const decodedUrl = decodeURI(url);
+        try {
+            return callback(decodedUrl);
+        } catch (error) {
+            console.error('ERROR: registerFileProtocol:', error);
+        }
+    });
 });
 
 app.on('ready', () => {

@@ -201,7 +201,7 @@ class XiaohongshuDownloader {
                 console.log(`正在导航到个人主页: ${profileUrl}`);
                 await this.page.goto(profileUrl, { waitUntil: 'networkidle0', timeout: 60000 });
             } else {
-                console.error('无法获取个人主页链接');
+                console.error('无��获取个人主页链接');
                 throw new Error('无法获取个人主页链接');
             }
 
