@@ -4,3 +4,5 @@ xhs-liked-videos.db
 cookies.json
 design/
 dist
+.DS_Store
+dist/

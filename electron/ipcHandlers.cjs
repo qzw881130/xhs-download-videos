@@ -1,4 +1,4 @@
-const { ipcMain } = require('electron');
+const { ipcMain, shell } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const { getLikedVideos, getVideoDetails, getAdjacentVideo, getStatistics } = require('./database.cjs');
@@ -85,6 +85,10 @@ function setupIpcHandlers(win) {
             console.error('Error getting statistics:', error);
             throw error;
         }
+    });
+
+    ipcMain.handle('open-external', async (event, url) => {
+        await shell.openExternal(url);
     });
 
     ipcMain.on('xiaohongshu-download', (event, startPosition, endPosition, type) => {

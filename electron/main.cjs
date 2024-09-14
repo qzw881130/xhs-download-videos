@@ -1,4 +1,4 @@
-const { app, BrowserWindow, protocol } = require('electron');
+const { app, BrowserWindow, protocol, shell } = require('electron');
 const path = require('path');
 const isDev = require('electron-is-dev');
 const { setupIpcHandlers } = require('./ipcHandlers.cjs');
