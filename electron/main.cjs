@@ -13,7 +13,8 @@ function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, 
     const { spawn } = require('child_process');
     const downloaderPath = path.join(__dirname, 'xiaohongshu_downloader.mjs');
 
-    const downloader = spawn('node', [downloaderPath, '--start', startPosition, '--end', endPosition, '--downloadDir', downloadDir, '--dbPath', dbPath, '--type', 'liked']);
+    const downloader = spawn('node', [downloaderPath, '--start', startPosition, '--end', endPosition, '--downloadDir', downloadDir, '--dbPath', dbPath, '--type', type]);
+
 
     downloader.stdout.on('data', (data) => {
         const message = `下载器输出: ${data.toString().trim()}`;
@@ -162,6 +163,7 @@ ipcMain.on('xiaohongshu-download', (event, startPosition, endPosition, type) => 
     const defaultDbPath = path.join(__dirname, '..', 'xhs-liked-videos.db');
     const downloadDirectory = defaultDownloadDir;
     const dbFilePath = defaultDbPath;
+    console.log('params=', { startPosition, endPosition, downloadDirectory, dbFilePath, type })
     xiaohongshuDownloader(startPosition, endPosition, downloadDirectory, dbFilePath, type);
 });
 

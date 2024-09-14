@@ -20,7 +20,7 @@ let fetch;
 })();
 
 class XiaohongshuDownloader {
-    constructor(scrollAttempts = 0, maxScrollAttempts = 200, type = 'liked', downloadDir, dbPath) {
+    constructor(scrollAttempts = 0, maxScrollAttempts = 200, type, downloadDir, dbPath) {
         this.baseUrl = 'https://www.xiaohongshu.com';
         this.loginUrl = `${this.baseUrl}/login`;
         this.likedNotesUrl = `${this.baseUrl}/user/profile/liked`;
@@ -52,6 +52,7 @@ class XiaohongshuDownloader {
             'post': '笔记'
         };
         this.setupLogging();
+        console.log('downloader=', this);
     }
 
     generateDeviceId() {
