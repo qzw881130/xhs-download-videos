@@ -82,7 +82,7 @@ async function getVideoDetails(vid) {
         const adjacentQuery = `
             SELECT id, vid, title, type FROM videos
             WHERE type = (SELECT type FROM videos WHERE vid = ?)
-            AND id < (SELECT id FROM videos WHERE vid = ?)
+            AND id <= (SELECT id FROM videos WHERE vid = ?)
             ORDER BY id DESC
             LIMIT 10
         `;
