@@ -19,11 +19,11 @@ function FavoriteVideos({ type }) {
     const fetchVideos = async (page) => {
         setIsLoading(true);
         try {
-            const result = await window.electron.getLikedVideos(page, pagination.pageSize);
+            const result = await window.electron.getLikedVideos(page, pagination.pageSize, type);
             setVideos(result.videos);
             setPagination(result.pagination);
         } catch (error) {
-            console.error('Error fetching liked videos:', error);
+            console.error('Error fetching videos:', error);
         } finally {
             setIsLoading(false);
         }
@@ -49,7 +49,9 @@ function FavoriteVideos({ type }) {
 
     return (
         <div className="favorite-videos">
-            <h2 className="text-2xl font-bold mb-4">{type === 'liked' ? '喜欢的视频' : '收藏的视频'}</h2>
+            <h2 className="text-2xl font-bold mb-4">
+                {type === 'liked' ? '喜欢的视频' : type === 'collected' ? '收藏的视频' : '我的视频笔记'}
+            </h2>
             <div className="relative">
                 <div className="flex flex-col">
                     <div className="flex justify-end mb-4">
