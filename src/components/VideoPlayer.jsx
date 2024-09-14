@@ -51,6 +51,10 @@ function VideoPlayer() {
         }
     };
 
+    const handleVideoClick = (newVid) => {
+        navigate(`/video-player/${newVid}`);
+    };
+
     return (
         <div className="video-player p-4 h-screen flex flex-col">
             <div className="flex justify-between items-center mb-2">
@@ -106,12 +110,19 @@ function VideoPlayer() {
                     </div>
                 </div>
             </div>
-            <div className="flex overflow-x-auto">
-                {/* 这里需要添加逻辑来获取和显示相邻的视频 */}
-                {[...Array(5)].map((_, index) => (
-                    <div key={index} className={`flex-shrink-0 w-1/5 px-1 ${index === 2 ? 'border-2 border-blue-500' : ''}`}>
-                        <img src="placeholder.jpg" alt="Video thumbnail" className="w-full h-16 object-cover mb-1" />
-                        <p className="text-xs truncate">视频标题 {index + 1}</p>
+            <div className="flex overflow-x-auto mt-4">
+                {videoDetails.adjacentVideos && videoDetails.adjacentVideos.map((video, index) => (
+                    <div
+                        key={video.vid}
+                        className={`flex-shrink-0 w-1/5 px-1 cursor-pointer ${video.vid === videoDetails.vid ? 'border-2 border-blue-500' : ''}`}
+                        onClick={() => handleVideoClick(video.vid)}
+                    >
+                        <img
+                            src={video.image_src}
+                            alt={`Thumbnail for ${video.title}`}
+                            className="w-full h-16 object-cover mb-1"
+                        />
+                        <p className="text-xs truncate">{video.title}</p>
                     </div>
                 ))}
             </div>

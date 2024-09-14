@@ -226,35 +226,70 @@ ipcMain.handle('open-video-player', (event, vid) => {
     playerWindow.webContents.openDevTools();
 });
 
-// Add this function to get video details from the database
-function getVideoDetails(vid) {
-    return new Promise((resolve, reject) => {
-        const db = new sqlite3.Database(path.join(__dirname, '..', 'xhs-liked-videos.db'), (err) => {
+// Modify the getVideoDetails function to include adjacent videos
+async function getVideoDetails(vid) {
+    return new Promise(async (resolve, reject) => {
+        const db = new sqlite3.Database(path.join(__dirname, '..', 'xhs-liked-videos.db'), async (err) => {
             if (err) {
                 reject(`Error opening database: ${err.message}`);
                 return;
             }
+
+            try {
+                const mainQuery = 'SELECT * FROM videos WHERE vid = ?';
+                const adjacentQuery = `
+                    SELECT vid, title, created_at FROM videos
+                    WHERE created_at < (SELECT created_at FROM videos WHERE vid = ?)
+                    ORDER BY created_at DESC
+                    LIMIT 5
+                `;
+
+                const [row, adjacentVideos] = await Promise.all([
+                    dbGet(db, mainQuery, [vid]),
+                    dbAll(db, adjacentQuery, [vid])
+                ]);
+
+                if (!row) {
+                    reject(`No video found with vid: ${vid}`);
+                    return;
+                }
+
+                const defaultDownloadDir = path.join(__dirname, '..', 'downloads');
+                const videoDetails = {
+                    ...row,
+                    image_src: `local-file://${path.join(defaultDownloadDir, `img_${row.vid}.jpg`).replace(/\\/g, '/')}`,
+                    video_src: `local-file://${path.join(defaultDownloadDir, `video_${row.vid}.mp4`).replace(/\\/g, '/')}`,
+                    adjacentVideos: adjacentVideos.map(v => ({
+                        ...v,
+                        image_src: `local-file://${path.join(defaultDownloadDir, `img_${v.vid}.jpg`).replace(/\\/g, '/')}`
+                    }))
+                };
+
+                resolve(videoDetails);
+            } catch (error) {
+                reject(`Error querying database: ${error.message}`);
+            } finally {
+                db.close();
+            }
         });
+    });
+}
 
-        const query = 'SELECT * FROM videos WHERE vid = ?';
+// Helper functions for database operations
+function dbGet(db, query, params) {
+    return new Promise((resolve, reject) => {
+        db.get(query, params, (err, row) => {
+            if (err) reject(err);
+            else resolve(row);
+        });
+    });
+}
 
-        db.get(query, [vid], (err, row) => {
-            db.close();
-            if (err) {
-                reject(`Error querying database: ${err.message}`);
-                return;
-            }
-            if (!row) {
-                reject(`No video found with vid: ${vid}`);
-                return;
-            }
-
-            const defaultDownloadDir = path.join(__dirname, '..', 'downloads');
-            resolve({
-                ...row,
-                image_src: `local-file://${path.join(defaultDownloadDir, `img_${row.vid}.jpg`).replace(/\\/g, '/')}`,
-                video_src: `local-file://${path.join(defaultDownloadDir, `video_${row.vid}.mp4`).replace(/\\/g, '/')}`
-            });
+function dbAll(db, query, params) {
+    return new Promise((resolve, reject) => {
+        db.all(query, params, (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
         });
     });
 }
