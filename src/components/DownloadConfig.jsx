@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import '../styles/DownloadConfig.css';
 
 function DownloadConfig() {
-    const [downloadType, setDownloadType] = useState('all');
+    const [downloadType, setDownloadType] = useState('liked');
     const [startPosition, setStartPosition] = useState(0);
     const [endPosition, setEndPosition] = useState(10);
     const [logs, setLogs] = useState('');
@@ -29,7 +29,7 @@ function DownloadConfig() {
 
     const handleStartDownload = () => {
         if (window.electron && window.electron.xiaohongshuDownloader) {
-            window.electron.xiaohongshuDownloader(startPosition, endPosition);
+            window.electron.xiaohongshuDownloader(startPosition, endPosition, downloadType);
             setLogs(prevLogs => prevLogs + `开始下载，类型：${downloadType}，从 ${startPosition} 到 ${endPosition}\n`);
         } else {
             console.error('xiaohongshuDownloader is not available');
@@ -50,8 +50,8 @@ function DownloadConfig() {
                             onChange={(e) => setDownloadType(e.target.value)}
                         >
                             <option value="liked">我的点赞视频</option>
-                            <option value="favorite">我的收藏视频</option>
-                            <option value="notes">我的笔记视频</option>
+                            <option value="collected">我的收藏视频</option>
+                            <option value="post">我的笔记视频</option>
                         </select>
                     </div>
                     <div className="form-group">
