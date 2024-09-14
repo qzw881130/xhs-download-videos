@@ -106,24 +106,27 @@ function VideoPlayer() {
                     <div className="flex flex-col h-full">
                         <div className="flex-grow">
                             <h2 className="text-base font-semibold mb-2">控制面板</h2>
-                            <div className="flex justify-between mb-2">
-                                {[0.5, 1, 1.5, 2].map((rate) => (
-                                    <button
-                                        key={rate}
-                                        className={`bg-blue-500 text-white px-2 py-1 rounded text-sm ${document.querySelector('video')?.playbackRate === rate ? 'bg-blue-700' : ''}`}
-                                        onClick={() => {
-                                            const video = document.querySelector('video');
-                                            if (video) {
-                                                video.playbackRate = rate;
-                                                setVideoDetails(prev => ({ ...prev, playbackRate: rate }));
-                                            }
-                                        }}
-                                    >
-                                        {rate}x
-                                    </button>
-                                ))}
+                            <div className="flex items-center justify-space mb-2">
+                                <span className="text-sm mr-2">播放倍速：</span>
+                                <div className="flex">
+                                    {[0.5, 1, 1.5, 2].map((rate) => (
+                                        <button
+                                            key={rate}
+                                            className={`bg-blue-500 text-white px-2 py-1 rounded text-sm mr-2 ${document.querySelector('video')?.playbackRate === rate ? 'bg-blue-700' : ''}`}
+                                            onClick={() => {
+                                                const video = document.querySelector('video');
+                                                if (video) {
+                                                    video.playbackRate = rate;
+                                                    setVideoDetails(prev => ({ ...prev, playbackRate: rate }));
+                                                }
+                                            }}
+                                        >
+                                            {rate}x
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center justify-space mb-2">
                                 <span className="text-sm mr-2">播放模式：</span>
                                 <div className="flex">
                                     <label className="inline-flex items-center mr-4">
