@@ -83,19 +83,28 @@ async function getVideoDetails(vid) {
             SELECT id, vid, title, type FROM videos
             WHERE type = (SELECT type FROM videos WHERE vid = ?)
             AND id <= (SELECT id FROM videos WHERE vid = ?)
-            ORDER BY id DESC
-            LIMIT 10
+            ORDER BY id ASC
+            LIMIT 3
         `;
+        const adjacentQuery2 = `
+        SELECT id, vid, title, type FROM videos
+        WHERE type = (SELECT type FROM videos WHERE vid = ?)
+        AND id > (SELECT id FROM videos WHERE vid = ?)
+        ORDER BY id ASC
+        LIMIT 3
+    `;
 
-        const [row, adjacentVideos] = await Promise.all([
+        const [row, adjacentVideosBefore, adjacentVideosAfter] = await Promise.all([
             dbGet(db, mainQuery, [vid]),
-            dbAll(db, adjacentQuery, [vid, vid])
+            dbAll(db, adjacentQuery, [vid, vid]),
+            dbAll(db, adjacentQuery2, [vid, vid])
         ]);
+        const adjacentVideos = [...adjacentVideosBefore, ...adjacentVideosAfter];
 
         if (!row) {
             throw new Error(`No video found with vid: ${vid}`);
         }
-
+        console.log('adjacentVideos=', adjacentVideos);
         return { ...row, adjacentVideos };
     } finally {
         db.close();
