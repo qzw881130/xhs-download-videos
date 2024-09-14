@@ -73,9 +73,9 @@ function VideoPlayer() {
 
     return (
         <div className="video-player p-4 h-screen flex flex-col">
-            <div className="flex justify-between items-center mb-2">
+            <div className="flex justify-space items-center mb-5">
                 <h1 className="text-xl font-bold truncate">{videoDetails.title}</h1>
-                <a href={videoDetails.page_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline text-sm">
+                <a href={videoDetails.page_url} target="_blank" rel="noopener noreferrer" className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded hover:bg-blue-200 transition-colors duration-300">
                     原链接
                 </a>
             </div>
