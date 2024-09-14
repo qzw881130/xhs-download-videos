@@ -41,7 +41,6 @@ function DownloadConfig() {
         <div className="download-configd">
             <h2 className="text-xl font-bold mb-4">下载配置</h2>
             <div className="control-panel">
-                <h2>下载视频配置</h2>
                 <div className="form-row">
                     <div className="form-group">
                         <label htmlFor="downloadType">下载类型：</label>
