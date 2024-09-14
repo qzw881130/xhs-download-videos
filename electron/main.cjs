@@ -238,9 +238,9 @@ async function getVideoDetails(vid) {
             try {
                 const mainQuery = 'SELECT * FROM videos WHERE vid = ?';
                 const adjacentQuery = `
-                    SELECT vid, title, created_at FROM videos
-                    WHERE created_at < (SELECT created_at FROM videos WHERE vid = ?)
-                    ORDER BY created_at DESC
+                    SELECT id, vid, title FROM videos
+                    WHERE id < (SELECT id FROM videos WHERE vid = ?)
+                    ORDER BY id DESC
                     LIMIT 5
                 `;
 
