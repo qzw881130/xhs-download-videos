@@ -303,7 +303,7 @@ ipcMain.handle('navigate-video', async (event, currentVid, direction) => {
         if (adjacentVid) {
             return adjacentVid;
         } else {
-            throw new Error(`No ${direction} video found`);
+            return null; // Instead of throwing an error, return null when there's no adjacent video
         }
     } catch (error) {
         console.error(`Error navigating to ${direction} video:`, error);

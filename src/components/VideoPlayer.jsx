@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 
 function VideoPlayer() {
     const [videoDetails, setVideoDetails] = useState(null);
+    const [hasPrevious, setHasPrevious] = useState(true);
+    const [hasNext, setHasNext] = useState(true);
     const { vid } = useParams();
     const navigate = useNavigate();
 
@@ -11,6 +13,7 @@ function VideoPlayer() {
             try {
                 const details = await window.electron.getVideoDetails(vid);
                 setVideoDetails(details);
+                checkAdjacentVideos(vid);
             } catch (error) {
                 console.error('Error fetching video details:', error);
             }
@@ -19,6 +22,19 @@ function VideoPlayer() {
         fetchVideoDetails();
     }, [vid]);
 
+    const checkAdjacentVideos = async (currentVid) => {
+        try {
+            const prevVid = await window.electron.navigateVideo(currentVid, 'prev');
+            const nextVid = await window.electron.navigateVideo(currentVid, 'next');
+            setHasPrevious(!!prevVid);
+            setHasNext(!!nextVid);
+        } catch (error) {
+            console.error('Error checking adjacent videos:', error);
+            setHasPrevious(false);
+            setHasNext(false);
+        }
+    };
+
     if (!videoDetails) {
         return <div>Loading...</div>;
     }
@@ -26,7 +42,9 @@ function VideoPlayer() {
     const handleNavigation = async (direction) => {
         try {
             const newVid = await window.electron.navigateVideo(vid, direction);
-            navigate(`/video-player/${newVid}`);
+            if (newVid) {
+                navigate(`/video-player/${newVid}`);
+            }
         } catch (error) {
             console.error(`Error navigating to ${direction} video:`, error);
             // Optionally, show an error message to the user
@@ -71,14 +89,16 @@ function VideoPlayer() {
                         </div>
                         <div className="flex justify-between mt-auto">
                             <button
-                                className="bg-green-500 text-white px-3 py-1 rounded text-sm"
+                                className={`bg-green-500 text-white px-3 py-1 rounded text-sm ${!hasPrevious ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 onClick={() => handleNavigation('prev')}
+                                disabled={!hasPrevious}
                             >
                                 上一个
                             </button>
                             <button
-                                className="bg-green-500 text-white px-3 py-1 rounded text-sm"
+                                className={`bg-green-500 text-white px-3 py-1 rounded text-sm ${!hasNext ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 onClick={() => handleNavigation('next')}
+                                disabled={!hasNext}
                             >
                                 下一个
                             </button>
