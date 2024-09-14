@@ -80,15 +80,16 @@ async function getVideoDetails(vid) {
     try {
         const mainQuery = 'SELECT * FROM videos WHERE vid = ?';
         const adjacentQuery = `
-            SELECT id, vid, title FROM videos
-            WHERE id < (SELECT id FROM videos WHERE vid = ?)
+            SELECT id, vid, title, type FROM videos
+            WHERE type = (SELECT type FROM videos WHERE vid = ?)
+            AND id < (SELECT id FROM videos WHERE vid = ?)
             ORDER BY id DESC
             LIMIT 10
         `;
 
         const [row, adjacentVideos] = await Promise.all([
             dbGet(db, mainQuery, [vid]),
-            dbAll(db, adjacentQuery, [vid])
+            dbAll(db, adjacentQuery, [vid, vid])
         ]);
 
         if (!row) {
@@ -101,14 +102,14 @@ async function getVideoDetails(vid) {
     }
 }
 
-async function getAdjacentVideo(currentVid, direction) {
+async function getAdjacentVideo(currentVid, direction, type) {
     const db = openDatabase();
     try {
         const query = direction === 'next'
-            ? 'SELECT vid FROM videos WHERE created_at < (SELECT created_at FROM videos WHERE vid = ?) ORDER BY created_at DESC LIMIT 1'
-            : 'SELECT vid FROM videos WHERE created_at > (SELECT created_at FROM videos WHERE vid = ?) ORDER BY created_at ASC LIMIT 1';
+            ? 'SELECT vid FROM videos WHERE type = ? AND id < (SELECT id FROM videos WHERE vid = ? AND type = ?) ORDER BY id DESC LIMIT 1'
+            : 'SELECT vid FROM videos WHERE type = ? AND id > (SELECT id FROM videos WHERE vid = ? AND type = ?) ORDER BY id ASC LIMIT 1';
 
-        const row = await dbGet(db, query, [currentVid]);
+        const row = await dbGet(db, query, [type, currentVid, type]);
         return row ? row.vid : null;
     } finally {
         db.close();

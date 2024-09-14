@@ -10,6 +10,7 @@ function VideoPlayer() {
         const storedAutoPlay = localStorage.getItem('autoPlay');
         return storedAutoPlay === 'true';
     });
+    const [videoType, setVideoType] = useState('liked'); // 添加这行来存储视频类型
 
     const { vid } = useParams();
     const navigate = useNavigate();
@@ -18,9 +19,9 @@ function VideoPlayer() {
         const fetchVideoDetails = async () => {
             try {
                 const details = await window.electron.getVideoDetails(vid);
-                console.log(details);
                 setVideoDetails(details);
-                checkAdjacentVideos(vid);
+                setVideoType(details.type); // 设置视频类型
+                checkAdjacentVideos(vid, details.type);
             } catch (error) {
                 console.error('Error fetching video details:', error);
             }
@@ -38,10 +39,10 @@ function VideoPlayer() {
         localStorage.setItem('autoPlayNext', autoPlayNext);
     }, [autoPlayNext]);
 
-    const checkAdjacentVideos = async (currentVid) => {
+    const checkAdjacentVideos = async (currentVid, type) => {
         try {
-            const prevVid = await window.electron.navigateVideo(currentVid, 'prev');
-            const nextVid = await window.electron.navigateVideo(currentVid, 'next');
+            const prevVid = await window.electron.navigateVideo(currentVid, 'prev', type);
+            const nextVid = await window.electron.navigateVideo(currentVid, 'next', type);
             setHasPrevious(!!prevVid);
             setHasNext(!!nextVid);
         } catch (error) {
@@ -57,7 +58,7 @@ function VideoPlayer() {
 
     const handleNavigation = async (direction) => {
         try {
-            const newVid = await window.electron.navigateVideo(vid, direction);
+            const newVid = await window.electron.navigateVideo(vid, direction, videoType);
             if (newVid) {
                 navigate(`/video-player/${newVid}`);
             }

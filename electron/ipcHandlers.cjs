@@ -68,9 +68,9 @@ function setupIpcHandlers(win) {
         }
     });
 
-    ipcMain.handle('navigate-video', async (event, currentVid, direction) => {
+    ipcMain.handle('navigate-video', async (event, currentVid, direction, type) => {
         try {
-            const adjacentVid = await getAdjacentVideo(currentVid, direction);
+            const adjacentVid = await getAdjacentVideo(currentVid, direction, type);
             return adjacentVid;
         } catch (error) {
             console.error(`Error navigating to ${direction} video:`, error);
