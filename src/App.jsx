@@ -40,7 +40,27 @@ function App() {
                                         isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"
                                     }
                                 >
-                                    喜欢的视频
+                                    我的点赞视频
+                                </NavLink>
+                            </li>
+                            <li>
+                                <NavLink
+                                    to="/collected"
+                                    className={({ isActive }) =>
+                                        isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"
+                                    }
+                                >
+                                    我的收藏视频
+                                </NavLink>
+                            </li>
+                            <li>
+                                <NavLink
+                                    to="/post"
+                                    className={({ isActive }) =>
+                                        isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"
+                                    }
+                                >
+                                    我的视频笔记
                                 </NavLink>
                             </li>
                         </ul>
@@ -51,7 +71,8 @@ function App() {
                         <Route path="/liked" element={<LikedVideos />} />
                         <Route path="/" element={<DownloadConfig />} />
                         <Route path="/liked-videos" element={<FavoriteVideos type="liked" />} />
-                        <Route path="/saved-videos" element={<FavoriteVideos type="saved" />} />
+                        <Route path="/collected-videos" element={<FavoriteVideos type="collected" />} />
+                        <Route path="/post-videos" element={<FavoriteVideos type="post" />} />
                         <Route path="/video-player/:vid" element={<VideoPlayer />} />
                     </Routes>
                 </div>
