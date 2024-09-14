@@ -38,7 +38,8 @@ function DownloadConfig() {
     };
 
     return (
-        <div className="download-config">
+        <div className="download-configd">
+            <h2 className="text-xl font-bold mb-4">下载配置</h2>
             <div className="control-panel">
                 <h2>下载视频配置</h2>
                 <div className="form-row">

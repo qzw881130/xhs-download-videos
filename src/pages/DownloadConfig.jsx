@@ -1,11 +1,18 @@
 import React from 'react';
 import DownloadConfigComponent from '../components/DownloadConfig';
+import StatisticsArea from '../components/StatisticsArea';
 
 function DownloadConfig() {
     return (
         <div className="download-config-page">
-            <h1>下载配置</h1>
-            <DownloadConfigComponent />
+            <div className="flex flex-col space-y-6">
+                <div>
+                    <StatisticsArea />
+                </div>
+                <div>
+                    <DownloadConfigComponent />
+                </div>
+            </div>
         </div>
     );
 }
