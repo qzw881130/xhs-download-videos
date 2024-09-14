@@ -8,4 +8,5 @@ contextBridge.exposeInMainWorld('electron', {
     getLikedVideos: (page, pageSize) => ipcRenderer.invoke('get-liked-videos', page, pageSize),
     openVideoPlayer: (vid) => ipcRenderer.invoke('open-video-player', vid),
     getVideoDetails: (vid) => ipcRenderer.invoke('get-video-details', vid),
+    navigateVideo: (currentVid, direction) => ipcRenderer.invoke('navigate-video', currentVid, direction),
 });

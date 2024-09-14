@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 function VideoPlayer() {
     const [videoDetails, setVideoDetails] = useState(null);
     const { vid } = useParams();
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchVideoDetails = async () => {
@@ -21,6 +22,16 @@ function VideoPlayer() {
     if (!videoDetails) {
         return <div>Loading...</div>;
     }
+
+    const handleNavigation = async (direction) => {
+        try {
+            const newVid = await window.electron.navigateVideo(vid, direction);
+            navigate(`/video-player/${newVid}`);
+        } catch (error) {
+            console.error(`Error navigating to ${direction} video:`, error);
+            // Optionally, show an error message to the user
+        }
+    };
 
     return (
         <div className="video-player p-4 h-screen flex flex-col">
@@ -59,8 +70,18 @@ function VideoPlayer() {
                             </div>
                         </div>
                         <div className="flex justify-between mt-auto">
-                            <button className="bg-green-500 text-white px-3 py-1 rounded text-sm">上一个</button>
-                            <button className="bg-green-500 text-white px-3 py-1 rounded text-sm">下一个</button>
+                            <button
+                                className="bg-green-500 text-white px-3 py-1 rounded text-sm"
+                                onClick={() => handleNavigation('prev')}
+                            >
+                                上一个
+                            </button>
+                            <button
+                                className="bg-green-500 text-white px-3 py-1 rounded text-sm"
+                                onClick={() => handleNavigation('next')}
+                            >
+                                下一个
+                            </button>
                         </div>
                     </div>
                 </div>

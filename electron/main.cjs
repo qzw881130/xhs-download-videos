@@ -270,3 +270,43 @@ ipcMain.handle('get-video-details', async (event, vid) => {
         throw error;
     }
 });
+
+// Add this function to get the next or previous video
+async function getAdjacentVideo(currentVid, direction) {
+    return new Promise((resolve, reject) => {
+        const db = new sqlite3.Database(path.join(__dirname, '..', 'xhs-liked-videos.db'), (err) => {
+            if (err) {
+                reject(`Error opening database: ${err.message}`);
+                return;
+            }
+        });
+
+        const query = direction === 'next'
+            ? 'SELECT vid FROM videos WHERE created_at < (SELECT created_at FROM videos WHERE vid = ?) ORDER BY created_at DESC LIMIT 1'
+            : 'SELECT vid FROM videos WHERE created_at > (SELECT created_at FROM videos WHERE vid = ?) ORDER BY created_at ASC LIMIT 1';
+
+        db.get(query, [currentVid], (err, row) => {
+            db.close();
+            if (err) {
+                reject(`Error querying database: ${err.message}`);
+                return;
+            }
+            resolve(row ? row.vid : null);
+        });
+    });
+}
+
+// Add this IPC handler
+ipcMain.handle('navigate-video', async (event, currentVid, direction) => {
+    try {
+        const adjacentVid = await getAdjacentVideo(currentVid, direction);
+        if (adjacentVid) {
+            return adjacentVid;
+        } else {
+            throw new Error(`No ${direction} video found`);
+        }
+    } catch (error) {
+        console.error(`Error navigating to ${direction} video:`, error);
+        throw error;
+    }
+});
