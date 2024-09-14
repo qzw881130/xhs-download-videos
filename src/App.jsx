@@ -1,7 +1,9 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes, NavLink } from 'react-router-dom';
+import { HashRouter as Router, Route, Routes, NavLink } from 'react-router-dom';
 import LikedVideos from './pages/LikedVideos';
 import DownloadConfig from './pages/DownloadConfig';
+import FavoriteVideos from './components/FavoriteVideos';
+import VideoPlayer from './components/VideoPlayer';
 
 function App() {
     return (
@@ -35,6 +37,9 @@ function App() {
                     <Routes>
                         <Route path="/liked" element={<LikedVideos />} />
                         <Route path="/" element={<DownloadConfig />} />
+                        <Route path="/liked-videos" element={<FavoriteVideos type="liked" />} />
+                        <Route path="/saved-videos" element={<FavoriteVideos type="saved" />} />
+                        <Route path="/video-player/:vid" element={<VideoPlayer />} />
                     </Routes>
                 </div>
             </div>

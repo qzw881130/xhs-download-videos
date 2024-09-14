@@ -6,4 +6,6 @@ contextBridge.exposeInMainWorld('electron', {
     },
     onLogMessage: (callback) => ipcRenderer.on('log-message', (_, message) => callback(message)),
     getLikedVideos: (page, pageSize) => ipcRenderer.invoke('get-liked-videos', page, pageSize),
+    openVideoPlayer: (vid) => ipcRenderer.invoke('open-video-player', vid),
+    getVideoDetails: (vid) => ipcRenderer.invoke('get-video-details', vid),
 });

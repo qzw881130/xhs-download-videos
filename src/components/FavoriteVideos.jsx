@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function FavoriteVideos({ type }) {
     const [videos, setVideos] = useState([]);
@@ -9,6 +10,7 @@ function FavoriteVideos({ type }) {
         pageSize: 20
     });
     const [isLoading, setIsLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchVideos(1);
@@ -35,6 +37,10 @@ function FavoriteVideos({ type }) {
 
     const handleImageError = (e) => {
         e.target.src = 'https://via.placeholder.com/150x200';
+    };
+
+    const handleVideoClick = (vid) => {
+        window.electron.openVideoPlayer(vid);
     };
 
     if (isLoading) {
@@ -67,7 +73,7 @@ function FavoriteVideos({ type }) {
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                         {videos.map((video) => (
-                            <div key={video.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                            <div key={video.id} className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer" onClick={() => handleVideoClick(video.vid)}>
                                 <div className="aspect-[3/4] relative">
                                     <img
                                         src={video.image_src}
