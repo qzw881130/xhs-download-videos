@@ -6,6 +6,8 @@ function VideoPlayer() {
     const [hasPrevious, setHasPrevious] = useState(true);
     const [hasNext, setHasNext] = useState(true);
     const [autoPlayNext, setAutoPlayNext] = useState(false);
+    const [autoPlay, setAutoPlay] = useState(false);
+
     const { vid } = useParams();
     const navigate = useNavigate();
 
@@ -79,15 +81,16 @@ function VideoPlayer() {
                         <video
                             src={videoDetails.video_src}
                             controls
+                            autoPlay={localStorage.getItem('autoPlayNext') === 'true'}
                             className="w-full h-full object-contain"
                             onEnded={() => {
-                                if (autoPlayNext && hasNext) {
+                                if (localStorage.getItem('autoPlayNext') === 'true' && hasNext) {
                                     handleNavigation('next');
                                 } else {
                                     const video = document.querySelector('video');
                                     if (video) {
                                         video.currentTime = 0;
-                                        if (!autoPlayNext) {
+                                        if (localStorage.getItem('autoPlayNext') !== 'true') {
                                             video.play();
                                         }
                                     }
@@ -159,6 +162,21 @@ function VideoPlayer() {
                                     </label>
                                 </div>
                             </div>
+                        </div>
+                        <div className="flex items-center mb-2">
+                            <span className="text-sm">自动播放：</span><label className="inline-flex items-center">
+                                <input
+                                    type="checkbox"
+                                    className="form-checkbox text-blue-600"
+                                    checked={autoPlay}
+                                    onChange={(e) => {
+                                        const newAutoPlay = e.target.checked;
+                                        setAutoPlay(newAutoPlay);
+                                        localStorage.setItem('autoPlay', JSON.stringify(newAutoPlay));
+                                    }}
+                                />
+                                <span className="ml-2 text-sm">启用</span>
+                            </label>
                         </div>
                         <div className="flex justify-between mt-auto">
                             <button
