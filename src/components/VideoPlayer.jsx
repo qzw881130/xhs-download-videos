@@ -11,10 +11,6 @@ function VideoPlayer() {
         return storedAutoPlay === 'true';
     });
 
-    useEffect(() => {
-        localStorage.setItem('autoPlay', autoPlay);
-    }, [autoPlay]);
-
     const { vid } = useParams();
     const navigate = useNavigate();
 
