@@ -21,7 +21,16 @@ function VideoPlayer() {
         };
 
         fetchVideoDetails();
+
+        // Load autoPlayNext from local storage
+        const storedAutoPlayNext = localStorage.getItem('autoPlayNext');
+        setAutoPlayNext(storedAutoPlayNext === 'true');
     }, [vid]);
+
+    useEffect(() => {
+        // Save autoPlayNext to local storage whenever it changes
+        localStorage.setItem('autoPlayNext', autoPlayNext);
+    }, [autoPlayNext]);
 
     const checkAdjacentVideos = async (currentVid) => {
         try {
@@ -67,7 +76,24 @@ function VideoPlayer() {
             <div className="flex mb-2 flex-grow" style={{ minHeight: 0, maxHeight: '60vh' }}>
                 <div className="w-2/3 pr-2">
                     <div className="h-full">
-                        <video src={videoDetails.video_src} controls className="w-full h-full object-contain"></video>
+                        <video
+                            src={videoDetails.video_src}
+                            controls
+                            className="w-full h-full object-contain"
+                            onEnded={() => {
+                                if (autoPlayNext && hasNext) {
+                                    handleNavigation('next');
+                                } else {
+                                    const video = document.querySelector('video');
+                                    if (video) {
+                                        video.currentTime = 0;
+                                        if (!autoPlayNext) {
+                                            video.play();
+                                        }
+                                    }
+                                }
+                            }}
+                        ></video>
                     </div>
                 </div>
                 <div className="w-1/3 bg-gray-100 p-2 rounded flex flex-col justify-between">
@@ -101,7 +127,13 @@ function VideoPlayer() {
                                             name="playMode"
                                             value="loop"
                                             checked={!autoPlayNext}
-                                            onChange={() => setAutoPlayNext(false)}
+                                            onChange={() => {
+                                                setAutoPlayNext(false);
+                                                const video = document.querySelector('video');
+                                                if (video) {
+                                                    video.loop = true;
+                                                }
+                                            }}
                                         />
                                         <span className="ml-2 text-sm">单视频循环</span>
                                     </label>
@@ -112,7 +144,16 @@ function VideoPlayer() {
                                             name="playMode"
                                             value="autoPlay"
                                             checked={autoPlayNext}
-                                            onChange={() => setAutoPlayNext(true)}
+                                            onChange={() => {
+                                                setAutoPlayNext(true);
+                                                const video = document.querySelector('video');
+                                                if (video) {
+                                                    video.loop = false;
+                                                    video.onended = () => {
+                                                        handleNavigation('next');
+                                                    };
+                                                }
+                                            }}
                                         />
                                         <span className="ml-2 text-sm">自动播放下一个</span>
                                     </label>
