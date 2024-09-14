@@ -4,6 +4,7 @@ import LikedVideos from './pages/LikedVideos';
 import DownloadConfig from './pages/DownloadConfig';
 import FavoriteVideos from './components/FavoriteVideos';
 import VideoPlayer from './components/VideoPlayer';
+import AboutPage from './pages/About';  // 修改这里，引入 AboutPage
 import packageInfo from '../package.json';
 
 function Footer() {
@@ -23,6 +24,16 @@ function App() {
                 {!location.hash.startsWith('#/video-player') && (
                     <nav className="bg-gray-800 p-4">
                         <ul className="flex justify-center space-x-8">
+                            <li>
+                                <NavLink
+                                    to="/about"
+                                    className={({ isActive }) =>
+                                        isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"
+                                    }
+                                >
+                                    关于
+                                </NavLink>
+                            </li>
                             <li>
                                 <NavLink
                                     to="/"
@@ -68,8 +79,9 @@ function App() {
                 )}
                 <div className="container mx-auto mt-8 flex-grow">
                     <Routes>
-                        <Route path="/liked" element={<FavoriteVideos type="liked" />} />
+                        <Route path="/about" element={<AboutPage />} />  {/* 修改这里，使用 AboutPage */}
                         <Route path="/" element={<DownloadConfig />} />
+                        <Route path="/liked" element={<FavoriteVideos type="liked" />} />
                         <Route path="/collected" element={<FavoriteVideos type="collected" />} />
                         <Route path="/post" element={<FavoriteVideos type="post" />} />
                         <Route path="/video-player/:vid" element={<VideoPlayer />} />
