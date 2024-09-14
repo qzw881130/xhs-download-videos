@@ -30,7 +30,7 @@ function VideoPlayer() {
                     原链接
                 </a>
             </div>
-            <div className="flex mb-4 flex-grow">
+            <div className="flex mb-4" style={{ height: 'calc(100vh - 200px)' }}>
                 <div className="w-2/3 pr-4">
                     <div className="h-full">
                         <video src={videoDetails.video_src} controls className="w-full h-full object-contain"></video>
@@ -40,10 +40,21 @@ function VideoPlayer() {
                     <div>
                         <h2 className="text-lg font-semibold mb-2">控制面板</h2>
                         <div className="flex justify-between mb-2">
-                            <button className="bg-blue-500 text-white px-2 py-1 rounded">0.5x</button>
-                            <button className="bg-blue-500 text-white px-2 py-1 rounded">1x</button>
-                            <button className="bg-blue-500 text-white px-2 py-1 rounded">1.5x</button>
-                            <button className="bg-blue-500 text-white px-2 py-1 rounded">2x</button>
+                            {[0.5, 1, 1.5, 2].map((rate) => (
+                                <button
+                                    key={rate}
+                                    className={`bg-blue-500 text-white px-2 py-1 rounded ${document.querySelector('video')?.playbackRate === rate ? 'bg-blue-700' : ''}`}
+                                    onClick={() => {
+                                        const video = document.querySelector('video');
+                                        if (video) {
+                                            video.playbackRate = rate;
+                                            setVideoDetails(prev => ({ ...prev, playbackRate: rate }));
+                                        }
+                                    }}
+                                >
+                                    {rate}x
+                                </button>
+                            ))}
                         </div>
                     </div>
                     <div className="flex justify-between">
