@@ -74,7 +74,7 @@ function FavoriteVideos({ type }) {
     const renderPagination = () => (
         <div className="flex items-center space-x-2">
             <button
-                className="px-3 py-1 bg-gray-200 rounded-md"
+                className="px-3 py-1 bg-blue-500 text-white rounded-md"
                 onClick={() => handlePageChange(pagination.currentPage - 1)}
                 disabled={pagination.currentPage === 1}
             >
@@ -104,7 +104,7 @@ function FavoriteVideos({ type }) {
                 ))}
             </select>
             <button
-                className="px-3 py-1 bg-gray-200 rounded-md"
+                className="px-3 py-1 bg-blue-500 text-white rounded-md"
                 onClick={() => handlePageChange(pagination.currentPage + 1)}
                 disabled={pagination.currentPage === pagination.totalPages}
             >
