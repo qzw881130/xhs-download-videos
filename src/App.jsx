@@ -9,30 +9,32 @@ function App() {
     return (
         <Router>
             <div className="App">
-                <nav className="bg-gray-800 p-4">
-                    <ul className="flex justify-center space-x-8">
-                        <li>
-                            <NavLink
-                                to="/"
-                                className={({ isActive }) =>
-                                    isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"
-                                }
-                            >
-                                下载配置
-                            </NavLink>
-                        </li>
-                        <li>
-                            <NavLink
-                                to="/liked"
-                                className={({ isActive }) =>
-                                    isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"
-                                }
-                            >
-                                喜欢的视频
-                            </NavLink>
-                        </li>
-                    </ul>
-                </nav>
+                {!location.hash.startsWith('#/video-player') && (
+                    <nav className="bg-gray-800 p-4">
+                        <ul className="flex justify-center space-x-8">
+                            <li>
+                                <NavLink
+                                    to="/"
+                                    className={({ isActive }) =>
+                                        isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"
+                                    }
+                                >
+                                    下载配置
+                                </NavLink>
+                            </li>
+                            <li>
+                                <NavLink
+                                    to="/liked"
+                                    className={({ isActive }) =>
+                                        isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"
+                                    }
+                                >
+                                    喜欢的视频
+                                </NavLink>
+                            </li>
+                        </ul>
+                    </nav>
+                )}
                 <div className="container mx-auto mt-8">
                     <Routes>
                         <Route path="/liked" element={<LikedVideos />} />
