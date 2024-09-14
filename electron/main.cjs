@@ -13,7 +13,7 @@ function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, 
     const { spawn } = require('child_process');
     const downloaderPath = path.join(__dirname, 'xiaohongshu_downloader.mjs');
 
-    const downloader = spawn('node', [downloaderPath, '--start', startPosition, '--end', endPosition, '--downloadDir', downloadDir, '--dbPath', dbPath, '--type', type]);
+    const downloader = spawn('node', [downloaderPath, '--scrollAttempts', startPosition, '--maxScrollAttempts', endPosition, '--downloadDir', downloadDir, '--dbPath', dbPath, '--type', type]);
 
 
     downloader.stdout.on('data', (data) => {
