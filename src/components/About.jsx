@@ -1,6 +1,8 @@
 import React from 'react';
 import packageInfo from '../../package.json';
 import KofiButton from './KofiButton';
+import wxpay from '@/assets/images/wxpay.jpg';
+import alipay from '@/assets/images/alipay.jpg';
 
 function About() {
     return (
@@ -36,10 +38,10 @@ function About() {
                     <div className="flex justify-around items-center">
                         <div className="flex justify-center items-center space-x-4">
                             <div className="text-center">
-                                <img src="/src/assets/images/wxpay.jpg" alt="微信支付" className="w-1/3 mx-auto" />
+                                <img src={wxpay} alt="微信支付" className="w-1/3 mx-auto" />
                             </div>
                             <div className="text-center">
-                                <img src="/src/assets/images/alipay.jpg" alt="支付宝" className="w-1/5 mx-auto" />
+                                <img src={alipay} alt="支付宝" className="w-1/5 mx-auto" />
                             </div>
                             <div className="text-center">
                                 <KofiButton />

@@ -1,5 +1,5 @@
 import React from 'react';
-const kofi = '/src/assets/images/kofi_bg_tag_white.png';
+import kofi from '@/assets/images/kofi_bg_tag_white.png';
 
 function KofiButton() {
     const onClick = () => {
