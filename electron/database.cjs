@@ -147,13 +147,16 @@ async function getStatistics() {
     }
 }
 
+// 修改 getRandomVideo 函数
 async function getRandomVideo(type) {
-    const db = await getDbConnection();
-    const result = await db.get(
-        'SELECT vid FROM videos WHERE type = ? ORDER BY RANDOM() LIMIT 1',
-        [type]
-    );
-    return result ? result.vid : null;
+    const db = openDatabase(); // 使用 openDatabase 而不是 getDbConnection
+    try {
+        const query = 'SELECT vid FROM videos WHERE type = ? ORDER BY RANDOM() LIMIT 1';
+        const result = await dbGet(db, query, [type]);
+        return result ? result.vid : null;
+    } finally {
+        db.close();
+    }
 }
 
 module.exports = {
