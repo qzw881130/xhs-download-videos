@@ -80,7 +80,8 @@ function setupIpcHandlers(browserWindow) {
 
     ipcMain.handle('get-statistics', async (event) => {
         try {
-            const statistics = await getStatistics();
+            const downloadDir = await getStoredDownloadPath();
+            const statistics = await getStatistics(downloadDir);
             return statistics;
         } catch (error) {
             console.error('Error getting statistics:', error);

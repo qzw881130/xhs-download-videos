@@ -1,6 +1,6 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs').promises;
 const isDev = require('electron-is-dev');
 
 function getDbPath() {
@@ -135,7 +135,7 @@ async function getAdjacentVideo(currentVid, direction, type) {
     }
 }
 
-async function getStatistics() {
+async function getStatistics(downloadDir) {
     const db = openDatabase();
     try {
         const query = `
@@ -148,13 +148,28 @@ async function getStatistics() {
         `;
 
         const row = await dbGet(db, query, []);
+        const storageSize = await calculateStorageSize(downloadDir);
         return {
             ...row,
-            lastUpdateTime: new Date().toISOString()
+            lastUpdateTime: new Date().toISOString(),
+            storageSize
         };
     } finally {
         db.close();
     }
+}
+
+async function calculateStorageSize(downloadDir) {
+    let totalSize = 0;
+    const files = await fs.readdir(downloadDir);
+    for (const file of files) {
+        const filePath = path.join(downloadDir, file);
+        const stats = await fs.stat(filePath);
+        if (stats.isFile()) {
+            totalSize += stats.size;
+        }
+    }
+    return totalSize;
 }
 
 // 修改 getRandomVideo 函数
@@ -169,24 +184,33 @@ async function getRandomVideo(type) {
     }
 }
 
-function ensureDatabaseExists() {
+async function ensureDatabaseExists() {
     const dbPath = getDbPath();
-    if (!fs.existsSync(dbPath)) {
-        console.log('Database file does not exist. Creating new database.');
-        const db = new sqlite3.Database(dbPath, (err) => {
-            if (err) {
-                console.error('Error creating database:', err.message);
-            } else {
-                console.log('New database created successfully');
-                // 在这里可以添加创建表的代码
-            }
-        });
-        db.close();
+    try {
+        await fs.access(dbPath);
+        console.log('Database file exists.');
+    } catch (error) {
+        if (error.code === 'ENOENT') {
+            console.log('Database file does not exist. Creating new database.');
+            const db = new sqlite3.Database(dbPath, (err) => {
+                if (err) {
+                    console.error('Error creating database:', err.message);
+                } else {
+                    console.log('New database created successfully');
+                    // 在这里可以添加创建表的代码
+                }
+            });
+            db.close();
+        } else {
+            console.error('Error checking database file:', error);
+        }
     }
 }
 
-// 在模块开始时调用这个函数
-ensureDatabaseExists();
+// 在模块开始时调用这个函数，但是要用 async IIFE 包裹
+(async () => {
+    await ensureDatabaseExists();
+})();
 
 module.exports = {
     getLikedVideos,

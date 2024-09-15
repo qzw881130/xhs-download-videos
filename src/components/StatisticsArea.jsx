@@ -5,7 +5,8 @@ function StatisticsArea() {
         likedCount: 0,
         collectedCount: 0,
         postCount: 0,
-        lastUpdateTime: new Date().toISOString()
+        lastUpdateTime: new Date().toISOString(),
+        storageSize: 0
     });
 
     useEffect(() => {
@@ -26,6 +27,14 @@ function StatisticsArea() {
         return () => clearInterval(intervalId);
     }, []);
 
+    const formatStorageSize = (bytes) => {
+        if (bytes >= 1024 * 1024 * 1024) {
+            return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+        } else {
+            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+    };
+
     return (
         <div className="statistics-area mb-6">
             <h2 className="text-xl font-bold mb-4 flex justify-between items-center">
@@ -34,7 +43,7 @@ function StatisticsArea() {
                     更新时间: {new Date(statistics.lastUpdateTime).toLocaleString()}
                 </span>
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="bg-white p-4 rounded-lg shadow">
                     <h3 className="text-lg font-semibold mb-2">我的点赞视频</h3>
                     <p className="text-3xl font-bold text-blue-600">
@@ -51,6 +60,12 @@ function StatisticsArea() {
                     <h3 className="text-lg font-semibold mb-2">我的视频笔记</h3>
                     <p className="text-3xl font-bold text-purple-600">
                         <span id="videoNotesCount">{statistics.postCount}</span>
+                    </p>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow">
+                    <h3 className="text-lg font-semibold mb-2">存储大小</h3>
+                    <p className="text-3xl font-bold text-orange-600">
+                        <span id="storageSize">{formatStorageSize(statistics.storageSize)}</span>
                     </p>
                 </div>
             </div>
