@@ -42,7 +42,7 @@ class XiaohongshuDownloader {
         };
         this.deviceId = this.generateDeviceId();
         this.downloadDir = downloadDir || path.join(__dirname, 'downloads');
-        this.dbPath = dbPath || path.join(__dirname, 'xhs-liked-videos.db');
+        this.dbPath = dbPath;
         this.scrollAttempts = scrollAttempts;
         this.maxScrollAttempts = maxScrollAttempts;
         this.type = type;

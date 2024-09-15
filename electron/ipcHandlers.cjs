@@ -2,7 +2,7 @@ const { ipcMain, shell, BrowserWindow, dialog, app } = require('electron');
 const path = require('path');
 const fs = require('fs-extra');  // 请确保安装了 fs-extra 包
 const { spawn } = require('child_process');
-const { getLikedVideos, getVideoDetails, getAdjacentVideo, getStatistics, getRandomVideo } = require('./database.cjs');
+const { getLikedVideos, getVideoDetails, getAdjacentVideo, getStatistics, getRandomVideo, getDbPath } = require('./database.cjs');
 const isDev = require('electron-is-dev');
 
 let win;
@@ -24,7 +24,9 @@ function setupIpcHandlers(browserWindow) {
     ipcMain.handle('get-liked-videos', async (event, page, pageSize, type, keyword) => {
         try {
             const downloadDir = await getStoredDownloadPath();
+            console.log('Attempting to get liked videos');
             const result = await getLikedVideos(page, pageSize, type, keyword);
+            console.log('Successfully got liked videos');
             const modifiedResult = {
                 ...result,
                 videos: result.videos.map(video => ({
@@ -35,7 +37,7 @@ function setupIpcHandlers(browserWindow) {
             console.log('get-liked-videos result:', modifiedResult);
             return modifiedResult;
         } catch (error) {
-            console.error('Error getting liked videos:', error);
+            console.error('Error in get-liked-videos handler:', error);
             throw error;
         }
     });
@@ -111,8 +113,9 @@ function setupIpcHandlers(browserWindow) {
         playerWindow.webContents.openDevTools();
     });
 
-    ipcMain.handle('start-downloader', async (event, startPosition, endPosition, dbPath, type) => {
+    ipcMain.handle('start-downloader', async (event, startPosition, endPosition, type) => {
         const downloadDir = await getStoredDownloadPath();
+        const dbPath = getDbPath();
         xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type);
     });
 

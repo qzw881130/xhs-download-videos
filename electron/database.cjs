@@ -1,14 +1,24 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
+const isDev = require('electron-is-dev');
 
 function getDbPath() {
-    return path.join(__dirname, '..', 'xhs-liked-videos.db');
+    if (isDev) {
+        return path.join(__dirname, '..', 'xhs-liked-videos.db');
+    } else {
+        return path.join(app.getPath('userData'), 'xhs-liked-videos.db');
+    }
 }
 
 function openDatabase() {
-    return new sqlite3.Database(getDbPath(), (err) => {
+    const dbPath = getDbPath();
+    console.log('Attempting to open database at:', dbPath);
+    return new sqlite3.Database(dbPath, (err) => {
         if (err) {
             console.error('Error opening database:', err.message);
+        } else {
+            console.log('Database opened successfully');
         }
     });
 }
@@ -159,10 +169,30 @@ async function getRandomVideo(type) {
     }
 }
 
+function ensureDatabaseExists() {
+    const dbPath = getDbPath();
+    if (!fs.existsSync(dbPath)) {
+        console.log('Database file does not exist. Creating new database.');
+        const db = new sqlite3.Database(dbPath, (err) => {
+            if (err) {
+                console.error('Error creating database:', err.message);
+            } else {
+                console.log('New database created successfully');
+                // 在这里可以添加创建表的代码
+            }
+        });
+        db.close();
+    }
+}
+
+// 在模块开始时调用这个函数
+ensureDatabaseExists();
+
 module.exports = {
     getLikedVideos,
     getVideoDetails,
     getAdjacentVideo,
     getStatistics,
-    getRandomVideo
+    getRandomVideo,
+    getDbPath
 };

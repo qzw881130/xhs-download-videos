@@ -33,12 +33,11 @@ function DownloadConfig() {
     }, []);
 
     const handleStartDownload = async () => {
-        if (window.electron && window.electron.startDownloader) {
-            const dbPath = await window.electron.getStoredDownloadPath();
-            await window.electron.startDownloader(startPosition, endPosition, dbPath, downloadType);
+        try {
+            await window.electron.startDownloader(startPosition, endPosition, downloadType);
             setLogs(prevLogs => [...prevLogs, `开始下载，类型：${downloadType}，从 ${startPosition} 到 ${endPosition}`]);
-        } else {
-            console.error('startDownloader is not available');
+        } catch (error) {
+            console.error('Error starting downloader:', error);
             setLogs(prevLogs => [...prevLogs, '下载功能暂时不可用']);
         }
     };
@@ -73,7 +72,7 @@ function DownloadConfig() {
                         </button>
                     </div>
                 </div>
-                <div className="form-row">
+                <div className="form-row mt-3">
 
                     <div className="form-group">
                         <label htmlFor="downloadType">下载类型：</label>
