@@ -6,6 +6,10 @@ function VideoPlayer() {
     const [hasPrevious, setHasPrevious] = useState(true);
     const [hasNext, setHasNext] = useState(true);
     const [autoPlayNext, setAutoPlayNext] = useState(false);
+    const [randomPlay, setRandomPlay] = useState(() => {
+        const storedRandomPlay = localStorage.getItem('randomPlay');
+        return storedRandomPlay === 'true';
+    });
     const [autoPlay, setAutoPlay] = useState(() => {
         const storedAutoPlay = localStorage.getItem('autoPlay');
         return storedAutoPlay === 'true';
@@ -167,6 +171,39 @@ function VideoPlayer() {
                                             }}
                                         />
                                         <span className="ml-2 text-sm">自动播放下一个</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div className="mb-4">
+                                <span className="text-sm font-medium mb-2 block">播放顺序：</span>
+                                <div className="flex flex-col space-y-2">
+                                    <label className="inline-flex items-center">
+                                        <input
+                                            type="radio"
+                                            className="form-radio text-blue-600"
+                                            name="playOrder"
+                                            value="sequential"
+                                            checked={!randomPlay}
+                                            onChange={() => {
+                                                setRandomPlay(false);
+                                                localStorage.setItem('randomPlay', 'false');
+                                            }}
+                                        />
+                                        <span className="ml-2 text-sm">顺序播放</span>
+                                    </label>
+                                    <label className="inline-flex items-center">
+                                        <input
+                                            type="radio"
+                                            className="form-radio text-blue-600"
+                                            name="playOrder"
+                                            value="random"
+                                            checked={randomPlay}
+                                            onChange={() => {
+                                                setRandomPlay(true);
+                                                localStorage.setItem('randomPlay', 'true');
+                                            }}
+                                        />
+                                        <span className="ml-2 text-sm">随机播放</span>
                                     </label>
                                 </div>
                             </div>
