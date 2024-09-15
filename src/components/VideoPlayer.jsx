@@ -94,6 +94,9 @@ function VideoPlayer() {
                     <span className="ml-2 inline-block px-2 py-1 text-xs font-semibold text-white bg-red-500 rounded">
                         {videoDetails.type}
                     </span>
+                    <span className="ml-2 inline-block px-2 py-1 text-xs font-semibold text-gray-600 bg-gray-200 rounded">
+                        ID: {videoDetails.id}
+                    </span>
                 </h1>
                 <a href={videoDetails.page_url} target="_blank" rel="noopener noreferrer" className="ml-2 px-3 py-2 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-600 transition-colors duration-300">
                     原链接
@@ -240,18 +243,18 @@ function VideoPlayer() {
                         </div>
                         <div className="flex justify-between mt-4 pt-4 border-t border-gray-200">
                             <button
-                                className={`bg-green-500 text-white px-4 py-2 rounded-md text-sm ${!hasPrevious ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-600'}`}
+                                className={`bg-green-500 text-white px-4 py-2 rounded-md text-sm ${(!hasPrevious || randomPlay) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-600'}`}
                                 onClick={() => handleNavigation('prev')}
-                                disabled={!hasPrevious}
+                                disabled={!hasPrevious || randomPlay}
                             >
                                 上一个
                             </button>
                             <button
-                                className={`bg-green-500 text-white px-4 py-2 rounded-md text-sm ${!hasNext ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-600'}`}
-                                onClick={() => handleNavigation('next')}
-                                disabled={!hasNext}
+                                className={`bg-green-500 text-white px-4 py-2 rounded-md text-sm ${randomPlay || hasNext ? 'hover:bg-green-600' : 'opacity-50 cursor-not-allowed'}`}
+                                onClick={() => handleNavigation('next', !!randomPlay)}
+                                disabled={!randomPlay && !hasNext}
                             >
-                                下一个
+                                {randomPlay ? '随机下一个' : '下一个'}
                             </button>
                         </div>
                     </div>
@@ -263,10 +266,10 @@ function VideoPlayer() {
                     {videoDetails.adjacentVideos && videoDetails.adjacentVideos.map((video, index) => (
                         <div
                             key={video.vid}
-                            className={`flex-shrink-0 w-1/6 cursor-pointer ${video.vid === videoDetails.vid ? 'ring-2 ring-blue-500 rounded-lg' : ''}`}
+                            className={`flex-shrink-0 w-1/12 cursor-pointer ${video.vid === videoDetails.vid ? 'ring-2 ring-blue-500 rounded-lg' : ''}`}
                             onClick={() => handleVideoClick(video.vid)}
                         >
-                            <div className="relative pb-[177.78%] mb-2 rounded-lg overflow-hidden">
+                            <div className="relative pb-[88.89%] mb-2 rounded-lg overflow-hidden">
                                 <img
                                     src={video.image_src}
                                     alt={`Thumbnail for ${video.title}`}
