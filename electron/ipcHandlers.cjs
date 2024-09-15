@@ -1,42 +1,35 @@
-const { ipcMain, shell, BrowserWindow } = require('electron');
+const { ipcMain, shell, BrowserWindow, dialog, app } = require('electron');
 const path = require('path');
+const fs = require('fs-extra');  // 请确保安装了 fs-extra 包
 const { spawn } = require('child_process');
 const { getLikedVideos, getVideoDetails, getAdjacentVideo, getStatistics } = require('./database.cjs');
 const isDev = require('electron-is-dev');
 
-function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type) {
-    console.log(`开始下载，从 ${startPosition} 到 ${endPosition}`);
-    const downloaderPath = path.join(__dirname, 'xiaohongshu_downloader.mjs');
+let win;
 
-    const downloader = spawn('node', [downloaderPath, '--scrollAttempts', startPosition, '--maxScrollAttempts', endPosition, '--downloadDir', downloadDir, '--dbPath', dbPath, '--type', type]);
-
-    downloader.stdout.on('data', (data) => {
-        const message = `下载器输出: ${data.toString().trim()}`;
-        console.log(message);
-        // Note: We can't use 'win' here as it's not in scope. We'll need to handle this differently.
-    });
-
-    downloader.stderr.on('data', (data) => {
-        const message = `下载器错误: ${data.toString().trim()}`;
-        console.error(message);
-    });
-
-    downloader.on('close', (code) => {
-        const message = `下载器进程退出，退出码 ${code}`;
-        console.log(message);
-    });
+async function getStoredDownloadPath() {
+    const downloadPathFile = getDownloadPathFile();
+    try {
+        const data = JSON.parse(fs.readFileSync(downloadPathFile, 'utf8'));
+        return data.downloadPath || path.join(app.getPath('userData'), 'downloads');
+    } catch (error) {
+        console.error('Error reading download path file:', error);
+        return path.join(app.getPath('userData'), 'downloads');
+    }
 }
 
-function setupIpcHandlers(win) {
+function setupIpcHandlers(browserWindow) {
+    win = browserWindow;
+
     ipcMain.handle('get-liked-videos', async (event, page, pageSize, type, keyword) => {
         try {
-            const defaultDownloadDir = path.join(__dirname, '..', 'downloads');
+            const downloadDir = await getStoredDownloadPath();
             const result = await getLikedVideos(page, pageSize, type, keyword);
             const modifiedResult = {
                 ...result,
                 videos: result.videos.map(video => ({
                     ...video,
-                    image_src: `local-file://${path.join(defaultDownloadDir, `img_${video.vid}.jpg`).replace(/\\/g, '/')}`
+                    image_src: `local-file://${path.join(downloadDir, `img_${video.vid}.jpg`).replace(/\\/g, '/')}`
                 }))
             };
             console.log('get-liked-videos result:', modifiedResult);
@@ -50,14 +43,14 @@ function setupIpcHandlers(win) {
     ipcMain.handle('get-video-details', async (event, vid) => {
         try {
             const videoDetails = await getVideoDetails(vid);
-            const defaultDownloadDir = path.join(__dirname, '..', 'downloads');
+            const downloadDir = await getStoredDownloadPath();
             const modifiedVideoDetails = {
                 ...videoDetails,
-                image_src: `local-file://${path.join(defaultDownloadDir, `img_${videoDetails.vid}.jpg`).replace(/\\/g, '/')}`,
-                video_src: `local-file://${path.join(defaultDownloadDir, `video_${videoDetails.vid}.mp4`).replace(/\\/g, '/')}`,
+                image_src: `local-file://${path.join(downloadDir, `img_${videoDetails.vid}.jpg`).replace(/\\/g, '/')}`,
+                video_src: `local-file://${path.join(downloadDir, `video_${videoDetails.vid}.mp4`).replace(/\\/g, '/')}`,
                 adjacentVideos: videoDetails.adjacentVideos.map(v => ({
                     ...v,
-                    image_src: `local-file://${path.join(defaultDownloadDir, `img_${v.vid}.jpg`).replace(/\\/g, '/')}`
+                    image_src: `local-file://${path.join(downloadDir, `img_${v.vid}.jpg`).replace(/\\/g, '/')}`
                 }))
             };
             console.log('get-video-details result:', modifiedVideoDetails);
@@ -113,13 +106,82 @@ function setupIpcHandlers(win) {
         playerWindow.webContents.openDevTools();
     });
 
-    ipcMain.on('xiaohongshu-download', (event, startPosition, endPosition, type) => {
-        const defaultDownloadDir = path.join(__dirname, '..', 'downloads');
-        const defaultDbPath = path.join(__dirname, '..', 'xhs-liked-videos.db');
-        const downloadDirectory = defaultDownloadDir;
-        const dbFilePath = defaultDbPath;
-        console.log('params=', { startPosition, endPosition, downloadDirectory, dbFilePath, type })
-        xiaohongshuDownloader(startPosition, endPosition, downloadDirectory, dbFilePath, type);
+    ipcMain.handle('start-downloader', async (event, startPosition, endPosition, dbPath, type) => {
+        const downloadDir = await getStoredDownloadPath();
+        xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type);
+    });
+
+    ipcMain.handle('get-default-download-path', () => {
+        return path.join(app.getPath('userData'), 'downloads');
+    });
+
+    ipcMain.handle('select-directory', async () => {
+        const result = await dialog.showOpenDialog(browserWindow, {
+            properties: ['openDirectory']
+        });
+        if (result.canceled) {
+            return null;
+        } else {
+            return result.filePaths[0];
+        }
+    });
+
+    ipcMain.handle('set-stored-download-path', async (event, newPath) => {
+        ensureDownloadPathFileExists();
+        const downloadPathFile = getDownloadPathFile();
+        let data = { downloadPath: '' };
+        try {
+            data = JSON.parse(fs.readFileSync(downloadPathFile, 'utf8'));
+        } catch (error) {
+            console.error('Error reading download path file:', error);
+        }
+
+        const oldPath = data.downloadPath;
+
+        if (oldPath !== newPath) {
+            try {
+                // 确保新路径存在
+                await fs.ensureDir(newPath);
+
+                // 如果旧路径存在且不为空，则复制文件
+                if (oldPath && fs.existsSync(oldPath)) {
+                    const files = await fs.readdir(oldPath);
+                    for (const file of files) {
+                        if (file.endsWith('.jpg') || file.endsWith('.mp4')) {
+                            const srcPath = path.join(oldPath, file);
+                            const destPath = path.join(newPath, file);
+                            await fs.copy(srcPath, destPath);
+                        }
+                    }
+                    console.log(`Image and video files copied from ${oldPath} to ${newPath}`);
+                }
+
+                // 更新存储的下载路径
+                data.downloadPath = newPath;
+                await fs.writeFile(downloadPathFile, JSON.stringify(data, null, 2));
+                console.log(`Download path updated to ${newPath}`);
+
+                return true;
+            } catch (error) {
+                console.error('Error updating download path:', error);
+                throw error;
+            }
+        } else {
+            console.log('New path is the same as the old path. No changes made.');
+            return false;
+        }
+    });
+
+    ipcMain.handle('get-stored-download-path', () => {
+        ensureDownloadPathFileExists();
+        const downloadPathFile = getDownloadPathFile();
+        try {
+            const data = JSON.parse(fs.readFileSync(downloadPathFile, 'utf8'));
+            return data.downloadPath || null;
+        } catch (error) {
+            console.error('Error reading download path file:', error);
+            return null;
+        }
     });
 
     // Add these event listeners to handle log messages
@@ -128,4 +190,60 @@ function setupIpcHandlers(win) {
     });
 }
 
-module.exports = { setupIpcHandlers };
+function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type) {
+    console.log(`开始下载，从 ${startPosition} 到 ${endPosition}`);
+    const { spawn } = require('child_process');
+    const path = require('path');
+    const downloaderPath = path.join(__dirname, 'xiaohongshu_downloader.mjs');
+
+    const downloader = spawn('node', [downloaderPath, '--scrollAttempts', startPosition, '--maxScrollAttempts', endPosition, '--downloadDir', downloadDir, '--dbPath', dbPath, '--type', type]);
+
+    downloader.stdout.on('data', (data) => {
+        const message = `下载器输出: ${data.toString().trim()}`;
+        console.log(message); // 添加这行来检查消息是否被记录
+        if (win && !win.isDestroyed()) {
+            win.webContents.send('log-message', message);
+        }
+    });
+
+    downloader.stderr.on('data', (data) => {
+        const message = `下载器错误: ${data.toString().trim()}`;
+        console.error(message);
+        if (win && !win.isDestroyed()) {
+            win.webContents.send('log-message', message);
+        }
+    });
+
+    downloader.on('close', (code) => {
+        const message = `下载器进程退出，退出码 ${code}`;
+        console.log(message);
+        if (win && !win.isDestroyed()) {
+            win.webContents.send('log-message', message);
+        }
+    });
+}
+
+function getConfigPath() {
+    return path.join(app.getPath('userData'), 'config.json');
+}
+
+function ensureConfigFileExists() {
+    const configPath = getConfigPath();
+    if (!fs.existsSync(configPath)) {
+        fs.writeFileSync(configPath, JSON.stringify({}, null, 2));
+    }
+}
+
+function getDownloadPathFile() {
+    console.log('Getting download path file', path.join(app.getPath('userData'), 'download_path.json'));
+    return path.join(app.getPath('userData'), 'download_path.json');
+}
+
+function ensureDownloadPathFileExists() {
+    const downloadPathFile = getDownloadPathFile();
+    if (!fs.existsSync(downloadPathFile)) {
+        fs.writeFileSync(downloadPathFile, JSON.stringify({ downloadPath: '' }, null, 2));
+    }
+}
+
+module.exports = { setupIpcHandlers, getStoredDownloadPath };
