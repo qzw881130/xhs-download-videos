@@ -87,7 +87,7 @@ function VideoPlayer() {
     };
 
     return (
-        <div className="video-player p-6 h-screen flex flex-col bg-gray-100 rounded-lg">
+        <div className="video-player p-2 h-screen flex flex-col bg-gray-100 rounded-lg">
             <div className="flex justify-between items-center mb-5 bg-white p-4 rounded-lg shadow-md">
                 <h1 className="text-xl font-bold truncate">
                     {videoDetails.title}
