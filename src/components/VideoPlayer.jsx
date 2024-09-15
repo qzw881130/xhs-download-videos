@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { getRandomInt } from '../utils/helpers'; // 假设我们有一个获取随机整数的辅助函数
 
 function VideoPlayer() {
     const [videoDetails, setVideoDetails] = useState(null);
@@ -60,15 +61,24 @@ function VideoPlayer() {
         return <div>Loading...</div>;
     }
 
-    const handleNavigation = async (direction) => {
+    const handleNavigation = async (direction, randomPlay = false) => {
         try {
-            const newVid = await window.electron.navigateVideo(vid, direction, videoType);
-            if (newVid) {
-                navigate(`/video-player/${newVid}`);
+            let nextVid;
+            if (randomPlay) {
+                // 如果是随机播放，我们请求一个随机的视频
+                nextVid = await window.electron.navigateVideo(videoDetails.vid, 'random', videoType);
+            } else {
+                // 原有的导航逻辑
+                nextVid = await window.electron.navigateVideo(videoDetails.vid, direction, videoType);
+            }
+
+            if (nextVid) {
+                navigate(`/video-player/${nextVid}`);
+            } else {
+                console.log('No more videos in this direction');
             }
         } catch (error) {
-            console.error(`Error navigating to ${direction} video:`, error);
-            // Optionally, show an error message to the user
+            console.error('Error navigating to next video:', error);
         }
     };
 
@@ -79,7 +89,12 @@ function VideoPlayer() {
     return (
         <div className="video-player p-6 h-screen flex flex-col bg-gray-100 rounded-lg">
             <div className="flex justify-between items-center mb-5 bg-white p-4 rounded-lg shadow-md">
-                <h1 className="text-xl font-bold truncate">{videoDetails.title}</h1>
+                <h1 className="text-xl font-bold truncate">
+                    {videoDetails.title}
+                    <span className="ml-2 inline-block px-2 py-1 text-xs font-semibold text-white bg-red-500 rounded">
+                        {videoDetails.type}
+                    </span>
+                </h1>
                 <a href={videoDetails.page_url} target="_blank" rel="noopener noreferrer" className="ml-2 px-3 py-2 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-600 transition-colors duration-300">
                     原链接
                 </a>

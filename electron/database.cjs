@@ -147,9 +147,19 @@ async function getStatistics() {
     }
 }
 
+async function getRandomVideo(type) {
+    const db = await getDbConnection();
+    const result = await db.get(
+        'SELECT vid FROM videos WHERE type = ? ORDER BY RANDOM() LIMIT 1',
+        [type]
+    );
+    return result ? result.vid : null;
+}
+
 module.exports = {
     getLikedVideos,
     getVideoDetails,
     getAdjacentVideo,
-    getStatistics
+    getStatistics,
+    getRandomVideo
 };

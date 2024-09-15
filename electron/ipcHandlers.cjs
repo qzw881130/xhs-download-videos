@@ -2,7 +2,7 @@ const { ipcMain, shell, BrowserWindow, dialog, app } = require('electron');
 const path = require('path');
 const fs = require('fs-extra');  // 请确保安装了 fs-extra 包
 const { spawn } = require('child_process');
-const { getLikedVideos, getVideoDetails, getAdjacentVideo, getStatistics } = require('./database.cjs');
+const { getLikedVideos, getVideoDetails, getAdjacentVideo, getStatistics, getRandomVideo } = require('./database.cjs');
 const isDev = require('electron-is-dev');
 
 let win;
@@ -63,7 +63,12 @@ function setupIpcHandlers(browserWindow) {
 
     ipcMain.handle('navigate-video', async (event, currentVid, direction, type) => {
         try {
-            const adjacentVid = await getAdjacentVideo(currentVid, direction, type);
+            let adjacentVid;
+            if (direction === 'random') {
+                adjacentVid = await getRandomVideo(type);
+            } else {
+                adjacentVid = await getAdjacentVideo(currentVid, direction, type);
+            }
             return adjacentVid;
         } catch (error) {
             console.error(`Error navigating to ${direction} video:`, error);
