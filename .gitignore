@@ -6,3 +6,5 @@ design/
 dist
 .DS_Store
 dist/
+release/
+privateKey.key
