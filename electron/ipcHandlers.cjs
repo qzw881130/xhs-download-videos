@@ -158,10 +158,10 @@ function setupIpcHandlers(browserWindow) {
                         if (file.endsWith('.jpg') || file.endsWith('.mp4')) {
                             const srcPath = path.join(oldPath, file);
                             const destPath = path.join(newPath, file);
-                            await fs.copy(srcPath, destPath);
+                            await fs.move(srcPath, destPath);
                         }
                     }
-                    console.log(`Image and video files copied from ${oldPath} to ${newPath}`);
+                    console.log(`Image and video files moved from ${oldPath} to ${newPath}`);
                 }
 
                 // 更新存储的下载路径

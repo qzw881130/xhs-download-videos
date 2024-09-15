@@ -18,7 +18,7 @@ function openDatabase() {
         if (err) {
             console.error('Error opening database:', err.message);
         } else {
-            console.log('Database opened successfully');
+            console.log('Database opened successfully:', dbPath);
         }
     });
 }

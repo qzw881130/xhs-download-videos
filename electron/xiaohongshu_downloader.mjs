@@ -52,7 +52,7 @@ class XiaohongshuDownloader {
             'post': '笔记'
         };
         this.setupLogging();
-        console.log('downloader=', this);
+        // console.log('downloader=', this);
     }
 
     generateDeviceId() {
