@@ -77,7 +77,7 @@ function FavoriteVideos({ type, language }) {
     const renderPagination = () => (
         <div className="flex items-center space-x-2">
             <button
-                className="px-3 py-1 bg-gray-200 rounded-md"
+                className="px-4 py-1 bg-blue-500 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => handlePageChange(pagination.currentPage - 1)}
                 disabled={pagination.currentPage === 1}
             >
@@ -91,7 +91,7 @@ function FavoriteVideos({ type, language }) {
                     className="w-16 px-2 py-1 border rounded"
                 />
                 <span className="mx-2">/ {pagination.totalPages}</span>
-                <button type="submit" className="px-3 py-1 bg-blue-500 text-white rounded-md">
+                <button type="submit" className="px-4 py-1 bg-blue-500 text-white rounded">
                     {t('jumpTo')}
                 </button>
             </form>
@@ -107,7 +107,7 @@ function FavoriteVideos({ type, language }) {
                 ))}
             </select>
             <button
-                className="px-3 py-1 bg-gray-200 rounded-md"
+                className="px-4 py-1 bg-blue-500 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => handlePageChange(pagination.currentPage + 1)}
                 disabled={pagination.currentPage === pagination.totalPages}
             >
