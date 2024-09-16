@@ -1,20 +1,32 @@
 const { ipcMain, shell, BrowserWindow, dialog, app } = require('electron');
 const path = require('path');
-const fs = require('fs-extra');  // 请确保安装了 fs-extra 包
+const fs = require('fs-extra');
 const { fork } = require('child_process');
 const { getLikedVideos, getVideoDetails, getAdjacentVideo, getStatistics, getRandomVideo, getDbPath } = require('./database.cjs');
 const isDev = require('electron-is-dev');
+const { getTranslation } = require('./i18n.cjs');
 
 let win;
+let currentLanguage = 'zh'; // 默认语言
 
-async function getStoredDownloadPath() {
-    const downloadPathFile = getDownloadPathFile();
+function sendTranslatedMessage(key, params = {}) {
+    const message = getTranslation(currentLanguage, key, params);
+    if (win && !win.isDestroyed()) {
+        win.webContents.send('log-message', message);
+    }
+}
+
+async function getLanguageSetting() {
+    const configPath = getDownloadPathFile();
     try {
-        const data = JSON.parse(fs.readFileSync(downloadPathFile, 'utf8'));
-        return data.downloadPath || path.join(app.getPath('userData'), 'downloads');
+        const data = await fs.readFile(configPath, 'utf8');
+        const config = JSON.parse(data);
+        currentLanguage = config.language || 'zh';
+        return currentLanguage;
     } catch (error) {
-        console.error('Error reading download path file:', error);
-        return path.join(app.getPath('userData'), 'downloads');
+        console.error('Error reading language setting:', error);
+        currentLanguage = 'zh';
+        return currentLanguage;
     }
 }
 
@@ -157,7 +169,7 @@ function setupIpcHandlers(browserWindow) {
                 // 确保新路径存在
                 await fs.ensureDir(newPath);
 
-                // 如果旧路径存在且不为空，则复制文件
+                // 如果旧路径存在且不为空，则复文件
                 if (oldPath && fs.existsSync(oldPath)) {
                     const files = await fs.readdir(oldPath);
                     for (const file of files) {
@@ -244,40 +256,22 @@ function setupIpcHandlers(browserWindow) {
         }
         config.language = language;
         await fs.writeFile(configPath, JSON.stringify(config, null, 2));
+        currentLanguage = language; // 更新当前语言
     });
 
-    ipcMain.handle('get-language-setting', async (event) => {
-        const configPath = getDownloadPathFile();
-        try {
-            const data = await fs.readFile(configPath, 'utf8');
-            const config = JSON.parse(data);
-            return config.language || 'zh'; // 默认返回中文
-        } catch (error) {
-            console.error('Error reading language setting:', error);
-            return 'zh'; // 如果出错，返回默认语言
-        }
+    ipcMain.handle('get-language-setting', async () => {
+        return await getLanguageSetting();
     });
 
 }
 
-async function getLanguageSetting() {
-    const configPath = getDownloadPathFile();
-    try {
-        const data = await fs.readFile(configPath, 'utf8');
-        const config = JSON.parse(data);
-        return config.language || 'zh'; // 默认返回中文
-    } catch (error) {
-        console.error('Error reading language setting:', error);
-        return 'zh'; // 如果出错，返回默认语言
-    }
-}
-
+// 在 xiaohongshuDownloader 函数中使用 sendTranslatedMessage
 async function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type) {
     try {
-        console.log(`开始下载，从 ${startPosition} 到 ${endPosition}`);
+        sendTranslatedMessage('startingDownloader_2', { start: startPosition, end: endPosition });
         const downloaderPath = path.join(__dirname, 'xiaohongshu_downloader.mjs');
 
-        const language = await getLanguageSetting(); // 等待 Promise 解析
+        const language = await getLanguageSetting();
 
         let downloader;
         try {
@@ -288,7 +282,7 @@ async function xiaohongshuDownloader(startPosition, endPosition, downloadDir, db
                 '--dbPath', dbPath,
                 '--type', type,
                 '--userDataPath', app.getPath('userData'),
-                '--language', language // 使用解析后的语言值
+                '--language', language
             ], {
                 env: {
                     ...process.env,
@@ -299,43 +293,25 @@ async function xiaohongshuDownloader(startPosition, endPosition, downloadDir, db
             if (!downloader.pid) {
                 throw new Error('Failed to start downloader process');
             }
-            console.log(`Downloader process started with PID: ${downloader.pid}`);
-            if (win && !win.isDestroyed()) {
-                win.webContents.send('log-message', `Downloader process started successfully with PID: ${downloader.pid}`);
-            }
+            sendTranslatedMessage('downloaderProcessStarted', { pid: downloader.pid });
         } catch (error) {
-            console.error('Error starting downloader:', error.message);
-            if (win && !win.isDestroyed()) {
-                win.webContents.send('log-message', `Error starting downloader: ${error.message}`);
-            }
-            return; // Exit the function if fork fails
+            sendTranslatedMessage('errorStartingDownloader', { error: error.message });
+            return;
         }
 
         downloader.on('message', (message) => {
-            console.log(`下载器输出: ${message}`);
-            if (win && !win.isDestroyed()) {
-                win.webContents.send('log-message', `下载器输出: ${message}`);
-            }
+            sendTranslatedMessage('downloaderOutput', { message });
         });
 
         downloader.on('error', (error) => {
-            console.error(`下载器错误: ${error.message}`);
-            if (win && !win.isDestroyed()) {
-                win.webContents.send('log-message', `下载器错误: ${error.message}`);
-            }
+            sendTranslatedMessage('downloaderError', { error: error.message });
         });
 
         downloader.on('exit', (code, signal) => {
-            const message = `下载器进程退出，退出码 ${code}, 信号 ${signal}`;
-            console.log(message);
-            if (win && !win.isDestroyed()) {
-                win.webContents.send('log-message', message);
-            }
+            sendTranslatedMessage('downloaderProcessExited', { code, signal });
         });
     } catch (err) {
-        if (win && !win.isDestroyed()) {
-            win.webContents.send('log-message', err.message);
-        }
+        sendTranslatedMessage('generalError', { error: err.message });
     }
 }
 
@@ -356,6 +332,18 @@ function ensureDownloadPathFileExists() {
     const downloadPathFile = getDownloadPathFile();
     if (!fs.existsSync(downloadPathFile)) {
         fs.writeFileSync(downloadPathFile, JSON.stringify({ downloadPath: '' }, null, 2));
+    }
+}
+
+async function getStoredDownloadPath() {
+    ensureDownloadPathFileExists();
+    const downloadPathFile = getDownloadPathFile();
+    try {
+        const data = JSON.parse(await fs.readFile(downloadPathFile, 'utf8'));
+        return data.downloadPath || path.join(app.getPath('userData'), 'downloads');
+    } catch (error) {
+        console.error('Error reading download path file:', error);
+        return path.join(app.getPath('userData'), 'downloads');
     }
 }
 

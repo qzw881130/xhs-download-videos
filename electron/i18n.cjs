@@ -131,7 +131,7 @@ const translations = {
     }
 };
 
-export function getTranslation(lang, key, params = {}) {
+function getTranslation(lang, key, params = {}) {
     if (!translations[lang] || !translations[lang][key]) {
         console.warn(`Translation missing for language: ${lang}, key: ${key}`);
         return key;
@@ -142,3 +142,5 @@ export function getTranslation(lang, key, params = {}) {
     });
     return translation;
 }
+
+module.exports = { getTranslation };
