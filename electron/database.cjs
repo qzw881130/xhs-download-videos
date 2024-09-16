@@ -7,7 +7,7 @@ function getDbPath() {
     if (isDev) {
         return path.join(__dirname, '..', 'xhs-liked-videos.db');
     } else {
-        return path.join(app.getPath('userData'), 'xhs-liked-videos.db');
+        return path.join(app.getPath('userData'), 'xhs-liked-videos-prod.db');
     }
 }
 

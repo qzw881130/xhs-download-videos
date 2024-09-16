@@ -23,5 +23,6 @@ contextBridge.exposeInMainWorld('electron', {
     selectDirectory: () => ipcRenderer.invoke('select-directory'),
     setStoredDownloadPath: (path) => ipcRenderer.invoke('set-stored-download-path', path),
     getStoredDownloadPath: () => ipcRenderer.invoke('get-stored-download-path'),
-    getDbPath: () => dbPath,
+    getDbPath: () => ipcRenderer.invoke('get-db-path'),
+    getConfigPath: () => ipcRenderer.invoke('get-config-path') // 新增这一行
 });

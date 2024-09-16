@@ -197,6 +197,16 @@ function setupIpcHandlers(browserWindow) {
     ipcMain.on('log-message', (event, message) => {
         win.webContents.send('log-message', message);
     });
+
+    // 检查是否已经存在 get-config-path 处理程序
+    ipcMain.handle('get-config-path', () => {
+        return getDownloadPathFile();
+    });
+
+    // 假设这个已经存在
+    ipcMain.handle('get-db-path', () => {
+        return getDbPath();
+    });
 }
 
 function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type) {
@@ -232,10 +242,6 @@ function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, 
     });
 }
 
-function getConfigPath() {
-    return path.join(app.getPath('userData'), 'config.json');
-}
-
 function ensureConfigFileExists() {
     const configPath = getConfigPath();
     if (!fs.existsSync(configPath)) {
@@ -244,8 +250,9 @@ function ensureConfigFileExists() {
 }
 
 function getDownloadPathFile() {
-    console.log('Getting download path file', path.join(app.getPath('userData'), 'download_path.json'));
-    return path.join(app.getPath('userData'), 'download_path.json');
+    const configFile = isDev ? 'download_path.json' : 'download_path_prod.json';
+    console.log('Getting download path file', path.join(app.getPath('userData'), configFile));
+    return path.join(app.getPath('userData'), configFile);
 }
 
 function ensureDownloadPathFileExists() {

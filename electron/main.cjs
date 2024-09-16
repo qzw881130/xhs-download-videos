@@ -2,6 +2,7 @@ const { app, BrowserWindow, protocol, shell } = require('electron');
 const path = require('path');
 const isDev = require('electron-is-dev');
 const { setupIpcHandlers, getStoredDownloadPath } = require('./ipcHandlers.cjs');
+require('./ipcHandlers.cjs');  // 确保这行存在，它会加载所有的 IPC 处理程序
 
 console.log('Electron main process starting...');
 

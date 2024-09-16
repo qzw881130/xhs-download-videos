@@ -1,10 +1,29 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import packageInfo from '../../package.json';
 import KofiButton from './KofiButton';
 import wxpay from '@/assets/images/wxpay.jpg';
 import alipay from '@/assets/images/alipay.jpg';
 
 function About() {
+    const [configPath, setConfigPath] = useState('');
+    const [dbPath, setDbPath] = useState('');
+
+    useEffect(() => {
+        async function fetchPaths() {
+            try {
+                const config = await window.electron.getConfigPath();
+                const db = await window.electron.getDbPath();
+                setConfigPath(config);
+                setDbPath(db);
+            } catch (error) {
+                console.error('Error fetching paths:', error);
+                setConfigPath('Error fetching path');
+                setDbPath('Error fetching path');
+            }
+        }
+        fetchPaths();
+    }, []);
+
     return (
         <>
             <div className="about-page bg-white p-8 rounded-lg shadow-md">
@@ -18,6 +37,8 @@ function About() {
                 <div className="mb-6">
                     <h2 className="text-xl font-semibold mb-2">版本信息</h2>
                     <p>当前版本: <span className="font-mono">{packageInfo.version}</span></p>
+                    <p>下载配置文件路径: <span className="font-mono">{configPath}</span></p>
+                    <p>数据库路径: <span className="font-mono">{dbPath}</span></p>
                 </div>
                 <div className="mb-6">
                     <h2 className="text-xl font-semibold mb-2">功能介绍</h2>
@@ -34,7 +55,7 @@ function About() {
                 </div>
                 <div className="mb-6">
                     <h2 className="text-xl font-semibold mb-2">打赏</h2>
-                    <p>如果您觉得这个软件对您有帮助，欢迎打赏作者，您的支持是我最大的动力。</p>
+                    <p>如果您觉得这个软件对您有帮助，欢迎赏作者，您的支持是我最大的动力。</p>
                     <div className="flex justify-around items-center">
                         <div className="flex justify-center items-center space-x-4">
                             <div className="text-center">
