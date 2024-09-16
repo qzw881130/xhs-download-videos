@@ -26,6 +26,19 @@ const translations = {
         Statistics: '统计信息',
         updateTime: '更新时间',
         storageSize: '存储大小',
+        previousPage: '上一页',
+        nextPage: '下一页',
+        jumpTo: '跳转',
+        pageNumber: '第 {number} 页',
+        total: '共',
+        items: '个',
+        searchPlaceholder: '输入关键词搜索',
+        search: '搜索',
+        likedVideos: '我的点赞视频',
+        collectedVideos: '我的收藏视频',
+        postVideos: '我的视频笔记',
+        pageNumberOf: '第 {current} 页，共 {total} 页',
+        pageNumberSimple: '第 {number} 页',
         // ... 添加更多翻译
     },
     en: {
@@ -55,6 +68,19 @@ const translations = {
         Statistics: 'Statistics',
         updateTime: 'Update Time',
         storageSize: 'Storage Size',
+        previousPage: 'Previous',
+        nextPage: 'Next',
+        jumpTo: 'Jump',
+        pageNumber: 'Page {number}',
+        total: 'Total',
+        items: 'items',
+        searchPlaceholder: 'Enter keywords to search',
+        search: 'Search',
+        likedVideos: 'My Liked Videos',
+        collectedVideos: 'My Collected Videos',
+        postVideos: 'My Video Notes',
+        pageNumberOf: 'Page {current} of {total}',
+        pageNumberSimple: 'Page {number}',
         // ... 添加更多翻译
     }
 };
@@ -65,8 +91,13 @@ export function getTranslation(lang, key, params = {}) {
         return key;
     }
     let translation = translations[lang][key];
-    Object.keys(params).forEach(param => {
-        translation = translation.replace(`{${param}}`, params[param]);
+    // Use a single regular expression to replace all placeholders at once
+    translation = translation.replace(/\{(\w+)\}/g, (match, key) => {
+        if (params.hasOwnProperty(key)) {
+            return params[key];
+        }
+        // If the key is not found in params, return the original placeholder
+        return match;
     });
     return translation;
 }

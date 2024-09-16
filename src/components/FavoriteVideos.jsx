@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getTranslation } from '../i18n';
 
-function FavoriteVideos({ type }) {
+function FavoriteVideos({ type, language }) {
+    const t = (key) => getTranslation(language, key);
+
     const [videos, setVideos] = useState([]);
     const [pagination, setPagination] = useState({
         currentPage: 1,
@@ -68,7 +71,7 @@ function FavoriteVideos({ type }) {
     };
 
     if (isLoading) {
-        return <div>Loading...</div>;
+        return <div>{t('loading')}</div>;
     }
 
     const renderPagination = () => (
@@ -78,7 +81,7 @@ function FavoriteVideos({ type }) {
                 onClick={() => handlePageChange(pagination.currentPage - 1)}
                 disabled={pagination.currentPage === 1}
             >
-                上一页
+                {t('previousPage')}
             </button>
             <form onSubmit={handleInputPageSubmit} className="flex items-center">
                 <input
@@ -89,7 +92,7 @@ function FavoriteVideos({ type }) {
                 />
                 <span className="mx-2">/ {pagination.totalPages}</span>
                 <button type="submit" className="px-3 py-1 bg-blue-500 text-white rounded-md">
-                    跳转
+                    {t('jumpTo')}
                 </button>
             </form>
             <select
@@ -99,7 +102,7 @@ function FavoriteVideos({ type }) {
             >
                 {[...Array(pagination.totalPages).keys()].map(i => (
                     <option key={i + 1} value={i + 1}>
-                        第 {i + 1} 页
+                        {t('pageNumberOf', { current: i + 1, total: pagination.totalPages }).replace('{current}', i + 1).replace('{total}', pagination.totalPages)}
                     </option>
                 ))}
             </select>
@@ -108,7 +111,7 @@ function FavoriteVideos({ type }) {
                 onClick={() => handlePageChange(pagination.currentPage + 1)}
                 disabled={pagination.currentPage === pagination.totalPages}
             >
-                下一页
+                {t('nextPage')}
             </button>
         </div>
     );
@@ -117,10 +120,10 @@ function FavoriteVideos({ type }) {
         <div className="favorite-videos">
             <h2 className="text-2xl font-bold mb-4 flex items-center">
                 <span>
-                    {type === 'liked' ? '我的点赞视频' : type === 'collected' ? '我的收藏视频' : '我的视频笔记'}
+                    {t(type + 'Videos')}
                 </span>
                 <span className="ml-2 text-lg font-normal text-gray-600">
-                    (共 {pagination.totalItems} 个)
+                    ({t('total')} {pagination.totalItems} {t('items')})
                 </span>
             </h2>
             <div className="mb-4 flex justify-between items-center">
@@ -129,11 +132,11 @@ function FavoriteVideos({ type }) {
                         type="text"
                         value={keyword}
                         onChange={handleKeywordChange}
-                        placeholder="输入关键词搜索"
+                        placeholder={t('searchPlaceholder')}
                         className="border rounded px-2 py-1 mr-2"
                     />
                     <button type="submit" className="bg-blue-500 text-white px-4 py-1 rounded">
-                        搜索
+                        {t('search')}
                     </button>
                 </form>
                 {renderPagination()}
