@@ -36,7 +36,7 @@ function createWindow() {
 
     loadURL();
 
-    if (isDev) {
+    if (isDev || true) {
         win.webContents.openDevTools();
     }
 
@@ -54,12 +54,19 @@ function createWindow() {
         console.error('Failed to load:', errorCode, errorDescription);
     });
 
-    setupIpcHandlers(win);
+    win.webContents.on('did-finish-load', () => {
+        console.log('Window finished loading, sending test messages');
+        win.webContents.send('log-message', '这是一条来自 main.cjs 的测试消息');
+        win.webContents.send('console-log', '这是一条来自 main.cjs console-log 的测试消息');
+    });
 
     // 添加这行来测试日志功能
     win.webContents.on('did-finish-load', () => {
         win.webContents.send('log-message', 'Window loaded successfully');
     });
+
+    // 在这里调用 setupIpcHandlers，并传入 win 对象
+    setupIpcHandlers(win);
 
     // 添加这些 IPC 监听器
     ipcMain.on('log', (event, message) => {

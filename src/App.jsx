@@ -19,21 +19,26 @@ function Footer() {
 
 function App() {
     useEffect(() => {
+        console.log('Setting up IPC listeners in App.jsx');
+
         const logListener = (message) => {
-            console.log(message);
+            console.log('Received log message:', message);
         };
 
         const errorListener = (message) => {
-            console.error(message);
+            console.error('Received error message:', message);
         };
 
         window.electron.ipcRenderer.on('console-log', logListener);
         window.electron.ipcRenderer.on('console-error', errorListener);
+        window.electron.ipcRenderer.on('log-message', logListener);
 
         // 清理函数
         return () => {
+            console.log('Cleaning up IPC listeners in App.jsx');
             window.electron.ipcRenderer.removeListener('console-log', logListener);
             window.electron.ipcRenderer.removeListener('console-error', errorListener);
+            window.electron.ipcRenderer.removeListener('log-message', logListener);
         };
     }, []);
 

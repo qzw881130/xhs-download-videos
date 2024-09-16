@@ -28,9 +28,14 @@ contextBridge.exposeInMainWorld('electron', {
     log: (message) => ipcRenderer.send('log', message),
     error: (message) => ipcRenderer.send('error', message),
     ipcRenderer: {
-        on: (channel, func) => ipcRenderer.on(channel, (event, ...args) => func(...args)),
+        on: (channel, func) => {
+            console.log(`Setting up listener for channel: ${channel}`);
+            ipcRenderer.on(channel, (event, ...args) => func(...args));
+        },
         send: (channel, data) => ipcRenderer.send(channel, data),
         removeListener: (channel, func) => ipcRenderer.removeListener(channel, func),
         removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel)
     },
 });
+
+console.log('Preload script executed');

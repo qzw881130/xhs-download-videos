@@ -20,6 +20,10 @@ async function getStoredDownloadPath() {
 
 function setupIpcHandlers(browserWindow) {
     win = browserWindow;
+    // 向页面发送测试消息
+    if (win && !win.isDestroyed()) {
+        win.webContents.send('log-message', '这是一条来自 ipcHandlers.cjs 的测试消息');
+    }
 
     ipcMain.handle('get-liked-videos', async (event, page, pageSize, type, keyword) => {
         try {
@@ -225,6 +229,7 @@ function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, 
     const downloaderPath = path.join(__dirname, 'xiaohongshu_downloader.mjs');
 
     const downloader = spawn('node', [downloaderPath, '--scrollAttempts', startPosition, '--maxScrollAttempts', endPosition, '--downloadDir', downloadDir, '--dbPath', dbPath, '--type', type]);
+
 
     downloader.stdout.on('data', (data) => {
         const message = `下载器输出: ${data.toString().trim()}`;
