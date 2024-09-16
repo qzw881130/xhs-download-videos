@@ -1,7 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import '../styles/DownloadConfig.css';
+import { getTranslation } from '../i18n';
+import StatisticsArea from './StatisticsArea';
 
-function DownloadConfig() {
+function DownloadConfig({ language }) {
+    const t = (key) => getTranslation(language, key);
+
     const [downloadType, setDownloadType] = useState('liked');
     const [startPosition, setStartPosition] = useState(0);
     const [endPosition, setEndPosition] = useState(10);
@@ -56,7 +60,7 @@ function DownloadConfig() {
 
     return (
         <div className="download-configd">
-            <h2 className="text-xl font-bold mb-4">下载配置</h2>
+            <h2 className="text-xl font-bold mb-4">{t('downloadConfig')}</h2>
             <div className="control-panel">
                 <div className="form-row  w-2/3">
                     <div className="form-group flex items-center">
@@ -135,10 +139,6 @@ function DownloadConfig() {
                     className="log-textarea"
                     rows="10"
                 />
-            </div>
-            <div>
-                <p>当前下载路径: {downloadPath}</p>
-                <button onClick={handleOpenDirectory}>打开下载目录</button>
             </div>
         </div>
     );

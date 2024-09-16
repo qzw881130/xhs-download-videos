@@ -1,11 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { HashRouter as Router, Route, Routes, NavLink } from 'react-router-dom';
-import LikedVideos from './pages/LikedVideos';
-import DownloadConfig from './pages/DownloadConfig';
 import FavoriteVideos from './components/FavoriteVideos';
 import VideoPlayer from './components/VideoPlayer';
-import AboutPage from './pages/About';  // 修改这里，引入 AboutPage
+import AboutPage from './pages/AboutPage';  // 修改这里，引入 AboutPage
 import packageInfo from '../package.json';
+import DownloadConfigPage from './pages/DownloadConfigPage';
 
 function Footer() {
     return (
@@ -18,6 +17,8 @@ function Footer() {
 }
 
 function App() {
+    const [language, setLanguage] = useState('zh');
+
     useEffect(() => {
         console.log('Setting up IPC listeners in App.jsx');
 
@@ -103,12 +104,12 @@ function App() {
                 )}
                 <div className="container mx-auto mt-8 flex-grow">
                     <Routes>
-                        <Route path="/about" element={<AboutPage />} />  {/* 修改这里，使用 AboutPage */}
-                        <Route path="/" element={<DownloadConfig />} />
-                        <Route path="/liked" element={<FavoriteVideos type="liked" />} />
-                        <Route path="/collected" element={<FavoriteVideos type="collected" />} />
-                        <Route path="/post" element={<FavoriteVideos type="post" />} />
-                        <Route path="/video-player/:vid" element={<VideoPlayer />} />
+                        <Route path="/about" element={<AboutPage language={language} />} />
+                        <Route path="/" element={<DownloadConfigPage language={language} />} />
+                        <Route path="/liked" element={<FavoriteVideos type="liked" language={language} />} />
+                        <Route path="/collected" element={<FavoriteVideos type="collected" language={language} />} />
+                        <Route path="/post" element={<FavoriteVideos type="post" language={language} />} />
+                        <Route path="/video-player/:vid" element={<VideoPlayer language={language} />} />
                     </Routes>
                 </div>
                 <Footer />
