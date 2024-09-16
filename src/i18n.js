@@ -21,6 +21,11 @@ const translations = {
         browserNotSupportVideo: '您的浏览器不支持 HTML5 视频。',
         type: '类型',
         createdAt: '创建时间',
+        startDownloadLog: '开始下载，类型：{type}，从 {start} 到 {end}',
+        downloadUnavailable: '下载功能暂时不可用',
+        Statistics: '统计信息',
+        updateTime: '更新时间',
+        storageSize: '存储大小',
         // ... 添加更多翻译
     },
     en: {
@@ -45,14 +50,23 @@ const translations = {
         browserNotSupportVideo: 'Your browser does not support HTML5 video.',
         type: 'Type',
         createdAt: 'Created At',
+        startDownloadLog: 'Start downloading, type: {type}, from {start} to {end}',
+        downloadUnavailable: 'Download function is temporarily unavailable',
+        Statistics: 'Statistics',
+        updateTime: 'Update Time',
+        storageSize: 'Storage Size',
         // ... 添加更多翻译
     }
 };
 
-export function getTranslation(lang, key) {
+export function getTranslation(lang, key, params = {}) {
     if (!translations[lang] || !translations[lang][key]) {
         console.warn(`Translation missing for language: ${lang}, key: ${key}`);
-        return key; // Return the key itself if translation is missing
+        return key;
     }
-    return translations[lang][key];
+    let translation = translations[lang][key];
+    Object.keys(params).forEach(param => {
+        translation = translation.replace(`{${param}}`, params[param]);
+    });
+    return translation;
 }

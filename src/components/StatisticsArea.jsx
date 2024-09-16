@@ -41,7 +41,7 @@ function StatisticsArea({ language }) {
     return (
         <div className="statistics-area mb-6">
             <h2 className="text-xl font-bold mb-4 flex justify-between items-center">
-                <span>{t('statistics')}</span>
+                <span>{t('Statistics')}</span>
                 <span className="text-sm font-normal">
                     {t('updateTime')}: {new Date(statistics.lastUpdateTime).toLocaleString()}
                 </span>

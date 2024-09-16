@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import '../styles/DownloadConfig.css';
 import { getTranslation } from '../i18n';
-import StatisticsArea from './StatisticsArea';
 
 function DownloadConfig({ language }) {
     const t = (key) => getTranslation(language, key);
@@ -25,12 +24,10 @@ function DownloadConfig({ language }) {
         }
         fetchDownloadPath();
 
-        // 添加日志消息监听器
         window.electron.onLogMessage((message) => {
             setLogs((prevLogs) => [...prevLogs, message + '\n']);
         });
 
-        // 清理函数
         return () => {
             window.electron.removeLogMessageListener();
         };
@@ -39,10 +36,10 @@ function DownloadConfig({ language }) {
     const handleStartDownload = async () => {
         try {
             await window.electron.startDownloader(startPosition, endPosition, downloadType);
-            setLogs(prevLogs => [...prevLogs, `开始下载，类型：${downloadType}，从 ${startPosition} 到 ${endPosition}`]);
+            setLogs(prevLogs => [...prevLogs, t('startDownloadLog', { type: t(downloadType), start: startPosition, end: endPosition })]);
         } catch (error) {
             console.error('Error starting downloader:', error);
-            setLogs(prevLogs => [...prevLogs, '下载功能暂时不可用']);
+            setLogs(prevLogs => [...prevLogs, t('downloadUnavailable')]);
         }
     };
 
@@ -55,14 +52,14 @@ function DownloadConfig({ language }) {
     };
 
     const handleOpenDirectory = async () => {
-        await window.electron.openDirectory();
+        await window.electron.openDirectory(downloadPath);
     };
 
     return (
         <div className="download-configd">
             <h2 className="text-xl font-bold mb-4">{t('downloadConfig')}</h2>
             <div className="control-panel">
-                <div className="form-row  w-2/3">
+                <div className="form-row w-2/3">
                     <div className="form-group flex items-center">
                         <label htmlFor="downloadPath" className="mr-2 whitespace-nowrap">{t('downloadPath')}</label>
                         <input
@@ -79,7 +76,7 @@ function DownloadConfig({ language }) {
                             {t('modify')}
                         </button>
                         <button
-                            onClick={() => window.electron.openDirectory(downloadPath)}
+                            onClick={handleOpenDirectory}
                             className="bg-secondary-300 text-white px-2 py-1 m-1 rounded whitespace-nowrap"
                         >
                             {t('openDownloadDir')}
@@ -87,21 +84,20 @@ function DownloadConfig({ language }) {
                     </div>
                 </div>
                 <div className="form-row mt-3">
-
                     <div className="form-group">
-                        <label htmlFor="downloadType">下载类型：</label>
+                        <label htmlFor="downloadType">{t('downloadType')}</label>
                         <select
                             id="downloadType"
                             value={downloadType}
                             onChange={(e) => setDownloadType(e.target.value)}
                         >
-                            <option value="liked">我的点赞视频</option>
-                            <option value="collected">我的收藏视频</option>
-                            <option value="post">我的笔记视频</option>
+                            <option value="liked">{t('likedVideos')}</option>
+                            <option value="collected">{t('collectedVideos')}</option>
+                            <option value="post">{t('videoNotes')}</option>
                         </select>
                     </div>
                     <div className="form-group">
-                        <label htmlFor="startPosition">开始滚屏位置[0~100]：</label>
+                        <label htmlFor="startPosition">{t('startScrollPosition')}</label>
                         <input
                             type="number"
                             id="startPosition"
@@ -112,7 +108,7 @@ function DownloadConfig({ language }) {
                         />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="endPosition">结束滚屏位置[0~100]：</label>
+                        <label htmlFor="endPosition">{t('endScrollPosition')}</label>
                         <input
                             type="number"
                             id="endPosition"
@@ -125,7 +121,7 @@ function DownloadConfig({ language }) {
                     <div className="form-group">
                         <label>&nbsp;</label>
                         <button onClick={handleStartDownload} className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 m-1 rounded transition duration-300 ease-in-out">
-                            登陆小红书&下载
+                            {t('loginAndDownload')}
                         </button>
                     </div>
                 </div>

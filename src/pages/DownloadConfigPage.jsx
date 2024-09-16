@@ -8,7 +8,6 @@ function DownloadConfigPage({ language }) {
 
     return (
         <div className="download-config-page-container">
-            <h1>{t('downloadConfig')}</h1>
             <StatisticsArea language={language} />
             <DownloadConfig language={language} />
         </div>
