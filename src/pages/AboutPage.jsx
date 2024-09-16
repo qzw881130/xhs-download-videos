@@ -1,10 +1,10 @@
 import React from 'react';
 import AboutComponent from '../components/About';
 
-function AboutPage() {
+function AboutPage({ language }) {
     return (
         <div className="about-page-container">
-            <AboutComponent />
+            <AboutComponent language={language} />
         </div>
     );
 }

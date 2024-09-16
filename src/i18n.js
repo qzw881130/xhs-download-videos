@@ -40,6 +40,30 @@ const translations = {
         pageNumberOf: '第 {current} 页，共 {total} 页',
         pageNumberSimple: '第 {number} 页',
         // ... 添加更多翻译
+
+        // 追加 About 组件的翻译
+        aboutTitle: '关于小红书视频下载器',
+        introduction: '介绍',
+        aboutDescription1: '该软件用于下载"您"在小红书APP的点赞视频、收藏视频、视频笔记。',
+        aboutDescription2: '通过"下载配置"页面，设置下载类型及相关参数，然后点击"下载"按钮，即可下载。',
+        aboutDescription3: '下载的视频会保存到"下载的视频"页面，您可以在这里查看及播放下载的视频。',
+        appInfo: 'APP信息',
+        currentVersion: '当前版本',
+        configPath: '下载配置文件路径',
+        dbPath: '数据库路径',
+        features: '功能介绍',
+        feature1: '下载小红书点赞视频',
+        feature2: '下载小红书收藏视频',
+        feature3: '下载小红书视频笔记',
+        feature4: '视频播放和管理',
+        contact: '联系方式',
+        author: '作者',
+        donate: '打赏',
+        donateDescription: '如果您觉得这个软件对您有帮助，欢迎赏作者，您的支持是我最大的动力。',
+        disclaimer: '免责声明',
+        disclaimerContent: '本软件仅供个人学习和研究使用。用户应遵守相关法律法规，不得将本软件用于任何非法用途。作者不对使用本软件造成的任何损失或法律责任负责。',
+        changelog: '更新日志',
+        changelogEntry: '2024-09-14 V1.0.0 初始版本',
     },
     en: {
         downloadConfig: 'Download Config',
@@ -82,6 +106,31 @@ const translations = {
         pageNumberOf: 'Page {current} of {total}',
         pageNumberSimple: 'Page {number}',
         // ... 添加更多翻译
+
+        // 这里可以添加 About 组件的英文翻译
+        // 如果暂时没有英文翻译，可以先使用中文或者占位符
+        aboutTitle: 'About Xiaohongshu Video Downloader',
+        introduction: 'Introduction',
+        aboutDescription1: 'This software is used to download "your" liked videos, collected videos, and video notes from the Xiaohongshu APP.',
+        aboutDescription2: 'Set the download type and related parameters on the "Download Config" page, then click the "Download" button to start downloading.',
+        aboutDescription3: 'Downloaded videos will be saved to the "Downloaded Videos" page, where you can view and play the downloaded videos.',
+        appInfo: 'APP Information',
+        currentVersion: 'Current Version',
+        configPath: 'Download Config File Path',
+        dbPath: 'Database Path',
+        features: 'Features',
+        feature1: 'Download Xiaohongshu liked videos',
+        feature2: 'Download Xiaohongshu collected videos',
+        feature3: 'Download Xiaohongshu video notes',
+        feature4: 'Video playback and management',
+        contact: 'Contact',
+        author: 'Author',
+        donate: 'Donate',
+        donateDescription: 'If you find this software helpful, feel free to donate to the author. Your support is my greatest motivation.',
+        disclaimer: 'Disclaimer',
+        disclaimerContent: 'This software is for personal learning and research purposes only. Users must comply with relevant laws and regulations and must not use this software for any illegal purposes. The author is not responsible for any losses or legal liabilities caused by using this software.',
+        changelog: 'Changelog',
+        changelogEntry: '2024-09-14 V1.0.0 Initial version',
     }
 };
 
