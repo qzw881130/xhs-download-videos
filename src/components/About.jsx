@@ -35,10 +35,10 @@ function About() {
                     <p>下载的视频会保存到“下载的视频”页面，您可以在这里查看及播放下载的视频。</p>
                 </div>
                 <div className="mb-6">
-                    <h2 className="text-xl font-semibold mb-2">版本信息</h2>
-                    <p>当前版本: <span className="font-mono">{packageInfo.version}</span></p>
-                    <p>下载配置文件路径: <span className="font-mono">{configPath}</span></p>
-                    <p>数据库路径: <span className="font-mono">{dbPath}</span></p>
+                    <h2 className="text-xl font-semibold mb-2">APP信息</h2>
+                    <p>当前版本: <span className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">{packageInfo.version}</span></p>
+                    <p>下载配置文件路径: <span className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">{configPath}</span></p>
+                    <p>数据库路径: <span className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">{dbPath}</span></p>
                 </div>
                 <div className="mb-6">
                     <h2 className="text-xl font-semibold mb-2">功能介绍</h2>
