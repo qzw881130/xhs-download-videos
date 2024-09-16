@@ -220,6 +220,17 @@ function setupIpcHandlers(browserWindow) {
     ipcMain.on('error', (event, message) => {
         win.webContents.send('console-error', message);
     });
+
+    ipcMain.handle('open-directory', async () => {
+        try {
+            const downloadDir = await getStoredDownloadPath();
+            await shell.openPath(downloadDir);
+            return true;
+        } catch (error) {
+            console.error('Error opening directory:', error);
+            return false;
+        }
+    });
 }
 
 function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type) {

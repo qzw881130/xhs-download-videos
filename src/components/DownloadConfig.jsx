@@ -50,6 +50,10 @@ function DownloadConfig() {
         }
     };
 
+    const handleOpenDirectory = async () => {
+        await window.electron.openDirectory();
+    };
+
     return (
         <div className="download-configd">
             <h2 className="text-xl font-bold mb-4">下载配置</h2>
@@ -69,6 +73,12 @@ function DownloadConfig() {
                             className="bg-primary-300 text-white px-2 py-1 m-1 rounded whitespace-nowrap"
                         >
                             修改
+                        </button>
+                        <button
+                            onClick={() => window.electron.openDirectory(downloadPath)}
+                            className="bg-secondary-300 text-white px-2 py-1 m-1 rounded whitespace-nowrap"
+                        >
+                            打开下载目录
                         </button>
                     </div>
                 </div>
@@ -125,6 +135,10 @@ function DownloadConfig() {
                     className="log-textarea"
                     rows="10"
                 />
+            </div>
+            <div>
+                <p>当前下载路径: {downloadPath}</p>
+                <button onClick={handleOpenDirectory}>打开下载目录</button>
             </div>
         </div>
     );
