@@ -1,7 +1,7 @@
 const { ipcMain, shell, BrowserWindow, dialog, app } = require('electron');
 const path = require('path');
 const fs = require('fs-extra');  // 请确保安装了 fs-extra 包
-const { spawn } = require('child_process');
+const { fork } = require('child_process');
 const { getLikedVideos, getVideoDetails, getAdjacentVideo, getStatistics, getRandomVideo, getDbPath } = require('./database.cjs');
 const isDev = require('electron-is-dev');
 
@@ -20,10 +20,6 @@ async function getStoredDownloadPath() {
 
 function setupIpcHandlers(browserWindow) {
     win = browserWindow;
-    // 向页面发送测试消息
-    if (win && !win.isDestroyed()) {
-        win.webContents.send('log-message', '这是一条来自 ipcHandlers.cjs 的测试消息');
-    }
 
     ipcMain.handle('get-liked-videos', async (event, page, pageSize, type, keyword) => {
         try {
@@ -120,6 +116,10 @@ function setupIpcHandlers(browserWindow) {
     });
 
     ipcMain.handle('start-downloader', async (event, startPosition, endPosition, type) => {
+        // 向页面发送测试消息
+        if (win && !win.isDestroyed()) {
+            win.webContents.send('log-message', '这是一条来自 ipcHandlers.cjs [start-downloader]的测试消息');
+        }
         const downloadDir = await getStoredDownloadPath();
         const dbPath = getDbPath();
         xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type);
@@ -223,37 +223,67 @@ function setupIpcHandlers(browserWindow) {
 }
 
 function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type) {
-    console.log(`开始下载，从 ${startPosition} 到 ${endPosition}`);
-    const { spawn } = require('child_process');
-    const path = require('path');
-    const downloaderPath = path.join(__dirname, 'xiaohongshu_downloader.mjs');
+    try {
+        console.log(`开始下载，从 ${startPosition} 到 ${endPosition}`);
+        const downloaderPath = path.join(__dirname, 'xiaohongshu_downloader.mjs');
 
-    const downloader = spawn('node', [downloaderPath, '--scrollAttempts', startPosition, '--maxScrollAttempts', endPosition, '--downloadDir', downloadDir, '--dbPath', dbPath, '--type', type]);
+        let downloader;
+        try {
+            downloader = fork(downloaderPath, [
+                '--scrollAttempts', startPosition,
+                '--maxScrollAttempts', endPosition,
+                '--downloadDir', downloadDir,
+                '--dbPath', dbPath,
+                '--type', type,
+                '--userDataPath', app.getPath('userData')
+            ], {
+                env: {
+                    ...process.env,
+                    ELECTRON_RUN_AS_NODE: '1'
+                }
+            });
 
-
-    downloader.stdout.on('data', (data) => {
-        const message = `下载器输出: ${data.toString().trim()}`;
-        console.log(message); // 添加这行来检查消息是否被记录
-        if (win && !win.isDestroyed()) {
-            win.webContents.send('log-message', message);
+            if (!downloader.pid) {
+                throw new Error('Failed to start downloader process');
+            }
+            console.log(`Downloader process started with PID: ${downloader.pid}`);
+            if (win && !win.isDestroyed()) {
+                win.webContents.send('log-message', `Downloader process started successfully with PID: ${downloader.pid}`);
+            }
+        } catch (error) {
+            console.error('Error starting downloader:', error.message);
+            if (win && !win.isDestroyed()) {
+                win.webContents.send('log-message', `Error starting downloader: ${error.message}`);
+            }
+            return; // Exit the function if fork fails
         }
-    });
 
-    downloader.stderr.on('data', (data) => {
-        const message = `下载器错误: ${data.toString().trim()}`;
-        console.error(message);
-        if (win && !win.isDestroyed()) {
-            win.webContents.send('log-message', message);
-        }
-    });
+        downloader.on('message', (message) => {
+            console.log(`下载器输出: ${message}`);
+            if (win && !win.isDestroyed()) {
+                win.webContents.send('log-message', `下载器输出: ${message}`);
+            }
+        });
 
-    downloader.on('close', (code) => {
-        const message = `下载器进程退出，退出码 ${code}`;
-        console.log(message);
+        downloader.on('error', (error) => {
+            console.error(`下载器错误: ${error.message}`);
+            if (win && !win.isDestroyed()) {
+                win.webContents.send('log-message', `下载器错误: ${error.message}`);
+            }
+        });
+
+        downloader.on('exit', (code, signal) => {
+            const message = `下载器进程退出，退出码 ${code}, 信号 ${signal}`;
+            console.log(message);
+            if (win && !win.isDestroyed()) {
+                win.webContents.send('log-message', message);
+            }
+        });
+    } catch (err) {
         if (win && !win.isDestroyed()) {
-            win.webContents.send('log-message', message);
+            win.webContents.send('log-message', err.message);
         }
-    });
+    }
 }
 
 function ensureConfigFileExists() {

@@ -76,8 +76,7 @@
       "!*.db",
       "!cookie.json",
       "!./release/**/*",
-      "!privateKey.key",
-      "!node_modules/puppeteer-extra-plugin-stealth/evasions/chrome.app"
+      "!privateKey.key"
     ],
     "extraMetadata": {
       "main": "electron/main.cjs"

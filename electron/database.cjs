@@ -240,9 +240,10 @@ async function ensureDatabaseExists() {
             console.log('Database opened successfully');
             try {
                 await initializeDatabase(db);
-                console.log('Database initialized successfully');
+                await updateDatabaseSchema(db);
+                console.log('Database initialized and schema updated successfully');
             } catch (initError) {
-                console.error('Error initializing database:', initError);
+                console.error('Error initializing or updating database:', initError);
             } finally {
                 db.close();
             }
@@ -263,6 +264,9 @@ async function initializeDatabase(db) {
                 vid TEXT UNIQUE,
                 title TEXT,
                 type TEXT,
+                page_url TEXT,
+                video_src TEXT,
+                image_src TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         `, (err) => {
@@ -275,6 +279,23 @@ async function initializeDatabase(db) {
             }
         });
     });
+}
+
+async function updateDatabaseSchema(db) {
+    const columns = ['page_url', 'video_src', 'image_src'];
+    for (const column of columns) {
+        await new Promise((resolve, reject) => {
+            db.run(`ALTER TABLE videos ADD COLUMN ${column} TEXT;`, (err) => {
+                if (err && !err.message.includes('duplicate column name')) {
+                    console.error(`Error adding ${column} column:`, err);
+                    reject(err);
+                } else {
+                    console.log(`Column ${column} added or already exists`);
+                    resolve();
+                }
+            });
+        });
+    }
 }
 
 module.exports = {
