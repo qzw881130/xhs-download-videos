@@ -1,3 +1,4 @@
+const { app } = require('electron');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs').promises;
@@ -138,6 +139,20 @@ async function getAdjacentVideo(currentVid, direction, type) {
 async function getStatistics(downloadDir) {
     const db = openDatabase();
     try {
+        const tableExistsQuery = "SELECT name FROM sqlite_master WHERE type='table' AND name='videos'";
+        const tableExists = await dbGet(db, tableExistsQuery);
+
+        if (!tableExists) {
+            console.log('Videos table does not exist. Returning empty statistics.');
+            return {
+                likedCount: 0,
+                collectedCount: 0,
+                postCount: 0,
+                lastUpdateTime: new Date().toISOString(),
+                storageSize: await calculateStorageSize(downloadDir)
+            };
+        }
+
         const query = `
             SELECT 
                 SUM(CASE WHEN type = 'liked' THEN 1 ELSE 0 END) as likedCount,
@@ -150,8 +165,10 @@ async function getStatistics(downloadDir) {
         const row = await dbGet(db, query, []);
         const storageSize = await calculateStorageSize(downloadDir);
         return {
-            ...row,
-            lastUpdateTime: new Date().toISOString(),
+            likedCount: row.likedCount || 0,
+            collectedCount: row.collectedCount || 0,
+            postCount: row.postCount || 0,
+            lastUpdateTime: row.lastUpdateTime || new Date().toISOString(),
             storageSize
         };
     } finally {
@@ -192,25 +209,55 @@ async function ensureDatabaseExists() {
     } catch (error) {
         if (error.code === 'ENOENT') {
             console.log('Database file does not exist. Creating new database.');
-            const db = new sqlite3.Database(dbPath, (err) => {
-                if (err) {
-                    console.error('Error creating database:', err.message);
-                } else {
-                    console.log('New database created successfully');
-                    // 在这里可以添加创建表的代码
-                }
-            });
-            db.close();
         } else {
             console.error('Error checking database file:', error);
+            return;
         }
     }
+
+    const db = new sqlite3.Database(dbPath, async (err) => {
+        if (err) {
+            console.error('Error opening database:', err.message);
+        } else {
+            console.log('Database opened successfully');
+            try {
+                await initializeDatabase(db);
+                console.log('Database initialized successfully');
+            } catch (initError) {
+                console.error('Error initializing database:', initError);
+            } finally {
+                db.close();
+            }
+        }
+    });
 }
 
 // 在模块开始时调用这个函数，但是要用 async IIFE 包裹
 (async () => {
     await ensureDatabaseExists();
 })();
+
+async function initializeDatabase(db) {
+    return new Promise((resolve, reject) => {
+        db.run(`
+            CREATE TABLE IF NOT EXISTS videos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                vid TEXT UNIQUE,
+                title TEXT,
+                type TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `, (err) => {
+            if (err) {
+                console.error('Error creating videos table:', err);
+                reject(err);
+            } else {
+                console.log('Videos table created or already exists');
+                resolve();
+            }
+        });
+    });
+}
 
 module.exports = {
     getLikedVideos,
