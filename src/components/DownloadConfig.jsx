@@ -64,7 +64,7 @@ function DownloadConfig({ language }) {
             <div className="control-panel">
                 <div className="form-row  w-2/3">
                     <div className="form-group flex items-center">
-                        <label htmlFor="downloadPath" className="mr-2 whitespace-nowrap">下载路径：</label>
+                        <label htmlFor="downloadPath" className="mr-2 whitespace-nowrap">{t('downloadPath')}</label>
                         <input
                             type="text"
                             id="downloadPath"
@@ -76,13 +76,13 @@ function DownloadConfig({ language }) {
                             onClick={handleChangeDownloadPath}
                             className="bg-primary-300 text-white px-2 py-1 m-1 rounded whitespace-nowrap"
                         >
-                            修改
+                            {t('modify')}
                         </button>
                         <button
                             onClick={() => window.electron.openDirectory(downloadPath)}
                             className="bg-secondary-300 text-white px-2 py-1 m-1 rounded whitespace-nowrap"
                         >
-                            打开下载目录
+                            {t('openDownloadDir')}
                         </button>
                     </div>
                 </div>
@@ -131,7 +131,7 @@ function DownloadConfig({ language }) {
                 </div>
             </div>
             <div className="log-area">
-                <h3>下载日志：</h3>
+                <h3>{t('downloadLog')}</h3>
                 <textarea
                     ref={logTextareaRef}
                     value={logs}

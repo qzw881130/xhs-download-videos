@@ -2,15 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { HashRouter as Router, Route, Routes, NavLink } from 'react-router-dom';
 import FavoriteVideos from './components/FavoriteVideos';
 import VideoPlayer from './components/VideoPlayer';
-import AboutPage from './pages/AboutPage';  // 修改这里，引入 AboutPage
+import AboutPage from './pages/AboutPage';
 import packageInfo from '../package.json';
 import DownloadConfigPage from './pages/DownloadConfigPage';
+import { getTranslation } from './i18n';
 
-function Footer() {
+function Footer({ language }) {
+    const t = (key) => getTranslation(language, key);
     return (
         <footer className="bg-gray-800 text-white p-4 mt-8">
             <div className="container mx-auto text-center">
-                <p>Author: <strong className="text-blue-400">qianzhiwei5921@gmail.com</strong> | Version: <strong className="text-green-400">{packageInfo.version}</strong></p>
+                <p>{t('author')}: <strong className="text-blue-400">qianzhiwei5921@gmail.com</strong> | {t('version')}: <strong className="text-green-400">{packageInfo.version}</strong></p>
             </div>
         </footer>
     );
@@ -18,30 +20,44 @@ function Footer() {
 
 function App() {
     const [language, setLanguage] = useState('zh');
+    const [logs, setLogs] = useState([]);
 
     useEffect(() => {
-        console.log('Setting up IPC listeners in App.jsx');
-
-        const logListener = (message) => {
+        // 保留原有的日志监听器代码
+        window.electron.ipcRenderer.on('console-log', (event, message) => {
             console.log('Received log message:', message);
-        };
+            setLogs(prevLogs => [...prevLogs, message]);
+        });
 
-        const errorListener = (message) => {
+        window.electron.ipcRenderer.on('console-error', (event, message) => {
             console.error('Received error message:', message);
-        };
+            setLogs(prevLogs => [...prevLogs, `Error: ${message}`]);
+        });
 
-        window.electron.ipcRenderer.on('console-log', logListener);
-        window.electron.ipcRenderer.on('console-error', errorListener);
-        window.electron.ipcRenderer.on('log-message', logListener);
+        window.electron.ipcRenderer.on('log-message', (event, message) => {
+            console.log('Received log message:', message);
+            setLogs(prevLogs => [...prevLogs, message]);
+        });
+
+        // 添加新的语言设置逻辑
+        const savedLanguage = localStorage.getItem('language') || 'zh';
+        setLanguage(savedLanguage);
 
         // 清理函数
         return () => {
-            console.log('Cleaning up IPC listeners in App.jsx');
-            window.electron.ipcRenderer.removeListener('console-log', logListener);
-            window.electron.ipcRenderer.removeListener('console-error', errorListener);
-            window.electron.ipcRenderer.removeListener('log-message', logListener);
+            window.electron.ipcRenderer.removeAllListeners('console-log');
+            window.electron.ipcRenderer.removeAllListeners('console-error');
+            window.electron.ipcRenderer.removeAllListeners('log-message');
         };
     }, []);
+
+    const handleLanguageChange = (e) => {
+        const newLanguage = e.target.value;
+        setLanguage(newLanguage);
+        localStorage.setItem('language', newLanguage); // 保存语言设置
+    };
+
+    const t = (key) => getTranslation(language, key);
 
     return (
         <Router>
@@ -50,54 +66,39 @@ function App() {
                     <nav className="bg-gray-800 p-4">
                         <ul className="flex justify-center space-x-8">
                             <li>
-                                <NavLink
-                                    to="/about"
-                                    className={({ isActive }) =>
-                                        isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"
-                                    }
-                                >
-                                    关于
+                                <NavLink to="/" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
+                                    {t('downloadConfig')}
                                 </NavLink>
                             </li>
                             <li>
-                                <NavLink
-                                    to="/"
-                                    className={({ isActive }) =>
-                                        isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"
-                                    }
-                                >
-                                    下载配置
+                                <NavLink to="/liked" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
+                                    {t('likedVideos')}
                                 </NavLink>
                             </li>
                             <li>
-                                <NavLink
-                                    to="/liked"
-                                    className={({ isActive }) =>
-                                        isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"
-                                    }
-                                >
-                                    我的点赞视频
+                                <NavLink to="/collected" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
+                                    {t('collectedVideos')}
                                 </NavLink>
                             </li>
                             <li>
-                                <NavLink
-                                    to="/collected"
-                                    className={({ isActive }) =>
-                                        isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"
-                                    }
-                                >
-                                    我的收藏视频
+                                <NavLink to="/post" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
+                                    {t('videoNotes')}
                                 </NavLink>
                             </li>
                             <li>
-                                <NavLink
-                                    to="/post"
-                                    className={({ isActive }) =>
-                                        isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"
-                                    }
-                                >
-                                    我的视频笔记
+                                <NavLink to="/about" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
+                                    {t('about')}
                                 </NavLink>
+                            </li>
+                            <li className="ml-auto absolute right-4 top-4">
+                                <select
+                                    value={language}
+                                    onChange={handleLanguageChange}
+                                    className="bg-gray-700 text-white rounded"
+                                >
+                                    <option value="zh">中文</option>
+                                    <option value="en">English</option>
+                                </select>
                             </li>
                         </ul>
                     </nav>
@@ -112,7 +113,7 @@ function App() {
                         <Route path="/video-player/:vid" element={<VideoPlayer language={language} />} />
                     </Routes>
                 </div>
-                <Footer />
+                <Footer language={language} />
             </div>
         </Router>
     );
