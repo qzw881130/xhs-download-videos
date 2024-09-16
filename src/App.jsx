@@ -51,13 +51,24 @@ function App() {
         };
     }, []);
 
-    const handleLanguageChange = (e) => {
+    const handleLanguageChange = async (e) => {
         const newLanguage = e.target.value;
         setLanguage(newLanguage);
-        localStorage.setItem('language', newLanguage); // 保存语言设置
+        localStorage.setItem('language', newLanguage);
+
+        // 调用 Electron API 保存语言设置到配置文件
+        await window.electron.saveLanguageSetting(newLanguage);
     };
 
     const t = (key) => getTranslation(language, key);
+
+    useEffect(() => {
+        const fetchLanguage = async () => {
+            const savedLanguage = await window.electron.getLanguageSetting();
+            setLanguage(savedLanguage);
+        };
+        fetchLanguage();
+    }, []);
 
     return (
         <Router>

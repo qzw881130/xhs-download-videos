@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import sqlite3 from 'sqlite3';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
+import { getTranslation } from './i18n.mjs';
 
 puppeteer.use(StealthPlugin());
 
@@ -20,7 +21,7 @@ let fetch;
 })();
 
 class XiaohongshuDownloader {
-    constructor(scrollAttempts = 0, maxScrollAttempts = 200, type, downloadDir, dbPath, userDataPath) {
+    constructor(scrollAttempts = 0, maxScrollAttempts = 200, type, downloadDir, dbPath, userDataPath, language) {
         this.baseUrl = 'https://www.xiaohongshu.com';
         this.loginUrl = `${this.baseUrl}/login`;
         this.likedNotesUrl = `${this.baseUrl}/user/profile/liked`;
@@ -54,6 +55,7 @@ class XiaohongshuDownloader {
         this.setupLogging();
         this.userDataPath = userDataPath;
         this.cookiesPath = path.join(this.userDataPath, 'cookies.json');
+        this.language = language; // 使用传入的语言参数
     }
 
     generateDeviceId() {
@@ -160,6 +162,8 @@ class XiaohongshuDownloader {
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );
         `);
+
+        process.send('Database opened successfully');
     }
 
     // 设置日志输出函数
@@ -211,7 +215,7 @@ class XiaohongshuDownloader {
             process.send('等待页面加载...');
             await this.page.waitForFunction(() => document.readyState === 'complete');
 
-            // 调用新的方法来替换个人信息
+            // 调用新的方法来替换个人信
             await this.replacePersonalInfoWithAsterisks();
 
             // 点击目标标签
@@ -499,7 +503,7 @@ class XiaohongshuDownloader {
                         const sections = document.querySelectorAll(`.tab-content-item:nth-child(${tabIndex + 1}) .feeds-container section:not(.done)`);
                         sections.forEach(section => section.classList.add('done'));
                     }, tabIndex);
-                    process.send(`已标记第 ${i + 1} 次滚动加载的��容为已处理`);
+                    process.send(`已标记第 ${i + 1} 次滚动加载的容为已处理`);
                 }
             }
 
@@ -654,6 +658,10 @@ class XiaohongshuDownloader {
             });
         });
     }
+
+    t(key, params = {}) {
+        return getTranslation(this.language, key, params);
+    }
 }
 
 // 解析命令行参数
@@ -694,6 +702,12 @@ const argv = yargs(hideBin(process.argv))
         type: 'string',
         required: true
     })
+    .option('language', {
+        alias: 'l',
+        description: '语言设置',
+        type: 'string',
+        default: 'zh'
+    })
     .argv;
 
 const downloader = new XiaohongshuDownloader(
@@ -702,6 +716,7 @@ const downloader = new XiaohongshuDownloader(
     argv.type,
     argv.downloadDir,
     argv.dbPath,
-    argv.userDataPath
+    argv.userDataPath,
+    argv.language
 );
 downloader.run().catch(error => process.send(`Error: ${error.message}`));

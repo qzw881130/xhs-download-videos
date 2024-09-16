@@ -37,6 +37,8 @@ contextBridge.exposeInMainWorld('electron', {
         removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel)
     },
     openDirectory: () => ipcRenderer.invoke('open-directory'),
+    saveLanguageSetting: (language) => ipcRenderer.invoke('save-language-setting', language),
+    getLanguageSetting: () => ipcRenderer.invoke('get-language-setting'),
 });
 
 console.log('Preload script executed');
