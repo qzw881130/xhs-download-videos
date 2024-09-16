@@ -55,14 +55,14 @@ function createWindow() {
     });
 
     win.webContents.on('did-finish-load', () => {
-        console.log('Window finished loading, sending test messages');
-        win.webContents.send('log-message', '这是一条来自 main.cjs 的测试消息');
-        win.webContents.send('console-log', '这是一条来自 main.cjs console-log 的测试消息');
+        // console.log('Window finished loading, sending test messages');
+        // win.webContents.send('log-message', '这是一条来自 main.cjs 的测试消息');
+        // win.webContents.send('console-log', '这是一条来自 main.cjs console-log 的测试消息');
     });
 
     // 添加这行来测试日志功能
     win.webContents.on('did-finish-load', () => {
-        win.webContents.send('log-message', 'Window loaded successfully');
+        // win.webContents.send('log-message', 'Window loaded successfully');
     });
 
     // 在这里调用 setupIpcHandlers，并传入 win 对象

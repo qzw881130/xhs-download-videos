@@ -23,7 +23,7 @@ function DownloadConfig() {
 
         // 添加日志消息监听器
         window.electron.onLogMessage((message) => {
-            setLogs((prevLogs) => [...prevLogs, message]);
+            setLogs((prevLogs) => [...prevLogs, message + '\n']);
         });
 
         // 清理函数

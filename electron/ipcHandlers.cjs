@@ -117,9 +117,9 @@ function setupIpcHandlers(browserWindow) {
 
     ipcMain.handle('start-downloader', async (event, startPosition, endPosition, type) => {
         // 向页面发送测试消息
-        if (win && !win.isDestroyed()) {
-            win.webContents.send('log-message', '这是一条来自 ipcHandlers.cjs [start-downloader]的测试消息');
-        }
+        // if (win && !win.isDestroyed()) {
+        //     win.webContents.send('log-message', '这是一条来自 ipcHandlers.cjs [start-downloader]的测试消息');
+        // }
         const downloadDir = await getStoredDownloadPath();
         const dbPath = getDbPath();
         xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type);
