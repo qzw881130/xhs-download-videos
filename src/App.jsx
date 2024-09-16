@@ -24,17 +24,17 @@ function App() {
 
     useEffect(() => {
         // 保留原有的日志监听器代码
-        window.electron.ipcRenderer.on('console-log', (event, message) => {
+        window.electron.ipcRenderer.on('console-log', (message) => {
             console.log('Received log message:', message);
             setLogs(prevLogs => [...prevLogs, message]);
         });
 
-        window.electron.ipcRenderer.on('console-error', (event, message) => {
+        window.electron.ipcRenderer.on('console-error', (message) => {
             console.error('Received error message:', message);
             setLogs(prevLogs => [...prevLogs, `Error: ${message}`]);
         });
 
-        window.electron.ipcRenderer.on('log-message', (event, message) => {
+        window.electron.ipcRenderer.on('log-message', (message) => {
             console.log('Received log message:', message);
             setLogs(prevLogs => [...prevLogs, message]);
         });
