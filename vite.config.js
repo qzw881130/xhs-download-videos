@@ -4,11 +4,6 @@ import path from 'path';
 
 export default defineConfig({
     plugins: [react()],
-    server: {
-        port: 5173,
-        strictPort: true,
-        cors: true
-    },
     build: {
         outDir: 'dist',
         assetsDir: 'assets',

@@ -207,9 +207,12 @@ class XiaohongshuDownloader {
                 throw new Error('无法获取个人主页链接');
             }
 
-            // 增加等待时间
+            // 等待页面完全加载
             process.send('等待页面加载...');
-            await this.wait(10000);  // 增加到10秒
+            await this.page.waitForFunction(() => document.readyState === 'complete');
+
+            // 调用新的方法来替换个人信息
+            await this.replacePersonalInfoWithAsterisks();
 
             // 点击目标标签
             await this.clickTab();
@@ -221,6 +224,36 @@ class XiaohongshuDownloader {
             process.send(`登录过程中出错: ${error.message}`);
             throw error;
         }
+    }
+
+    async replacePersonalInfoWithAsterisks() {
+        await this.page.evaluate(() => {
+            const replaceTextWithAsterisks = (element) => {
+                if (element.childNodes.length === 0) {
+                    element.textContent = '*'.repeat(element.textContent.length);
+                } else {
+                    element.childNodes.forEach(child => {
+                        if (child.nodeType === Node.TEXT_NODE) {
+                            child.textContent = '*'.repeat(child.textContent.length);
+                        } else if (child.nodeType === Node.ELEMENT_NODE) {
+                            replaceTextWithAsterisks(child);
+                        }
+                    });
+                }
+            };
+
+            const basicInfo = document.querySelector('.basic-info');
+            if (basicInfo) {
+                replaceTextWithAsterisks(basicInfo);
+            }
+
+            const userDesc = document.querySelector('.user-desc');
+            if (userDesc) {
+                replaceTextWithAsterisks(userDesc);
+            }
+        });
+
+        process.send('个人信息已被替换为星号');
     }
 
     async clickTab() {
@@ -466,7 +499,7 @@ class XiaohongshuDownloader {
                         const sections = document.querySelectorAll(`.tab-content-item:nth-child(${tabIndex + 1}) .feeds-container section:not(.done)`);
                         sections.forEach(section => section.classList.add('done'));
                     }, tabIndex);
-                    process.send(`已标记第 ${i + 1} 次滚动加载的内容为已处理`);
+                    process.send(`已标记第 ${i + 1} 次滚动加载的��容为已处理`);
                 }
             }
 
@@ -485,6 +518,15 @@ class XiaohongshuDownloader {
 
             for (let i = 0; i < sections.length; i++) {
                 const section = sections[i];
+                const hasPlayIcon = await section.$('span.play-icon');
+                if (!hasPlayIcon) {
+                    // 将section元素从页面移出
+                    await this.page.evaluate((el) => {
+                        el.remove();
+                    }, section);
+                    process.send(`跳过第 ${i + 1} 个项目：没有找到 play-icon，可能不是视频`);
+                    continue;
+                }
                 try {
                     const videoUrl = await section.$eval('a.cover', el => el.href);
                     process.send(`处理视频 ${i + 1}: ${videoUrl}`);
@@ -500,6 +542,7 @@ class XiaohongshuDownloader {
                     // 标记已处理的项目
                     await this.page.evaluate((el) => {
                         el.classList.add('done');
+                        el.remove();
                     }, section);
 
                 } catch (error) {

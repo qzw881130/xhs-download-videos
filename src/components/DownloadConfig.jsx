@@ -111,7 +111,7 @@ function DownloadConfig() {
                     <div className="form-group">
                         <label>&nbsp;</label>
                         <button onClick={handleStartDownload} className="bg-blue-500 text-white px-4 py-2 rounded">
-                            开始下载
+                            登陆小红书&下载
                         </button>
                     </div>
                 </div>
