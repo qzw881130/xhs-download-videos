@@ -1,4 +1,4 @@
-const { app, BrowserWindow, protocol, shell } = require('electron');
+const { app, BrowserWindow, protocol, shell, ipcMain } = require('electron');
 const path = require('path');
 const isDev = require('electron-is-dev');
 const { setupIpcHandlers, getStoredDownloadPath } = require('./ipcHandlers.cjs');
@@ -15,7 +15,7 @@ function createWindow() {
         height: 1000,
         minWidth: 800,
         webPreferences: {
-            nodeIntegration: true,
+            nodeIntegration: false,
             contextIsolation: true,
             preload: path.join(__dirname, 'preload.js')
         },
@@ -59,6 +59,15 @@ function createWindow() {
     // 添加这行来测试日志功能
     win.webContents.on('did-finish-load', () => {
         win.webContents.send('log-message', 'Window loaded successfully');
+    });
+
+    // 添加这些 IPC 监听器
+    ipcMain.on('log', (event, message) => {
+        win.webContents.send('console-log', message);
+    });
+
+    ipcMain.on('error', (event, message) => {
+        win.webContents.send('console-error', message);
     });
 }
 

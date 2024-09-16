@@ -24,5 +24,13 @@ contextBridge.exposeInMainWorld('electron', {
     setStoredDownloadPath: (path) => ipcRenderer.invoke('set-stored-download-path', path),
     getStoredDownloadPath: () => ipcRenderer.invoke('get-stored-download-path'),
     getDbPath: () => ipcRenderer.invoke('get-db-path'),
-    getConfigPath: () => ipcRenderer.invoke('get-config-path') // 新增这一行
+    getConfigPath: () => ipcRenderer.invoke('get-config-path'), // 新增这一行
+    log: (message) => ipcRenderer.send('log', message),
+    error: (message) => ipcRenderer.send('error', message),
+    ipcRenderer: {
+        on: (channel, func) => ipcRenderer.on(channel, (event, ...args) => func(...args)),
+        send: (channel, data) => ipcRenderer.send(channel, data),
+        removeListener: (channel, func) => ipcRenderer.removeListener(channel, func),
+        removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel)
+    },
 });

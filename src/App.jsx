@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { HashRouter as Router, Route, Routes, NavLink } from 'react-router-dom';
 import LikedVideos from './pages/LikedVideos';
 import DownloadConfig from './pages/DownloadConfig';
@@ -18,6 +18,25 @@ function Footer() {
 }
 
 function App() {
+    useEffect(() => {
+        const logListener = (message) => {
+            console.log(message);
+        };
+
+        const errorListener = (message) => {
+            console.error(message);
+        };
+
+        window.electron.ipcRenderer.on('console-log', logListener);
+        window.electron.ipcRenderer.on('console-error', errorListener);
+
+        // 清理函数
+        return () => {
+            window.electron.ipcRenderer.removeListener('console-log', logListener);
+            window.electron.ipcRenderer.removeListener('console-error', errorListener);
+        };
+    }, []);
+
     return (
         <Router>
             <div className="App flex flex-col min-h-screen">

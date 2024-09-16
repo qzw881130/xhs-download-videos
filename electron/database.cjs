@@ -1,7 +1,7 @@
 const { app } = require('electron');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
-const fs = require('fs').promises;
+const fs = require('fs-extra');  // 改为 fs-extra
 const isDev = require('electron-is-dev');
 
 function getDbPath() {
@@ -12,14 +12,22 @@ function getDbPath() {
     }
 }
 
+function log(message) {
+    console.log(message);
+}
+
+function error(message) {
+    console.error(message);
+}
+
 function openDatabase() {
     const dbPath = getDbPath();
-    console.log('Attempting to open database at:', dbPath);
+    log(`Attempting to open database at: ${dbPath}`);
     return new sqlite3.Database(dbPath, (err) => {
         if (err) {
-            console.error('Error opening database:', err.message);
+            error(`Error opening database: ${err.message}`);
         } else {
-            console.log('Database opened successfully:', dbPath);
+            log(`Database opened successfully: ${dbPath}`);
         }
     });
 }
@@ -143,7 +151,7 @@ async function getStatistics(downloadDir) {
         const tableExists = await dbGet(db, tableExistsQuery);
 
         if (!tableExists) {
-            console.log('Videos table does not exist. Returning empty statistics.');
+            log('Videos table does not exist. Returning empty statistics.');
             return {
                 likedCount: 0,
                 collectedCount: 0,
@@ -171,6 +179,9 @@ async function getStatistics(downloadDir) {
             lastUpdateTime: row.lastUpdateTime || new Date().toISOString(),
             storageSize
         };
+    } catch (err) {
+        error(`Error getting statistics: ${err.message}`);
+        throw err;
     } finally {
         db.close();
     }
@@ -178,13 +189,20 @@ async function getStatistics(downloadDir) {
 
 async function calculateStorageSize(downloadDir) {
     let totalSize = 0;
-    const files = await fs.readdir(downloadDir);
-    for (const file of files) {
-        const filePath = path.join(downloadDir, file);
-        const stats = await fs.stat(filePath);
-        if (stats.isFile()) {
-            totalSize += stats.size;
+    try {
+        // 确保目录存在
+        await fs.ensureDir(downloadDir);
+
+        const files = await fs.readdir(downloadDir);
+        for (const file of files) {
+            const filePath = path.join(downloadDir, file);
+            const stats = await fs.stat(filePath);
+            if (stats.isFile()) {
+                totalSize += stats.size;
+            }
         }
+    } catch (error) {
+        console.error(`Error calculating storage size: ${error.message}`);
     }
     return totalSize;
 }

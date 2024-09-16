@@ -85,6 +85,7 @@ function setupIpcHandlers(browserWindow) {
             return statistics;
         } catch (error) {
             console.error('Error getting statistics:', error);
+            win.webContents.send('console-error', `Error getting statistics: ${error.message}`);
             throw error;
         }
     });
@@ -206,6 +207,14 @@ function setupIpcHandlers(browserWindow) {
     // 假设这个已经存在
     ipcMain.handle('get-db-path', () => {
         return getDbPath();
+    });
+
+    ipcMain.on('log', (event, message) => {
+        win.webContents.send('console-log', message);
+    });
+
+    ipcMain.on('error', (event, message) => {
+        win.webContents.send('console-error', message);
     });
 }
 
