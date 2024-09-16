@@ -122,7 +122,7 @@ function setupIpcHandlers(browserWindow) {
         // }
         const downloadDir = await getStoredDownloadPath();
         const dbPath = getDbPath();
-        xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type);
+        await xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type);
     });
 
     ipcMain.handle('get-default-download-path', () => {
@@ -258,31 +258,6 @@ function setupIpcHandlers(browserWindow) {
         }
     });
 
-    // 添加新的语言设置相关的处理程序
-    ipcMain.handle('save-language-setting', async (event, language) => {
-        const configPath = getDownloadPathFile();
-        let config = {};
-        try {
-            const data = await fs.readFile(configPath, 'utf8');
-            config = JSON.parse(data);
-        } catch (error) {
-            // 如果文件不存在或解析失败，使用空对象
-        }
-        config.language = language;
-        await fs.writeFile(configPath, JSON.stringify(config, null, 2));
-    });
-
-    ipcMain.handle('get-language-setting', async (event) => {
-        const configPath = getDownloadPathFile();
-        try {
-            const data = await fs.readFile(configPath, 'utf8');
-            const config = JSON.parse(data);
-            return config.language || 'zh'; // 默认返回中文
-        } catch (error) {
-            console.error('Error reading language setting:', error);
-            return 'zh'; // 如果出错，返回默认语言
-        }
-    });
 }
 
 async function getLanguageSetting() {
@@ -297,10 +272,12 @@ async function getLanguageSetting() {
     }
 }
 
-function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type) {
+async function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type) {
     try {
         console.log(`开始下载，从 ${startPosition} 到 ${endPosition}`);
         const downloaderPath = path.join(__dirname, 'xiaohongshu_downloader.mjs');
+
+        const language = await getLanguageSetting(); // 等待 Promise 解析
 
         let downloader;
         try {
@@ -311,7 +288,7 @@ function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, 
                 '--dbPath', dbPath,
                 '--type', type,
                 '--userDataPath', app.getPath('userData'),
-                '--language', getLanguageSetting() // 添加语言参数
+                '--language', language // 使用解析后的语言值
             ], {
                 env: {
                     ...process.env,
