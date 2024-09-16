@@ -54,19 +54,19 @@ function DownloadConfig() {
         <div className="download-configd">
             <h2 className="text-xl font-bold mb-4">下载配置</h2>
             <div className="control-panel">
-                <div className="form-row">
+                <div className="form-row  w-2/3">
                     <div className="form-group flex items-center">
                         <label htmlFor="downloadPath" className="mr-2 whitespace-nowrap">下载路径：</label>
                         <input
                             type="text"
                             id="downloadPath"
                             value={downloadPath}
-                            onChange={(e) => setDownloadPath(e.target.value)}
+                            readOnly
                             className="flex-grow mr-2"
                         />
                         <button
                             onClick={handleChangeDownloadPath}
-                            className="bg-gray-300 text-black px-2 py-1 rounded whitespace-nowrap"
+                            className="bg-primary-300 text-white px-2 py-1 m-1 rounded whitespace-nowrap"
                         >
                             修改
                         </button>
@@ -110,7 +110,7 @@ function DownloadConfig() {
                     </div>
                     <div className="form-group">
                         <label>&nbsp;</label>
-                        <button onClick={handleStartDownload} className="bg-blue-500 text-white px-4 py-2 rounded">
+                        <button onClick={handleStartDownload} className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 m-1 rounded transition duration-300 ease-in-out">
                             登陆小红书&下载
                         </button>
                     </div>
