@@ -1,15 +1,18 @@
 name: Release
 
-# on:
-#   release:
-#     types:
-#       - created
 on:
-  push:
+  release:
+    types:
+      - created
     branches:
       - dev
-    tags:
-      - 'v*.*.*'
+
+# on:
+#   push:
+#     branches:
+#       - dev
+#     tags:
+#       - 'v*.*.*'
 
 jobs:
 
