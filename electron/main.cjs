@@ -4,6 +4,7 @@ const isDev = require('electron-is-dev');
 const { setupIpcHandlers, getStoredDownloadPath } = require('./ipcHandlers.cjs');
 require('./ipcHandlers.cjs');  // 确保这行存在，它会加载所有的 IPC 处理程序
 
+const { fork } = require('child_process');
 console.log('Electron main process starting...');
 
 let win;
@@ -92,6 +93,7 @@ app.whenReady().then(async () => {
 });
 
 app.on('ready', () => {
+    installPuppeteer();
     console.log('App is ready');
     createWindow();
 });
@@ -115,3 +117,20 @@ process.on('uncaughtException', (error) => {
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled rejection at:', promise, 'reason:', reason);
 });
+
+function installPuppeteer() {
+    const installScriptPath = path.join(__dirname, '..', 'node_modules', 'puppeteer', 'install.mjs');
+    const installProcess = fork(installScriptPath);
+
+    installProcess.on('exit', (code) => {
+        if (code === 0) {
+            console.log('Puppeteer installation completed successfully');
+        } else {
+            console.error(`Puppeteer installation failed with code ${code}`);
+        }
+    });
+
+    installProcess.on('error', (err) => {
+        console.error('Error occurred while running Puppeteer install script:', err);
+    });
+}
