@@ -66,6 +66,12 @@ function StatisticsArea({ language }) {
                     </p>
                 </div>
                 <div className="bg-white p-4 rounded-lg shadow">
+                    <h3 className="text-lg font-semibold mb-2">{t('hiddenVideos')}</h3>
+                    <p className="text-3xl font-bold text-red-600">
+                        <span id="hiddenVideosCount">{statistics.hiddenCount}</span>
+                    </p>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow">
                     <h3 className="text-lg font-semibold mb-2">{t('storageSize')}</h3>
                     <p className="text-3xl font-bold text-orange-600">
                         <span id="storageSize">{formatStorageSize(statistics.storageSize)}</span>

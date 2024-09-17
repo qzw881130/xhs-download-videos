@@ -43,7 +43,7 @@ const translations = {
 
         // 追加 About 组件的翻译
         aboutTitle: '关于小红书视频下载器',
-        introduction: '介绍',
+        introduction: '介��',
         aboutDescription1: '该软件用于下载"您"在小红书APP的点赞视频、收藏视频、视频笔记。',
         aboutDescription2: '通过"下载配置"页面，设置下载类型及相关参数，然后点击"下载"按钮，即可下载。',
         aboutDescription3: '下载的视频会保存到"下载的视频"页面，您可以在这里查看及播放下载的视频。',
@@ -81,6 +81,7 @@ const translations = {
         randomNext: '随机下一个',
         otherVideos: '其他视频',
         hide: '隐藏',
+        hiddenVideos: '隐藏视频',
     },
     en: {
         downloadConfig: 'Download Config',
@@ -165,6 +166,7 @@ const translations = {
         randomNext: 'Random Next',
         otherVideos: 'Other Videos',
         hide: 'Hide',
+        hiddenVideos: 'Hidden Videos',
     }
 };
 

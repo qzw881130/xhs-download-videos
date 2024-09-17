@@ -158,6 +158,7 @@ async function getStatistics(downloadDir) {
                 likedCount: 0,
                 collectedCount: 0,
                 postCount: 0,
+                hiddenCount: 0,  // 添加 hiddenCount
                 lastUpdateTime: new Date().toISOString(),
                 storageSize: await calculateStorageSize(downloadDir)
             };
@@ -165,12 +166,12 @@ async function getStatistics(downloadDir) {
 
         const query = `
             SELECT 
-                SUM(CASE WHEN type = 'liked' THEN 1 ELSE 0 END) as likedCount,
-                SUM(CASE WHEN type = 'collected' THEN 1 ELSE 0 END) as collectedCount,
-                SUM(CASE WHEN type = 'post' THEN 1 ELSE 0 END) as postCount,
+                SUM(CASE WHEN type = 'liked' AND is_hidden = 0 THEN 1 ELSE 0 END) as likedCount,
+                SUM(CASE WHEN type = 'collected' AND is_hidden = 0 THEN 1 ELSE 0 END) as collectedCount,
+                SUM(CASE WHEN type = 'post' AND is_hidden = 0 THEN 1 ELSE 0 END) as postCount,
+                SUM(CASE WHEN is_hidden = 1 THEN 1 ELSE 0 END) as hiddenCount,
                 MAX(created_at) as lastUpdateTime
             FROM videos
-            WHERE is_hidden = 0
         `;
 
         const row = await dbGet(db, query, []);
@@ -179,6 +180,7 @@ async function getStatistics(downloadDir) {
             likedCount: row.likedCount || 0,
             collectedCount: row.collectedCount || 0,
             postCount: row.postCount || 0,
+            hiddenCount: row.hiddenCount || 0,  // 添加 hiddenCount
             lastUpdateTime: row.lastUpdateTime || new Date().toISOString(),
             storageSize
         };
