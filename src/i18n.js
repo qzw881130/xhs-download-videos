@@ -80,6 +80,7 @@ const translations = {
         next: '下一个',
         randomNext: '随机下一个',
         otherVideos: '其他视频',
+        hide: '隐藏',
     },
     en: {
         downloadConfig: 'Download Config',
@@ -163,6 +164,7 @@ const translations = {
         next: 'Next',
         randomNext: 'Random Next',
         otherVideos: 'Other Videos',
+        hide: 'Hide',
     }
 };
 

@@ -134,7 +134,18 @@ function VideoPlayer({ language }) {
                 </div>
                 <div className="w-1/4 bg-white p-4 rounded-lg shadow-md flex flex-col justify-between">
                     <div className="flex flex-col h-full">
-                        <h2 className="text-lg font-semibold mb-4 pb-2 border-b border-gray-200">{t('controlPanel')}</h2>
+                        <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-200">
+                            <h2 className="text-lg font-semibold">{t('controlPanel')}</h2>
+                            <button
+                                className="bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600 transition-colors duration-300"
+                                onClick={() => {
+                                    // Add delete functionality here
+                                    console.log('Delete button clicked');
+                                }}
+                            >
+                                {t('hide')}
+                            </button>
+                        </div>
                         <div className="flex-grow">
                             <div className="mb-4">
                                 <span className="text-sm font-medium mb-2 block">{t('playbackSpeed')}：</span>
