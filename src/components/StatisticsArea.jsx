@@ -46,7 +46,7 @@ function StatisticsArea({ language }) {
                     {t('updateTime')}: {new Date(statistics.lastUpdateTime).toLocaleString()}
                 </span>
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
                 <div className="bg-white p-4 rounded-lg shadow">
                     <h3 className="text-lg font-semibold mb-2">{t('likedVideos')}</h3>
                     <p className="text-3xl font-bold text-blue-600">
