@@ -103,14 +103,14 @@ async function getVideoDetails(vid) {
             WHERE type = (SELECT type FROM videos WHERE vid = ?)
             AND id <= (SELECT id FROM videos WHERE vid = ?)
             ORDER BY id ASC
-            LIMIT 3
+            LIMIT 5
         `;
         const adjacentQuery2 = `
         SELECT id, vid, title, type FROM videos
         WHERE type = (SELECT type FROM videos WHERE vid = ?)
         AND id > (SELECT id FROM videos WHERE vid = ?)
         ORDER BY id ASC
-        LIMIT 3
+        LIMIT 5
     `;
 
         const [row, adjacentVideosBefore, adjacentVideosAfter] = await Promise.all([
