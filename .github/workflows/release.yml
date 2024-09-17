@@ -21,6 +21,18 @@ jobs:
       matrix:
         os: [windows-latest]
     steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: latest
+      env:
+        CI: false
+    - name: Clear npm cache
+      run: npm cache clean --force
+    - name: install dependencies
+      run: npm install
+    - name: build-react
+      run: npm run build
     - name: Build For windows
       if: matrix.os == 'windows-latest'
       run: npm run dist
