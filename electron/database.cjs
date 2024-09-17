@@ -55,11 +55,11 @@ async function getLikedVideos(page = 1, pageSize = 20, type = 'liked', keyword =
     const offset = (page - 1) * pageSize;
     let query = `
         SELECT * FROM videos
-        WHERE type = ?
+        WHERE type = ? AND is_hidden = 0
     `;
     let countQuery = `
         SELECT COUNT(*) as total FROM videos
-        WHERE type = ?
+        WHERE type = ? AND is_hidden = 0
     `;
     let params = [type];
 
@@ -102,6 +102,7 @@ async function getVideoDetails(vid) {
             SELECT id, vid, title, type FROM videos
             WHERE type = (SELECT type FROM videos WHERE vid = ?)
             AND id <= (SELECT id FROM videos WHERE vid = ?)
+            AND is_hidden = 0
             ORDER BY id ASC
             LIMIT 5
         `;
@@ -109,6 +110,7 @@ async function getVideoDetails(vid) {
         SELECT id, vid, title, type FROM videos
         WHERE type = (SELECT type FROM videos WHERE vid = ?)
         AND id > (SELECT id FROM videos WHERE vid = ?)
+        AND is_hidden = 0
         ORDER BY id ASC
         LIMIT 5
     `;
@@ -134,8 +136,8 @@ async function getAdjacentVideo(currentVid, direction, type) {
     const db = openDatabase();
     try {
         const query = direction === 'next'
-            ? 'SELECT vid FROM videos WHERE type = ? AND id < (SELECT id FROM videos WHERE vid = ? AND type = ?) ORDER BY id DESC LIMIT 1'
-            : 'SELECT vid FROM videos WHERE type = ? AND id > (SELECT id FROM videos WHERE vid = ? AND type = ?) ORDER BY id ASC LIMIT 1';
+            ? 'SELECT vid FROM videos WHERE type = ? AND id < (SELECT id FROM videos WHERE vid = ? AND type = ? AND is_hidden = 0) ORDER BY id DESC LIMIT 1'
+            : 'SELECT vid FROM videos WHERE type = ? AND id > (SELECT id FROM videos WHERE vid = ? AND type = ? AND is_hidden = 0) ORDER BY id ASC LIMIT 1';
 
         const row = await dbGet(db, query, [type, currentVid, type]);
         return row ? row.vid : null;
@@ -168,6 +170,7 @@ async function getStatistics(downloadDir) {
                 SUM(CASE WHEN type = 'post' THEN 1 ELSE 0 END) as postCount,
                 MAX(created_at) as lastUpdateTime
             FROM videos
+            WHERE is_hidden = 0
         `;
 
         const row = await dbGet(db, query, []);
@@ -211,7 +214,7 @@ async function calculateStorageSize(downloadDir) {
 async function getRandomVideo(type) {
     const db = openDatabase(); // 使用 openDatabase 而不是 getDbConnection
     try {
-        const query = 'SELECT vid FROM videos WHERE type = ? ORDER BY RANDOM() LIMIT 1';
+        const query = 'SELECT vid FROM videos WHERE type = ? AND is_hidden = 0 ORDER BY RANDOM() LIMIT 1';
         const result = await dbGet(db, query, [type]);
         return result ? result.vid : null;
     } finally {
@@ -267,7 +270,8 @@ async function initializeDatabase(db) {
                 page_url TEXT,
                 video_src TEXT,
                 image_src TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                is_hidden BOOLEAN DEFAULT FALSE
             )
         `, (err) => {
             if (err) {
@@ -296,6 +300,18 @@ async function updateDatabaseSchema(db) {
             });
         });
     }
+    // Check if is_hidden column exists, if not, add it
+    await new Promise((resolve, reject) => {
+        db.run("ALTER TABLE videos ADD COLUMN is_hidden BOOLEAN DEFAULT FALSE", (err) => {
+            if (err) {
+                console.error('Error adding is_hidden column:', err);
+                reject(err);
+            } else {
+                console.log('Column is_hidden added successfully');
+                resolve();
+            }
+        });
+    });
 }
 
 module.exports = {
