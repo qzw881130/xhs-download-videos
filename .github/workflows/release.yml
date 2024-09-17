@@ -6,8 +6,10 @@ name: Release
 #       - created
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches:
+      - dev
+    # tags:
+    #   - 'v*.*.*'
 
 jobs:
 
@@ -17,57 +19,8 @@ jobs:
 
     strategy:
       matrix:
-        # os: [macos-latest, windows-latest]
         os: [windows-latest]
     steps:
-    - name: Setup Python
-      if: matrix.os == 'macos-latest'
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.x  # 选择适合的 Python 版本
-        architecture: x64   # 或 arm64，根据你的系统架构选择
-    - name: Install dependencies
-      if: matrix.os == 'macos-latest'
-      run: |
-        python -m pip install --upgrade pip
-        pip install setuptools
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: latest
-      env:
-        CI: false
-    - name: Clear npm cache
-      run: npm cache clean --force
-    - name: install dependencies
-      run: npm install
-    - name: build-react
-      run: npm run build
-
-    - name: Prepare Certificate
-      if: matrix.os == 'macos-latest'
-      run: |
-        echo "$MAC_CERTIFICATE" | base64 --decode > mac_certificate.p12
-      env:
-        MAC_CERTIFICATE: ${{ secrets.MAC_CERTIFICATE }}
-    - name: Configure Keychain
-      if: matrix.os == 'macos-latest'
-      run: |
-        security create-keychain -p mypassword build.keychain
-        security default-keychain -s build.keychain
-        security unlock-keychain -p mypassword build.keychain
-        security import mac_certificate.p12 -k build.keychain -P ${{ secrets.MAC_CERTIFICATE_PASSWORD }} -T /usr/bin/codesign
-        security set-key-partition-list -S apple-tool:,apple: -s -k mypassword build.keychain
-
-    - name: Build and Sign Application For macOS
-      if: matrix.os == 'macos-latest'
-      run: npm run dist
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        CSC_LINK: mac_certificate.p12
-        CSC_KEY_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
-
-
     - name: Build For windows
       if: matrix.os == 'windows-latest'
       run: npm run dist
@@ -75,25 +28,20 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Check 1
-      run: ls -l dist
+      run: ls -l release
     - name: Cleanup Artifacts for Windows
       if: matrix.os == 'windows-latest'
       run: |
-        npx rimraf --glob "dist/!(*.exe)"
-
-    - name: Cleanup Artifacts for macOS
-      if: matrix.os == 'macos-latest'
-      run: |
-        npx rimraf --glob "dist/!(*.dmg|*.yml)"
+        npx rimraf --glob "release/!(*.exe)"
 
     - name: Check dist directory
-      run: ls -l dist
+      run: ls -l release
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.os }}
-        path: dist
+        path: release
     - name: Check 3
       run: ls -l dist
 
@@ -101,6 +49,6 @@ jobs:
       uses: softprops/action-gh-release@v2
       # if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: "dist/*"
+        files: "release/*"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
