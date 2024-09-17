@@ -8,8 +8,8 @@ on:
   push:
     branches:
       - dev
-    # tags:
-    #   - 'v*.*.*'
+    tags:
+      - 'v*.*.*'
 
 jobs:
 
@@ -55,7 +55,7 @@ jobs:
         name: ${{ matrix.os }}
         path: release
     - name: Check 3
-      run: ls -l dist
+      run: ls -l release
 
     - name: Release
       uses: softprops/action-gh-release@v2
