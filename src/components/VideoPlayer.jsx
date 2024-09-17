@@ -110,8 +110,12 @@ function VideoPlayer({ language }) {
                             autoPlay={localStorage.getItem('autoPlay') === 'true'}
                             className="w-full h-full object-contain"
                             onEnded={() => {
-                                if (localStorage.getItem('autoPlayNext') === 'true' && hasNext) {
-                                    handleNavigation('next');
+                                if (localStorage.getItem('autoPlayNext') === 'true') {
+                                    if (localStorage.getItem('playOrder') === 'random') {
+                                        handleNavigation('next', true);
+                                    } else {
+                                        handleNavigation('next');
+                                    }
                                 } else {
                                     const video = document.querySelector('video');
                                     if (video) {
