@@ -46,7 +46,7 @@ jobs:
       run: |
         npx rimraf --glob "release/!(*.exe)"
 
-    - name: Check dist directory
+    - name: Check release directory
       run: ls -l release
 
     - name: Upload artifacts
