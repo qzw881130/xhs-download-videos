@@ -29,6 +29,7 @@ function VideoPlayer({ language }) {
                 const details = await window.electron.getVideoDetails(vid);
                 setVideoDetails(details);
                 setVideoType(details.type);
+                console.log(details);
                 checkAdjacentVideos(vid, details.type);
             } catch (error) {
                 console.error('Error fetching video details:', error);
@@ -85,6 +86,23 @@ function VideoPlayer({ language }) {
         navigate(`/video-player/${newVid}`);
     };
 
+    const handleVideoEnd = () => {
+        if (localStorage.getItem('autoPlayNext') === 'true') {
+            if (localStorage.getItem('randomPlay') === 'true') {
+                handleNavigation('next', true);
+            } else {
+                handleNavigation('next');
+            }
+        } else {
+            const video = document.querySelector('video');
+            if (video) {
+                video.currentTime = 0;
+                if (localStorage.getItem('autoPlayNext') !== 'true') {
+                    video.play();
+                }
+            }
+        }
+    }
     return (
         <div className="video-player p-2 h-screen flex flex-col bg-gray-100 rounded-lg">
             <div className="flex justify-between items-center mb-5 bg-white p-4 rounded-lg shadow-md">
@@ -102,34 +120,19 @@ function VideoPlayer({ language }) {
                 </a>
             </div>
             <div className="flex mb-4 flex-grow" style={{ minHeight: 0, maxHeight: '60vh' }}>
-                <div className="w-2/3 pr-4">
+                <div className="w-3/4 pr-4">
                     <div className="h-full bg-black rounded-lg overflow-hidden shadow-lg">
                         <video
                             src={videoDetails.video_src}
                             controls
                             autoPlay={localStorage.getItem('autoPlay') === 'true'}
                             className="w-full h-full object-contain"
-                            onEnded={() => {
-                                if (localStorage.getItem('autoPlayNext') === 'true') {
-                                    if (localStorage.getItem('randomPlay') === 'true') {
-                                        handleNavigation('next', true);
-                                    } else {
-                                        handleNavigation('next');
-                                    }
-                                } else {
-                                    const video = document.querySelector('video');
-                                    if (video) {
-                                        video.currentTime = 0;
-                                        if (localStorage.getItem('autoPlayNext') !== 'true') {
-                                            video.play();
-                                        }
-                                    }
-                                }
-                            }}
+                            onEnded={handleVideoEnd}
+                            onError={handleVideoEnd}
                         ></video>
                     </div>
                 </div>
-                <div className="w-1/3 bg-white p-4 rounded-lg shadow-md flex flex-col justify-between">
+                <div className="w-1/4 bg-white p-4 rounded-lg shadow-md flex flex-col justify-between">
                     <div className="flex flex-col h-full">
                         <h2 className="text-lg font-semibold mb-4 pb-2 border-b border-gray-200">{t('controlPanel')}</h2>
                         <div className="flex-grow">
