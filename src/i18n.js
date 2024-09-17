@@ -64,6 +64,22 @@ const translations = {
         disclaimerContent: '本软件仅供个人学习和研究使用。用户应遵守相关法律法规，不得将本软件用于任何非法用途。作者不对使用本软件造成的任何损失或法律责任负责。',
         changelog: '更新日志',
         changelogEntry: '2024-09-14 V1.0.0 初始版本',
+
+        // 添加 VideoPlayer 组件的翻译
+        originalLink: '原链接',
+        controlPanel: '控制面板',
+        playbackSpeed: '播放倍速',
+        playMode: '播放模式',
+        singleVideoLoop: '单视频循环',
+        autoPlayNext: '自动播放下一个',
+        playOrder: '播放顺序',
+        sequentialPlay: '顺序播放',
+        randomPlay: '随机播放',
+        autoPlay: '自动播放',
+        previous: '上一个',
+        next: '下一个',
+        randomNext: '随机下一个',
+        otherVideos: '其他视频',
     },
     en: {
         downloadConfig: 'Download Config',
@@ -131,6 +147,22 @@ const translations = {
         disclaimerContent: 'This software is for personal learning and research purposes only. Users must comply with relevant laws and regulations and must not use this software for any illegal purposes. The author is not responsible for any losses or legal liabilities caused by using this software.',
         changelog: 'Changelog',
         changelogEntry: '2024-09-14 V1.0.0 Initial version',
+
+        // 添加 VideoPlayer 组件的翻译
+        originalLink: 'Original Link',
+        controlPanel: 'Control Panel',
+        playbackSpeed: 'Playback Speed',
+        playMode: 'Play Mode',
+        singleVideoLoop: 'Single Video Loop',
+        autoPlayNext: 'Auto Play Next',
+        playOrder: 'Play Order',
+        sequentialPlay: 'Sequential Play',
+        randomPlay: 'Random Play',
+        autoPlay: 'Auto Play',
+        previous: 'Previous',
+        next: 'Next',
+        randomNext: 'Random Next',
+        otherVideos: 'Other Videos',
     }
 };
 

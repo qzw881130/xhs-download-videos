@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getRandomInt } from '../utils/helpers'; // 假设我们有一个获取随机整数的辅助函数
+import { getRandomInt } from '../utils/helpers';
+import { getTranslation } from '../i18n';
 
-function VideoPlayer() {
+function VideoPlayer({ language }) {
     const [videoDetails, setVideoDetails] = useState(null);
     const [hasPrevious, setHasPrevious] = useState(true);
     const [hasNext, setHasNext] = useState(true);
@@ -15,17 +16,19 @@ function VideoPlayer() {
         const storedAutoPlay = localStorage.getItem('autoPlay');
         return storedAutoPlay === 'true';
     });
-    const [videoType, setVideoType] = useState('liked'); // 添加这行来存储视频类型
+    const [videoType, setVideoType] = useState('liked');
 
     const { vid } = useParams();
     const navigate = useNavigate();
+
+    const t = (key) => getTranslation(language, key);
 
     useEffect(() => {
         const fetchVideoDetails = async () => {
             try {
                 const details = await window.electron.getVideoDetails(vid);
                 setVideoDetails(details);
-                setVideoType(details.type); // 设置视频类型
+                setVideoType(details.type);
                 checkAdjacentVideos(vid, details.type);
             } catch (error) {
                 console.error('Error fetching video details:', error);
@@ -34,13 +37,11 @@ function VideoPlayer() {
 
         fetchVideoDetails();
 
-        // Load autoPlayNext from local storage
         const storedAutoPlayNext = localStorage.getItem('autoPlayNext');
         setAutoPlayNext(storedAutoPlayNext === 'true');
     }, [vid]);
 
     useEffect(() => {
-        // Save autoPlayNext to local storage whenever it changes
         localStorage.setItem('autoPlayNext', autoPlayNext);
     }, [autoPlayNext]);
 
@@ -65,10 +66,8 @@ function VideoPlayer() {
         try {
             let nextVid;
             if (randomPlay) {
-                // 如果是随机播放，我们请求一个随机的视频
                 nextVid = await window.electron.navigateVideo(videoDetails.vid, 'random', videoType);
             } else {
-                // 原有的导航逻辑
                 nextVid = await window.electron.navigateVideo(videoDetails.vid, direction, videoType);
             }
 
@@ -92,14 +91,14 @@ function VideoPlayer() {
                 <h1 className="text-xl font-bold truncate">
                     {videoDetails.title}
                     <span className="ml-2 inline-block px-2 py-1 text-xs font-semibold text-white bg-red-500 rounded">
-                        {videoDetails.type}
+                        {t(videoDetails.type)}
                     </span>
                     <span className="ml-2 inline-block px-2 py-1 text-xs font-semibold text-gray-600 bg-gray-200 rounded">
                         ID: {videoDetails.id}
                     </span>
                 </h1>
                 <a href={videoDetails.page_url} target="_blank" rel="noopener noreferrer" className="ml-2 px-3 py-2 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-600 transition-colors duration-300">
-                    原链接
+                    {t('originalLink')}
                 </a>
             </div>
             <div className="flex mb-4 flex-grow" style={{ minHeight: 0, maxHeight: '60vh' }}>
@@ -128,10 +127,10 @@ function VideoPlayer() {
                 </div>
                 <div className="w-1/3 bg-white p-4 rounded-lg shadow-md flex flex-col justify-between">
                     <div className="flex flex-col h-full">
-                        <h2 className="text-lg font-semibold mb-4 pb-2 border-b border-gray-200">控制面板</h2>
+                        <h2 className="text-lg font-semibold mb-4 pb-2 border-b border-gray-200">{t('controlPanel')}</h2>
                         <div className="flex-grow">
                             <div className="mb-4">
-                                <span className="text-sm font-medium mb-2 block">播放倍速：</span>
+                                <span className="text-sm font-medium mb-2 block">{t('playbackSpeed')}：</span>
                                 <div className="flex space-x-2">
                                     {[0.5, 1, 1.5, 2].map((rate) => (
                                         <button
@@ -151,7 +150,7 @@ function VideoPlayer() {
                                 </div>
                             </div>
                             <div className="mb-4">
-                                <span className="text-sm font-medium mb-2 block">播放模式：</span>
+                                <span className="text-sm font-medium mb-2 block">{t('playMode')}：</span>
                                 <div className="flex flex-col space-y-2">
                                     <label className="inline-flex items-center">
                                         <input
@@ -168,7 +167,7 @@ function VideoPlayer() {
                                                 }
                                             }}
                                         />
-                                        <span className="ml-2 text-sm">单视频循环</span>
+                                        <span className="ml-2 text-sm">{t('singleVideoLoop')}</span>
                                     </label>
                                     <label className="inline-flex items-center">
                                         <input
@@ -188,12 +187,12 @@ function VideoPlayer() {
                                                 }
                                             }}
                                         />
-                                        <span className="ml-2 text-sm">自动播放下一个</span>
+                                        <span className="ml-2 text-sm">{t('autoPlayNext')}</span>
                                     </label>
                                 </div>
                             </div>
                             <div className="mb-4">
-                                <span className="text-sm font-medium mb-2 block">播放顺序：</span>
+                                <span className="text-sm font-medium mb-2 block">{t('playOrder')}：</span>
                                 <div className="flex flex-col space-y-2">
                                     <label className="inline-flex items-center">
                                         <input
@@ -207,7 +206,7 @@ function VideoPlayer() {
                                                 localStorage.setItem('randomPlay', 'false');
                                             }}
                                         />
-                                        <span className="ml-2 text-sm">顺序播放</span>
+                                        <span className="ml-2 text-sm">{t('sequentialPlay')}</span>
                                     </label>
                                     <label className="inline-flex items-center">
                                         <input
@@ -221,7 +220,7 @@ function VideoPlayer() {
                                                 localStorage.setItem('randomPlay', 'true');
                                             }}
                                         />
-                                        <span className="ml-2 text-sm">随机播放</span>
+                                        <span className="ml-2 text-sm">{t('randomPlay')}</span>
                                     </label>
                                 </div>
                             </div>
@@ -237,7 +236,7 @@ function VideoPlayer() {
                                             localStorage.setItem('autoPlay', JSON.stringify(newAutoPlay));
                                         }}
                                     />
-                                    <span className="ml-2 text-sm">自动播放</span>
+                                    <span className="ml-2 text-sm">{t('autoPlay')}</span>
                                 </label>
                             </div>
                         </div>
@@ -247,21 +246,21 @@ function VideoPlayer() {
                                 onClick={() => handleNavigation('prev')}
                                 disabled={!hasPrevious || randomPlay}
                             >
-                                上一个
+                                {t('previous')}
                             </button>
                             <button
                                 className={`bg-green-500 text-white px-4 py-2 rounded-md text-sm ${randomPlay || hasNext ? 'hover:bg-green-600' : 'opacity-50 cursor-not-allowed'}`}
                                 onClick={() => handleNavigation('next', !!randomPlay)}
                                 disabled={!randomPlay && !hasNext}
                             >
-                                {randomPlay ? '随机下一个' : '下一个'}
+                                {randomPlay ? t('randomNext') : t('next')}
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
             <div className="mt-6 bg-white p-4 rounded-lg shadow-md">
-                <h3 className="text-lg font-semibold mb-4">其他视频</h3>
+                <h3 className="text-lg font-semibold mb-4">{t('otherVideos')}</h3>
                 <div className="flex overflow-x-auto space-x-4">
                     {videoDetails.adjacentVideos && videoDetails.adjacentVideos.map((video, index) => (
                         <div
