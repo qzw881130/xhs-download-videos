@@ -103,6 +103,23 @@ function VideoPlayer({ language }) {
             }
         }
     }
+
+    const handleHideVideo = async () => {
+        try {
+            const result = await window.electron.hideVideo(videoDetails.vid);
+            if (result.success) {
+                // 视频已成功隐藏，可以导航到其他页面或显示消息
+                handleVideoEnd(); // 或者导航到视频列表页面
+            } else {
+                console.error('Failed to hide video:', result.error);
+                // 可以显示错误消息给用户
+            }
+        } catch (error) {
+            console.error('Error hiding video:', error);
+            // 可以显示错误消息给用户
+        }
+    };
+
     return (
         <div className="video-player p-2 h-screen flex flex-col bg-gray-100 rounded-lg">
             <div className="flex justify-between items-center mb-5 bg-white p-4 rounded-lg shadow-md">
@@ -138,10 +155,7 @@ function VideoPlayer({ language }) {
                             <h2 className="text-lg font-semibold">{t('controlPanel')}</h2>
                             <button
                                 className="bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600 transition-colors duration-300"
-                                onClick={() => {
-                                    // Add delete functionality here
-                                    console.log('Delete button clicked');
-                                }}
+                                onClick={handleHideVideo}
                             >
                                 {t('hide')}
                             </button>

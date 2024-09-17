@@ -39,6 +39,7 @@ contextBridge.exposeInMainWorld('electron', {
     openDirectory: () => ipcRenderer.invoke('open-directory'),
     saveLanguageSetting: (language) => ipcRenderer.invoke('save-language-setting', language),
     getLanguageSetting: () => ipcRenderer.invoke('get-language-setting'),
+    hideVideo: (vid) => ipcRenderer.invoke('hide-video', vid),
 });
 
 console.log('Preload script executed');

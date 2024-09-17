@@ -5,6 +5,7 @@ const { fork } = require('child_process');
 const { getLikedVideos, getVideoDetails, getAdjacentVideo, getStatistics, getRandomVideo, getDbPath } = require('./database.cjs');
 const isDev = require('electron-is-dev');
 const { getTranslation } = require('./i18n.cjs');
+const database = require('./database.cjs');
 
 let win;
 let currentLanguage = 'zh'; // 默认语言
@@ -263,6 +264,15 @@ function setupIpcHandlers(browserWindow) {
         return await getLanguageSetting();
     });
 
+    ipcMain.handle('hide-video', async (event, vid) => {
+        try {
+            await database.hideVideo(vid);
+            return { success: true };
+        } catch (error) {
+            console.error('Error hiding video:', error);
+            return { success: false, error: error.message };
+        }
+    });
 }
 
 // 在 xiaohongshuDownloader 函数中使用 sendTranslatedMessage

@@ -314,11 +314,27 @@ async function updateDatabaseSchema(db) {
     });
 }
 
+async function hideVideo(vid) {
+    const db = openDatabase();
+    try {
+        const query = 'UPDATE videos SET is_hidden = TRUE WHERE vid = ?';
+        await new Promise((resolve, reject) => {
+            db.run(query, [vid], function (err) {
+                if (err) reject(err);
+                else resolve(this);
+            });
+        });
+    } finally {
+        db.close();
+    }
+}
+
 module.exports = {
     getLikedVideos,
     getVideoDetails,
     getAdjacentVideo,
     getStatistics,
     getRandomVideo,
-    getDbPath
+    getDbPath,
+    hideVideo
 };
