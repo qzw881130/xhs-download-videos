@@ -93,7 +93,7 @@ app.whenReady().then(async () => {
 });
 
 app.on('ready', () => {
-    installPuppeteer();
+    // installPuppeteer();
     console.log('App is ready');
     createWindow();
 });

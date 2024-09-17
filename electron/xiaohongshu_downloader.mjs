@@ -8,7 +8,7 @@ import sqlite3 from 'sqlite3';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { getTranslation } from './i18n.mjs';
-
+import { downloadBrowsers } from "puppeteer/internal/node/install.js";
 puppeteer.use(StealthPlugin());
 
 const __filename = fileURLToPath(import.meta.url);
@@ -63,6 +63,7 @@ class XiaohongshuDownloader {
     }
 
     async init() {
+        await downloadBrowsers();
         this.sendMessage('startingBrowser');
         this.browser = await puppeteer.launch({
             headless: false,
