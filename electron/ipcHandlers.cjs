@@ -107,25 +107,36 @@ function setupIpcHandlers(browserWindow) {
         await shell.openExternal(url);
     });
 
+    let playerWindow = null;
+
     ipcMain.handle('open-video-player', (event, vid) => {
-        const playerWindow = new BrowserWindow({
-            width: 800,
-            height: 600,
-            webPreferences: {
-                preload: path.join(__dirname, 'preload.js'),
-                contextIsolation: true,
-                nodeIntegration: false,
-            },
-        });
-
-
         const url = isDev
             ? `http://localhost:5173/#/video-player/${vid}`
             : `file://${path.join(__dirname, '../dist/index.html')}#/video-player/${vid}`;
-        playerWindow.loadURL(url);
 
-        // 可选：打开开发者工具
-        playerWindow.webContents.openDevTools();
+        if (playerWindow && !playerWindow.isDestroyed()) {
+            playerWindow.loadURL(url);
+            playerWindow.focus();
+        } else {
+            playerWindow = new BrowserWindow({
+                width: 800,
+                height: 600,
+                webPreferences: {
+                    preload: path.join(__dirname, 'preload.js'),
+                    contextIsolation: true,
+                    nodeIntegration: false,
+                },
+            });
+
+            playerWindow.loadURL(url);
+
+            playerWindow.on('closed', () => {
+                playerWindow = null;
+            });
+
+            // 可选：打开开发者工具
+            playerWindow.webContents.openDevTools();
+        }
     });
 
     ipcMain.handle('start-downloader', async (event, startPosition, endPosition, type) => {
