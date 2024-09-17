@@ -78,7 +78,9 @@
       "!*.db",
       "!cookie.json",
       "!./release/**/*",
-      "!privateKey.key"
+      "!privateKey.key",
+      "!/.github/**/*",
+      "!README.md"
     ],
     "extraMetadata": {
       "main": "electron/main.cjs"
