@@ -1,6 +1,6 @@
 {
   "name": "xhs-download-video",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "小红书视频下载器",
   "main": "electron/main.cjs",
   "scripts": {
