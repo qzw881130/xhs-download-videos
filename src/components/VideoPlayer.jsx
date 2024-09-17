@@ -111,7 +111,7 @@ function VideoPlayer({ language }) {
                             className="w-full h-full object-contain"
                             onEnded={() => {
                                 if (localStorage.getItem('autoPlayNext') === 'true') {
-                                    if (localStorage.getItem('playOrder') === 'random') {
+                                    if (localStorage.getItem('randomPlay') === 'true') {
                                         handleNavigation('next', true);
                                     } else {
                                         handleNavigation('next');
