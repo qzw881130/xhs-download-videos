@@ -58,7 +58,16 @@ function DownloadConfig({ language }) {
     return (
         <div className="download-configd">
             <h2 className="text-xl font-bold mb-4">{t('downloadConfig')}</h2>
+            <div className="mt-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700">
+                <h4 className="font-bold mb-2">{t('noticeTitle')}</h4>
+                <ul className="list-disc list-inside">
+                    <li>{t('noticePoint1')}</li>
+                    <li>{t('noticePoint2')}</li>
+                    <li>{t('noticePoint3')}</li>
+                </ul>
+            </div>
             <div className="control-panel">
+
                 <div className="form-row w-2/3">
                     <div className="form-group flex items-center">
                         <label htmlFor="downloadPath" className="mr-2 whitespace-nowrap">{t('downloadPath')}</label>
@@ -124,14 +133,6 @@ function DownloadConfig({ language }) {
                             {t('loginAndDownload')}
                         </button>
                     </div>
-                </div>
-                <div className="mt-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700">
-                    <h4 className="font-bold mb-2">{t('noticeTitle')}</h4>
-                    <ul className="list-disc list-inside">
-                        <li>{t('noticePoint1')}</li>
-                        <li>{t('noticePoint2')}</li>
-                        <li>{t('noticePoint3')}</li>
-                    </ul>
                 </div>
             </div>
             <div className="log-area">
