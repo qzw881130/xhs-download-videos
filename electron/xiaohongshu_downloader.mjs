@@ -314,7 +314,7 @@ class XiaohongshuDownloader {
 
             newPage.on('request', request => {
                 const url = request.url();
-                if (url.endsWith('.mp4')) {
+                if (url.includes('.mp4') && url.includes('.xhscdn.com')) {
                     mp4Url = url;
                 }
                 request.continue();
