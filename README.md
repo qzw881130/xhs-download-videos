@@ -10,10 +10,10 @@
 
 ## Demo
 
-<p><img src='src/assets/demo/1.png' width="550" /></p>
-<p><img src='src/assets/demo/2.png' width="550" /></p>
-<p><img src='src/assets/demo/3.png' width="550" /></p>
-<p><img src='src/assets/demo/4.png' width="550" /></p>
+<p><img src='src/assets/demo/1.png' width="850" /></p>
+<p><img src='src/assets/demo/2.png' width="850" /></p>
+<p><img src='src/assets/demo/3.png' width="850" /></p>
+<p><img src='src/assets/demo/4.png' width="850" /></p>
 
 ## Installation
 
