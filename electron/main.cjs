@@ -12,7 +12,7 @@ let win;
 function createWindow() {
     console.log('Creating Electron window...');
     win = new BrowserWindow({
-        width: 1000,
+        width: 1346,
         height: 1000,
         minWidth: 800,
         webPreferences: {

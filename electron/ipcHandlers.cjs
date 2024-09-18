@@ -119,8 +119,8 @@ function setupIpcHandlers(browserWindow) {
             playerWindow.focus();
         } else {
             playerWindow = new BrowserWindow({
-                width: 800,
-                height: 600,
+                width: 1280,
+                height: 1040,
                 webPreferences: {
                     preload: path.join(__dirname, 'preload.js'),
                     contextIsolation: true,
