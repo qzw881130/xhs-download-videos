@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 定义背景色（例如白色）
-BACKGROUND_COLOR="white"
+BACKGROUND_COLOR="#ec6b74"
 
 # 遍历当前目录中的所有 PNG 文件并去除背景色
 for file in *.png; do
@@ -13,5 +13,5 @@ echo "Batch processing complete!"
 
 cd ../
 iconutil -c icns icon.iconset
-rm -rf Custom-Icon-Design-Happy-Easter-Flower.icns
-mv icon.icns Custom-Icon-Design-Happy-Easter-Flower.icns
+rm -rf Elegantthemes-Beautiful-Flat-Flower.icns
+mv icon.icns Elegantthemes-Beautiful-Flat-Flower.icns
