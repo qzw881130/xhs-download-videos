@@ -37,7 +37,7 @@ function createWindow() {
 
     loadURL();
 
-    if (isDev || true) {
+    if (isDev) {
         win.webContents.openDevTools();
     }
 

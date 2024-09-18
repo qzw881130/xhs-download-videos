@@ -135,7 +135,7 @@ function setupIpcHandlers(browserWindow) {
             });
 
             // 可选：打开开发者工具
-            playerWindow.webContents.openDevTools();
+            if (isDev) playerWindow.webContents.openDevTools();
         }
     });
 
