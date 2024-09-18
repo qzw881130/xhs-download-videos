@@ -74,34 +74,39 @@ function App() {
         <Router>
             <div className="App flex flex-col min-h-screen">
                 {!location.hash.startsWith('#/video-player') && (
-                    <nav className="bg-gray-800 p-4">
-                        <ul className="flex justify-center space-x-8">
-                            <li>
-                                <NavLink to="/" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
-                                    {t('downloadConfig')}
-                                </NavLink>
-                            </li>
-                            <li>
-                                <NavLink to="/liked" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
-                                    {t('likedVideos')}
-                                </NavLink>
-                            </li>
-                            <li>
-                                <NavLink to="/collected" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
-                                    {t('collectedVideos')}
-                                </NavLink>
-                            </li>
-                            <li>
-                                <NavLink to="/post" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
-                                    {t('videoNotes')}
-                                </NavLink>
-                            </li>
-                            <li>
-                                <NavLink to="/about" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
-                                    {t('about')}
-                                </NavLink>
-                            </li>
-                            <li className="ml-auto absolute right-4 top-4">
+                    <>
+                        <div className="bg-gray-800 p-2 flex items-center">
+                            <img src="src/assets/images/icon_48x48.png" alt="Logo" className="mr-4" />
+                            <nav className="flex-grow">
+                                <ul className="flex justify-center space-x-8">
+                                    <li>
+                                        <NavLink to="/" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
+                                            {t('downloadConfig')}
+                                        </NavLink>
+                                    </li>
+                                    <li>
+                                        <NavLink to="/liked" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
+                                            {t('likedVideos')}
+                                        </NavLink>
+                                    </li>
+                                    <li>
+                                        <NavLink to="/collected" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
+                                            {t('collectedVideos')}
+                                        </NavLink>
+                                    </li>
+                                    <li>
+                                        <NavLink to="/post" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
+                                            {t('videoNotes')}
+                                        </NavLink>
+                                    </li>
+                                    <li>
+                                        <NavLink to="/about" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
+                                            {t('about')}
+                                        </NavLink>
+                                    </li>
+                                </ul>
+                            </nav>
+                            <div className="ml-auto">
                                 <select
                                     value={language}
                                     onChange={handleLanguageChange}
@@ -110,9 +115,9 @@ function App() {
                                     <option value="zh">中文</option>
                                     <option value="en">English</option>
                                 </select>
-                            </li>
-                        </ul>
-                    </nav>
+                            </div>
+                        </div>
+                    </>
                 )}
                 <div className="container mx-auto mt-8 flex-grow">
                     <Routes>
