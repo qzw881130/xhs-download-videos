@@ -175,7 +175,7 @@ function setupIpcHandlers(browserWindow) {
         }
         win.webContents.send('console-log', `New download path file: ${newPath}`);
 
-        const oldPath = data.downloadPath;
+        const oldPath = data.downloadPath || await getStoredDownloadPath();
 
         if (oldPath !== newPath) {
             try {
