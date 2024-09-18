@@ -34,7 +34,7 @@ yarn run dist-mac
 
 ```
 yarn run build
-yarn run dist
+yarn run dist-mac
 ```
 
 ## Make Icon
