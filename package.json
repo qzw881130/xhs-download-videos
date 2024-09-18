@@ -93,10 +93,10 @@
       "target": [
         "dmg"
       ],
-      "icon": "icons/Custom-Icon-Design-Happy-Easter-Flower.icns"
+      "icon": "icons/Elegantthemes-Beautiful-Flat-Flower.icns"
     },
     "dmg": {
-      "icon": "icons/Custom-Icon-Design-Happy-Easter-Flower.icns",
+      "icon": "icons/Elegantthemes-Beautiful-Flat-Flower.icns",
       "iconSize": 100,
       "contents": [
         {
@@ -117,7 +117,7 @@
       }
     },
     "win": {
-      "icon": "icons/Custom-Icon-Design-Happy-Easter-Flower.ico",
+      "icon": "icons/Elegantthemes-Beautiful-Flat-Flower.ico",
       "verifyUpdateCodeSignature": false,
       "target": [
         {
@@ -134,9 +134,9 @@
       "oneClick": false,
       "allowElevation": true,
       "allowToChangeInstallationDirectory": true,
-      "installerIcon": "icons/Custom-Icon-Design-Happy-Easter-Flower.ico",
-      "uninstallerIcon": "icons/Custom-Icon-Design-Happy-Easter-Flower.ico",
-      "installerHeaderIcon": "icons/Custom-Icon-Design-Happy-Easter-Flower.ico",
+      "installerIcon": "icons/Elegantthemes-Beautiful-Flat-Flower.ico",
+      "uninstallerIcon": "icons/Elegantthemes-Beautiful-Flat-Flower.ico",
+      "installerHeaderIcon": "icons/Elegantthemes-Beautiful-Flat-Flower.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Xhs Video Downloader",

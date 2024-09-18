@@ -37,6 +37,15 @@ yarn run build
 yarn run dist
 ```
 
+## Make Icon
+```
+mkdir icons/icon.iconset
+#download .png variant size icon from https://www.iconarchive.com
+cd icons
+iconutil -c icns icon.iconset
+rename icon.icns Custom-Icon-Design-Happy-Easter-Flower.icns
+```
+
 ## Reference
 
 * [create electron by react](https://medium.com/@azer.maslow/creating-desktop-applications-with-electron-and-react-b7f81f78c9d5)
@@ -51,4 +60,3 @@ yarn run dist
 * [react-datetime-picker](https://github.com/wojtekmaj/react-datetime-picker)
 * [bugsnag.com](https://app.bugsnag.com/)
 * [ascci 2 utf8](https://onlinetools.com/utf8/convert-ascii-to-utf8)
-
