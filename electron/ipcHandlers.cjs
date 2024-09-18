@@ -173,6 +173,7 @@ function setupIpcHandlers(browserWindow) {
         } catch (error) {
             console.error('Error reading download path file:', error);
         }
+        win.webContents.send('console-log', `New download path file: ${newPath}`);
 
         const oldPath = data.downloadPath;
 
@@ -192,20 +193,24 @@ function setupIpcHandlers(browserWindow) {
                         }
                     }
                     console.log(`Image and video files moved from ${oldPath} to ${newPath}`);
+                    win.webContents.send('console-log', `Image and video files moved from ${oldPath} to ${newPath}`);
                 }
 
                 // 更新存储的下载路径
                 data.downloadPath = newPath;
                 await fs.writeFile(downloadPathFile, JSON.stringify(data, null, 2));
                 console.log(`Download path updated to ${newPath}`);
+                win.webContents.send('console-log', `Download path updated to ${newPath}`);
 
                 return true;
             } catch (error) {
                 console.error('Error updating download path:', error);
+                win.webContents.send('console-error', `Error updating download path: ${error.message}`);
                 throw error;
             }
         } else {
             console.log('New path is the same as the old path. No changes made.');
+            win.webContents.send('console-log', 'New path is the same as the old path. No changes made.');
             return false;
         }
     });
