@@ -28,7 +28,9 @@ yarn run build
 yarn run dist-mac
 ```
 
-## Package for windows(maybe, it'll fail in mac. so please view .github/workflows/release.yml)
+## Package for windows
+
+> maybe, it'll fail in mac. so please view .github/workflows/release.yml)
 
 ```
 yarn run build
