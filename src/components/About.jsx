@@ -59,7 +59,19 @@ function About({ language }) { // 添加 language 参数
                 <div className="mb-6">
                     <h2 className="text-xl font-semibold mb-2">{t('donate')}</h2>
                     <p>{t('donateDescription')}</p>
-                    {/* 保持支付图片部分不变 */}
+                    <div className="flex justify-around items-center">
+                        <div className="flex justify-center items-center space-x-4">
+                            <div className="text-center">
+                                <img src={wxpay} alt={t('wechatDonation')} className="w-1/3 mx-auto" />
+                            </div>
+                            <div className="text-center">
+                                <img src={alipay} alt={t('alipayDonation')} className="w-1/3 mx-auto" />
+                            </div>
+                            <div className="text-center">
+                                <KofiButton />
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <h2 className="text-xl font-semibold mb-2">{t('disclaimer')}</h2>

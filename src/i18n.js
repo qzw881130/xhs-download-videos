@@ -82,6 +82,8 @@ const translations = {
         otherVideos: '其他视频',
         hide: '隐藏',
         hiddenVideos: '隐藏视频',
+        wechatDonation: '微信打赏二维码',
+        alipayDonation: '支付宝打赏二维码',
     },
     en: {
         downloadConfig: 'Download Config',
@@ -167,6 +169,8 @@ const translations = {
         otherVideos: 'Other Videos',
         hide: 'Hide',
         hiddenVideos: 'Hidden Videos',
+        wechatDonation: 'WeChat Donation QR Code',
+        alipayDonation: 'Alipay Donation QR Code',
     }
 };
 
