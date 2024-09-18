@@ -5,7 +5,7 @@
 
 ## Installation
 ```
-npm install
+yarn
 ```
 
 ## Usage

@@ -1,0 +1,72 @@
+nav ul {
+    display: flex;
+    flex-direction: row;
+    list-style-type: none;
+    padding: 0;
+}
+
+nav ul li {
+    margin-right: 1rem;
+}
+
+.menu {
+    background-color: #f8f9fa;
+    padding: 10px 0;
+    width: 100%;
+    /* 确保菜单占据全宽 */
+}
+
+.menu ul {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    /* 均匀分布菜单项 */
+    align-items: center;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    /* 确保 ul 占据全宽 */
+    flex-wrap: nowrap;
+    /* 防止换行 */
+}
+
+.menu li {
+    margin: 0;
+    /* 移除左右边距 */
+    white-space: nowrap;
+    /* 防止文本换行 */
+}
+
+.menu a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    padding: 10px 15px;
+    transition: background-color 0.3s, color 0.3s;
+    border-radius: 5px;
+    display: block;
+    /* 使链接占据整个 li 空间 */
+}
+
+.menu a:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+.menu li.active a {
+    background-color: #007bff;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .menu ul {
+        flex-direction: column;
+        /* 在小屏幕上垂直排列 */
+    }
+
+    .menu li {
+        margin: 5px 0;
+        /* 在小屏幕上添加垂直间距 */
+    }
+}
