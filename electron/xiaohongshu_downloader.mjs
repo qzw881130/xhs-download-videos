@@ -206,6 +206,13 @@ class XiaohongshuDownloader {
             }
 
             await this.page.waitForFunction(() => document.readyState === 'complete');
+            // 修改页面标题为 xhs
+            await this.page.evaluate(() => {
+                setTimeout(() => {
+                    document.title = 'xhs';
+                }, 2000);
+            });
+            this.sendMessage('pageTitleChanged', { newTitle: 'xhs' });
 
             await this.replacePersonalInfoWithAsterisks();
 
@@ -419,8 +426,8 @@ class XiaohongshuDownloader {
 
             this.sendMessage('allContentProcessed');
 
-            this.sendMessage('waitingForUserInput');
-            await new Promise(resolve => process.stdin.once('data', resolve));
+            // this.sendMessage('waitingForUserInput');
+            // await new Promise(resolve => process.stdin.once('data', resolve));
 
         } catch (error) {
             if (error.message.includes(this.t('loginTimeout'))) {
