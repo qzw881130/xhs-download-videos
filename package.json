@@ -140,13 +140,6 @@
       "createStartMenuShortcut": true,
       "shortcutName": "Xhs Video Downloader",
       "include": "build-scripts/installer.nsh"
-    },
-    "publish": {
-      "provider": "github",
-      "private": true,
-      "owner": "qzw881130",
-      "repo": "xhs-download-videos",
-      "token": "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"
     }
   },
   "type": "module"
