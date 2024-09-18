@@ -6,6 +6,7 @@ import AboutPage from './pages/AboutPage';
 import packageInfo from '../package.json';
 import DownloadConfigPage from './pages/DownloadConfigPage';
 import { getTranslation } from './i18n';
+import logo from '@/assets/images/icon_48x48.png';
 
 function Footer({ language }) {
     const t = (key) => getTranslation(language, key);
@@ -76,7 +77,7 @@ function App() {
                 {!location.hash.startsWith('#/video-player') && (
                     <>
                         <div className="bg-gray-800 p-2 flex items-center">
-                            <img src="src/assets/images/icon_48x48.png" alt="Logo" className="mr-4" />
+                            <img src={logo} alt="Logo" className="mr-4" />
                             <nav className="flex-grow">
                                 <ul className="flex justify-center space-x-8">
                                     <li>
