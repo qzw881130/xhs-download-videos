@@ -59,7 +59,7 @@ const translations = {
         contact: '联系方式',
         author: '作者',
         donate: '打赏',
-        donateDescription: '如果您觉得这个软件对您有帮助，欢迎赏作者，您的支持是我最大的动力。',
+        donateDescription: '如果您觉得这个软件对您有帮助，欢迎打赏作者，您的支持是我最大的动力。',
         disclaimer: '免责声明',
         disclaimerContent: '本软件仅供个人学习和研究使用。用户应遵守相关法律法规，不得将本软件用于任何非法用途。作者不对使用本软件造成的任何损失或法律责任负责。',
         changelog: '更新日志',

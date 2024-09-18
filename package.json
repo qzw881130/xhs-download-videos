@@ -1,6 +1,6 @@
 {
   "name": "xhs-download-video",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "小红书视频下载器",
   "main": "electron/main.cjs",
   "scripts": {
@@ -15,6 +15,7 @@
     "insall-win-chrome": "puppeteer browsers install chrome  --platform  win64",
     "dist": "npm run build && npm run electron:build",
     "dist-mac": "npm run build && cross-env NODE_ENV=production NODE_OPTIONS=--openssl-legacy-provider electron-builder --mac",
+    "dist-win": "npm run build && cross-env NODE_ENV=production NODE_OPTIONS=--openssl-legacy-provider electron-builder --win",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -140,13 +141,6 @@
       "createStartMenuShortcut": true,
       "shortcutName": "Xhs Video Downloader",
       "include": "build-scripts/installer.nsh"
-    },
-    "publish": {
-      "provider": "github",
-      "private": true,
-      "owner": "qzw881130",
-      "repo": "xhs-download-videos",
-      "token": "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"
     }
   },
   "type": "module"
