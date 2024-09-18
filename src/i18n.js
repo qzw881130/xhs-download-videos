@@ -84,6 +84,10 @@ const translations = {
         hiddenVideos: '隐藏视频',
         wechatDonation: '微信打赏二维码',
         alipayDonation: '支付宝打赏二维码',
+        noticeTitle: '注意事项',
+        noticePoint1: '不要多次点击登陆按钮，避免下载混乱',
+        noticePoint2: '点击“登陆小红书&下载”按钮后，要快速登陆小红书帐号。然后等待软件自动操作，不要干预',
+        noticePoint3: '下载过程中，不要变更存储路径',
     },
     en: {
         downloadConfig: 'Download Config',
@@ -171,6 +175,10 @@ const translations = {
         hiddenVideos: 'Hidden Videos',
         wechatDonation: 'WeChat Donation QR Code',
         alipayDonation: 'Alipay Donation QR Code',
+        noticeTitle: 'Important Notes',
+        noticePoint1: 'Do not click the login button multiple times to avoid download confusion',
+        noticePoint2: 'After clicking the button, quickly log in to your Xiaohongshu account. Then wait for the software to operate automatically, do not click anything',
+        noticePoint3: 'Do not change the storage path during the download process',
     }
 };
 
