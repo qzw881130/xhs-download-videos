@@ -53,20 +53,32 @@ function dbAll(db, query, params) {
 async function getLikedVideos(page = 1, pageSize = 20, type = 'liked', keyword = '') {
     const db = openDatabase();
     const offset = (page - 1) * pageSize;
-    let query = `
+    if (!type) {
+        let query = `
+            SELECT * FROM videos
+            WHERE type = ? AND is_hidden = 0
+        `;
+        let countQuery = `
+            SELECT COUNT(*) as total FROM videos
+            WHERE type = ? AND is_hidden = 0
+        `;
+        let params = [type];
+    } else {
+        let query = `
         SELECT * FROM videos
-        WHERE type = ? AND is_hidden = 0
-    `;
-    let countQuery = `
-        SELECT COUNT(*) as total FROM videos
-        WHERE type = ? AND is_hidden = 0
-    `;
-    let params = [type];
+        WHERE is_hidden = 0
+        `;
+        let countQuery = `
+            SELECT COUNT(*) as total FROM videos
+            WHERE is_hidden = 0
+        `;
+        let params = [];
+    }
 
     if (keyword) {
         query += ` AND title LIKE ?`;
         countQuery += ` AND title LIKE ?`;
-        params.push(`%${keyword}%`);
+        if (!type) params.push(`%${keyword}%`);
     }
 
     query += `

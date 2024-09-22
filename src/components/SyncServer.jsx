@@ -8,6 +8,9 @@ function SyncServer({ language }) {
         remoteTotal: 0,
         pendingSync: 0,
     });
+    const [serverStatus, setServerStatus] = useState('stopped');
+    const [lastSyncTime, setLastSyncTime] = useState(null);
+    const [refreshTime, setRefreshTime] = useState(new Date());
 
     const [logs, setLogs] = useState([]);
     const logTextareaRef = useRef(null);
@@ -17,16 +20,28 @@ function SyncServer({ language }) {
             setLogs((prevLogs) => [...prevLogs, message + '\n']);
         });
 
-        return () => {
-            window.electron.removeLogMessageListener();
-        };
-
         window.electron.onSyncServerStatusChange((status) => {
             setServerStatus(status);
         });
 
+        window.electron.onSyncStatisticsUpdate((newStats) => {
+            setStatistics(newStats);
+        });
+
+        window.electron.onLastSyncTimeUpdate((time) => {
+            setLastSyncTime(new Date(time));
+        });
+
+        const intervalId = setInterval(() => {
+            setRefreshTime(new Date());
+        }, 1000);
+
         return () => {
+            window.electron.removeLogMessageListener();
             window.electron.removeSyncServerStatusChangeListener();
+            window.electron.removeSyncStatisticsUpdateListener();
+            window.electron.removeLastSyncTimeUpdateListener();
+            clearInterval(intervalId);
         };
     }, []);
 
@@ -42,18 +57,26 @@ function SyncServer({ language }) {
         <div className="sync-server-container">
             <h2 className="text-2xl font-bold mb-4 flex items-center">{t('syncServer')}</h2>
             <div className="flex items-center">
-                <button onClick={handleStartServer} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mr-2">
+                <button
+                    onClick={handleStartServer}
+                    className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mr-2 ${serverStatus === 'running' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={serverStatus === 'running'}
+                >
                     {t('startServer')}
                 </button>
-                <button onClick={handleStopServer} className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded mr-2">
+                <button
+                    onClick={handleStopServer}
+                    className={`bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded mr-2 ${serverStatus === 'stopped' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={serverStatus === 'stopped'}
+                >
                     {t('stopServer')}
                 </button>
                 <div className="text-gray-600 ml-auto flex flex-col gap-2">
                     <span>
-                        <span className='font-bold bg-green-200 text-green-600 p-1 rounded-md'>{t('lastSyncTime')}</span> {new Date().toLocaleString('zh-CN', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                        <span className='font-bold bg-green-200 text-green-600 p-1 rounded-md'>{t('lastSyncTime')}</span> {lastSyncTime ? lastSyncTime.toLocaleString() : '-'}
                     </span>
                     <span>
-                        <span className='font-bold bg-green-200 text-green-600 p-1 rounded-md'>{t('refreshTime')}</span> {new Date().toLocaleString('zh-CN', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                        <span className='font-bold bg-green-200 text-green-600 p-1 rounded-md'>{t('refreshTime')}</span> {refreshTime.toLocaleString()}
                     </span>
                 </div>
             </div>

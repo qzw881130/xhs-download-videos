@@ -6,6 +6,7 @@ const { getLikedVideos, getVideoDetails, getAdjacentVideo, getStatistics, getRan
 const isDev = require('electron-is-dev');
 const { getTranslation } = require('./i18n.cjs');
 const database = require('./database.cjs');
+const { setupSyncServerHandlers } = require('./syncServer.cjs');
 
 let win;
 let currentLanguage = 'zh'; // 默认语言
@@ -134,7 +135,7 @@ function setupIpcHandlers(browserWindow) {
                 playerWindow = null;
             });
 
-            // 可选：打开开发者工具
+            // 选择：打开开发者工具
             if (isDev) playerWindow.webContents.openDevTools();
         }
     });
@@ -289,6 +290,9 @@ function setupIpcHandlers(browserWindow) {
             return { success: false, error: error.message };
         }
     });
+
+    // 设置同步服务器处理程序
+    setupSyncServerHandlers(ipcMain, win);
 }
 
 // 在 xiaohongshuDownloader 函数中使用 sendTranslatedMessage

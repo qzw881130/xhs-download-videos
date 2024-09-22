@@ -40,6 +40,19 @@ contextBridge.exposeInMainWorld('electron', {
     saveLanguageSetting: (language) => ipcRenderer.invoke('save-language-setting', language),
     getLanguageSetting: () => ipcRenderer.invoke('get-language-setting'),
     hideVideo: (vid) => ipcRenderer.invoke('hide-video', vid),
+
+    // 添加新的同步服务器相关函数
+    startSyncServer: () => ipcRenderer.send('start-sync-server'),
+    stopSyncServer: () => ipcRenderer.send('stop-sync-server'),
+
+    onSyncServerStatusChange: (callback) => ipcRenderer.on('sync-server-status-change', (_, status) => callback(status)),
+    removeSyncServerStatusChangeListener: () => ipcRenderer.removeAllListeners('sync-server-status-change'),
+
+    onSyncStatisticsUpdate: (callback) => ipcRenderer.on('sync-statistics-update', (_, stats) => callback(stats)),
+    removeSyncStatisticsUpdateListener: () => ipcRenderer.removeAllListeners('sync-statistics-update'),
+
+    onLastSyncTimeUpdate: (callback) => ipcRenderer.on('last-sync-time-update', (_, time) => callback(time)),
+    removeLastSyncTimeUpdateListener: () => ipcRenderer.removeAllListeners('last-sync-time-update'),
 });
 
 console.log('Preload script executed');
