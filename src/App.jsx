@@ -7,6 +7,7 @@ import packageInfo from '../package.json';
 import DownloadConfigPage from './pages/DownloadConfigPage';
 import { getTranslation } from './i18n';
 import logo from '@/assets/images/icon_48x48.png';
+import SyncServerPage from './pages/SyncServerPage';
 
 function Footer({ language }) {
     const t = (key) => getTranslation(language, key);
@@ -101,6 +102,11 @@ function App() {
                                         </NavLink>
                                     </li>
                                     <li>
+                                        <NavLink to="/sync-server" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
+                                            {t('syncServer')}
+                                        </NavLink>
+                                    </li>
+                                    <li>
                                         <NavLink to="/about" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
                                             {t('about')}
                                         </NavLink>
@@ -128,6 +134,7 @@ function App() {
                         <Route path="/collected" element={<FavoriteVideos type="collected" language={language} />} />
                         <Route path="/post" element={<FavoriteVideos type="post" language={language} />} />
                         <Route path="/video-player/:vid" element={<VideoPlayer language={language} />} />
+                        <Route path="/sync-server" element={<SyncServerPage language={language} />} />
                     </Routes>
                 </div>
                 <Footer language={language} />

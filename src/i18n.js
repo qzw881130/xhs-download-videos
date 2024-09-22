@@ -88,6 +88,15 @@ const translations = {
         noticePoint1: '不要多次点击“登陆小红书&下载”按钮，避免下载混乱',
         noticePoint2: '点击“登陆小红书&下载”按钮后，要快速登陆小红书帐号。然后等待软件自动操作，不要干预',
         noticePoint3: '下载过程中，不要变更存储路径',
+        syncServer: '同步服务器',
+        startServer: '启动同步服务器',
+        stopServer: '停止同步服务器',
+        statistics: '统计信息',
+        lastSyncTime: '上次同步时间',
+        refreshTime: '刷新时间',
+        localTotal: '本地总数',
+        remoteTotal: '远程总数',
+        pendingSync: '待同步',
     },
     en: {
         downloadConfig: 'Download Config',
@@ -179,6 +188,15 @@ const translations = {
         noticePoint1: 'Do not click the "login&download" button multiple times to avoid download confusion',
         noticePoint2: 'After clicking the button, quickly log in to your Xiaohongshu account. Then wait for the software to operate automatically, do not click anything',
         noticePoint3: 'Do not change the storage path during the download process',
+        syncServer: 'Sync Server',
+        startServer: 'Start Sync Server',
+        stopServer: 'Stop Sync Server',
+        statistics: 'Statistics',
+        lastSyncTime: 'Last Sync Time',
+        refreshTime: 'Refresh Time',
+        localTotal: 'Local Total',
+        remoteTotal: 'Remote Total',
+        pendingSync: 'Pending Sync',
     }
 };
 
