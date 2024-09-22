@@ -1,6 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
-const { getLikedVideos } = require('./database.cjs');
-const { ipcMain, shell, BrowserWindow, dialog, app } = require('electron');
+const { getLikedVideos, openDatabase, dbGet, dbAll } = require('./database.cjs');
+const { ipcMain } = require('electron');
 
 console.log('SUPABASE_URL:', process.env.SUPABASE_URL);
 console.log('SUPABASE_KEY:', process.env.SUPABASE_KEY);
@@ -11,28 +11,57 @@ let syncInterval;
 let win;
 async function syncServer() {
     try {
-        // 使用 getLikedVideos 函数获取所有视频
-        const { videos: localVideos, total } = await getLikedVideos(1, Number.MAX_SAFE_INTEGER, '');
-        console.log('local-total', total);
+        const db = openDatabase();
+        console.log('start sync....syncServer')
+        let localTotal = 0;
+        let remoteTotal = 0;
+        let pendingSync = 0;
 
-        // 同步到 Supabase
-        const { data, error } = await supabase
-            .from('videos')
-            .upsert(localVideos);
+        // 获取总行数
+        try {
+            const countResult = await dbGet(db, "SELECT COUNT(*) as count FROM videos", []);
+            // const countResult = await db.get("SELECT COUNT(*) as count FROM videos", []);
+            console.log('countResult===', countResult)
+            localTotal = countResult.count;
+        } catch (err) {
+            console.error('Error fetching total count from videos table:', err.message);
+            throw err; // Rethrow the error to be handled by the outer try-catch
+        }
 
-        if (error) throw error;
+        // 使用游标逐行读取数据
+        const batchSize = 100; // 每批处理的行数
+        let offset = 0;
 
-        // 更新统计信息
-        win.webContents.send('sync-statistics-update', {
-            localTotal: total,
-            remoteTotal: data.length,
-            pendingSync: total - data.length
-        });
+        while (offset < localTotal) {
+            console.log('offset:', offset, 'batchSize:', batchSize, 'localTotal:', localTotal);
+            const rows = await dbAll(db, `SELECT * FROM videos LIMIT ? OFFSET ?`, [batchSize, offset]);
+            if (rows.length === 0) break;
+
+            // 同步到 Supabase
+            const { data, error } = await supabase
+                .from('videos')
+                .upsert(rows);
+
+            console.log('data===', data, 'error===', error);
+            if (error) throw error;
+
+            remoteTotal += data.length;
+            pendingSync = localTotal - remoteTotal;
+
+            // 更新进度
+            win.webContents.send('sync-statistics-update', {
+                localTotal,
+                remoteTotal,
+                pendingSync
+            });
+
+            offset += batchSize;
+        }
 
         win.webContents.send('last-sync-time-update', new Date().toISOString());
         win.webContents.send('log-message', 'Sync completed successfully');
     } catch (error) {
-        console.error('sync error', error)
+        console.error('sync error', error);
         win.webContents.send('log-message', `Sync error: ${error.message}`);
     }
 }
@@ -49,11 +78,8 @@ function setupSyncServerHandlers(browserWindow) {
 
         (async () => {
             await syncServer();
+            event.reply('sync-server-status-change', 'stopped');
         })()
-
-        // syncInterval = setInterval(async () => {
-        //     await syncServer();
-        // }, 60000); // 每分钟同步一次
     });
 
     ipcMain.on('stop-sync-server', (event) => {

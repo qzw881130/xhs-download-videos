@@ -351,5 +351,8 @@ module.exports = {
     getStatistics,
     getRandomVideo,
     getDbPath,
-    hideVideo
+    hideVideo,
+    openDatabase,
+    dbGet,
+    dbAll
 };
