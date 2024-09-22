@@ -7,6 +7,7 @@ const isDev = require('electron-is-dev');
 const { getTranslation } = require('./i18n.cjs');
 const database = require('./database.cjs');
 const { setupSyncServerHandlers } = require('./syncServer.cjs');
+const { getStoredDownloadPath } = require('./utils.cjs');
 
 let win;
 let currentLanguage = 'zh'; // 默认语言
@@ -291,8 +292,8 @@ function setupIpcHandlers(browserWindow) {
         }
     });
 
-    // 设置同步服务器处理程序
-    // setupSyncServerHandlers(ipcMain, win);
+    // 设置同步服务器处理程
+    setupSyncServerHandlers(ipcMain, win);
 }
 
 // 在 xiaohongshuDownloader 函数中使用 sendTranslatedMessage
@@ -365,16 +366,4 @@ function ensureDownloadPathFileExists() {
     }
 }
 
-async function getStoredDownloadPath() {
-    ensureDownloadPathFileExists();
-    const downloadPathFile = getDownloadPathFile();
-    try {
-        const data = JSON.parse(await fs.readFile(downloadPathFile, 'utf8'));
-        return data.downloadPath || path.join(app.getPath('userData'), 'downloads');
-    } catch (error) {
-        console.error('Error reading download path file:', error);
-        return path.join(app.getPath('userData'), 'downloads');
-    }
-}
-
-module.exports = { setupIpcHandlers, getStoredDownloadPath, getLanguageSetting };
+module.exports = { setupIpcHandlers, getLanguageSetting };

@@ -2,8 +2,9 @@ const { app, BrowserWindow, protocol, shell, ipcMain } = require('electron');
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 const isDev = require('electron-is-dev');
-const { setupIpcHandlers, getStoredDownloadPath } = require('./ipcHandlers.cjs');
+const { setupIpcHandlers } = require('./ipcHandlers.cjs');
 const { setupSyncServerHandlers } = require('./syncServer.cjs');
+const { getStoredDownloadPath } = require('./utils.cjs');
 require('./ipcHandlers.cjs');  // 确保这行存在，它会加载所有的 IPC 处理程序
 
 const { fork } = require('child_process');
