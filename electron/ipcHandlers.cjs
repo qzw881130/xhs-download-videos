@@ -292,7 +292,7 @@ function setupIpcHandlers(browserWindow) {
     });
 
     // 设置同步服务器处理程序
-    setupSyncServerHandlers(ipcMain, win);
+    // setupSyncServerHandlers(ipcMain, win);
 }
 
 // 在 xiaohongshuDownloader 函数中使用 sendTranslatedMessage
@@ -354,7 +354,7 @@ function ensureConfigFileExists() {
 
 function getDownloadPathFile() {
     const configFile = isDev ? 'download_path.json' : 'download_path_prod.json';
-    console.log('Getting download path file', path.join(app.getPath('userData'), configFile));
+    // console.log('Getting download path file', path.join(app.getPath('userData'), configFile));
     return path.join(app.getPath('userData'), configFile);
 }
 

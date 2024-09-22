@@ -70,6 +70,8 @@ function createWindow() {
 
     // 在这里调用 setupIpcHandlers，并传入 win 对象
     setupIpcHandlers(win);
+    // 正确调用 setupSyncServerHandlers
+    setupSyncServerHandlers(win);
 
     // 添加这些 IPC 监听器
     ipcMain.on('log', (event, message) => {
@@ -79,9 +81,6 @@ function createWindow() {
     ipcMain.on('error', (event, message) => {
         win.webContents.send('console-error', message);
     });
-
-    // 正确调用 setupSyncServerHandlers
-    setupSyncServerHandlers(ipcMain, win);
 }
 
 app.whenReady().then(async () => {

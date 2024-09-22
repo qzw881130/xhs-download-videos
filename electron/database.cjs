@@ -22,7 +22,7 @@ function error(message) {
 
 function openDatabase() {
     const dbPath = getDbPath();
-    log(`Attempting to open database at: ${dbPath}`);
+    // log(`Attempting to open database at: ${dbPath}`);
     return new sqlite3.Database(dbPath, (err) => {
         if (err) {
             error(`Error opening database: ${err.message}`);
@@ -53,26 +53,27 @@ function dbAll(db, query, params) {
 async function getLikedVideos(page = 1, pageSize = 20, type = 'liked', keyword = '') {
     const db = openDatabase();
     const offset = (page - 1) * pageSize;
-    if (!type) {
-        let query = `
+    let query, countQuery, params;
+    if (!!type) {
+        query = `
             SELECT * FROM videos
             WHERE type = ? AND is_hidden = 0
         `;
-        let countQuery = `
+        countQuery = `
             SELECT COUNT(*) as total FROM videos
             WHERE type = ? AND is_hidden = 0
         `;
-        let params = [type];
+        params = [type];
     } else {
-        let query = `
+        query = `
         SELECT * FROM videos
         WHERE is_hidden = 0
         `;
-        let countQuery = `
+        countQuery = `
             SELECT COUNT(*) as total FROM videos
             WHERE is_hidden = 0
         `;
-        let params = [];
+        params = [];
     }
 
     if (keyword) {
@@ -260,7 +261,7 @@ async function ensureDatabaseExists() {
                 await updateDatabaseSchema(db);
                 console.log('Database initialized and schema updated successfully');
             } catch (initError) {
-                console.error('Error initializing or updating database:', initError);
+                console.error('Error initializing or updating database:', initError.message);
             } finally {
                 db.close();
             }
@@ -305,7 +306,7 @@ async function updateDatabaseSchema(db) {
         await new Promise((resolve, reject) => {
             db.run(`ALTER TABLE videos ADD COLUMN ${column} TEXT;`, (err) => {
                 if (err && !err.message.includes('duplicate column name')) {
-                    console.error(`Error adding ${column} column:`, err);
+                    console.error(`Error adding ${column} column:`, err.message);
                     reject(err);
                 } else {
                     console.log(`Column ${column} added or already exists`);
@@ -318,7 +319,7 @@ async function updateDatabaseSchema(db) {
     await new Promise((resolve, reject) => {
         db.run("ALTER TABLE videos ADD COLUMN is_hidden BOOLEAN DEFAULT FALSE", (err) => {
             if (err) {
-                console.error('Error adding is_hidden column:', err);
+                console.error('Error adding is_hidden column:', err.message);
                 reject(err);
             } else {
                 console.log('Column is_hidden added successfully');
