@@ -104,13 +104,13 @@ function SyncServer({ language }) {
                     </div>
                 </div>
             </div>
-
+            {/* 
             <textarea
                 ref={logTextareaRef}
                 value={logs.join('')}
                 readOnly
                 className="mt-6 w-full h-40 p-2 border rounded"
-            />
+            /> */}
         </div>
     );
 }
