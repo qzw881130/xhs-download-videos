@@ -94,12 +94,12 @@ function SyncServer({ language }) {
                         className="border p-2 rounded mr-2 flex-grow"
                         placeholder={t('enterEmail')}
                     />
-                    <button
+                    {<button
                         onClick={handleSaveEmail}
                         className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
                     >
                         {t('save')}
-                    </button>
+                    </button>}
                 </div>
             </div>
 
