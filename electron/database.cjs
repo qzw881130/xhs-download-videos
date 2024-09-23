@@ -358,7 +358,7 @@ async function updateDatabaseSchema(db) {
 async function hideVideo(vid) {
     const db = openDatabase();
     try {
-        const query = 'UPDATE videos SET is_hidden = TRUE, updated_at = CURRENT_TIMESTAMP WHERE vid = ?';
+        const query = 'UPDATE videos SET is_hidden = TRUE, updated_at = CURRENT_TIMESTAMP, is_synced = FALSE WHERE vid = ?';
         await new Promise((resolve, reject) => {
             db.run(query, [vid], function (err) {
                 if (err) reject(err);
