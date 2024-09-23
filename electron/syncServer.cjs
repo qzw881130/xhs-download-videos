@@ -128,7 +128,14 @@ function setupSyncServerHandlers(browserWindow) {
         event.reply('sync-server-status-change', 'running');
 
         (async () => {
-            await syncServer();
+            let unSyncedCount = 0;
+            do {
+                await syncServer();
+                unSyncedCount = await getUnSyncedCount();
+                if (unSyncedCount === 0) {
+                    break;
+                }
+            } while (true)
             event.reply('sync-server-status-change', 'stopped');
         })()
     });
