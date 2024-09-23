@@ -82,9 +82,6 @@ function SyncServer({ language }) {
                 </button>
                 <div className="text-gray-600 ml-auto flex flex-col gap-2">
                     <span>
-                        <span className='font-bold bg-green-200 text-green-600 p-1 rounded-md'>{t('lastSyncTime')}</span> {lastSyncTime ? lastSyncTime.toLocaleString() : '-'}
-                    </span>
-                    <span>
                         <span className='font-bold bg-green-200 text-green-600 p-1 rounded-md'>{t('refreshTime')}</span> {refreshTime.toLocaleString()}
                     </span>
                 </div>
