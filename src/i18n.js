@@ -97,6 +97,10 @@ const translations = {
         localTotal: '本地总数',
         remoteTotal: '远程总数',
         pendingSync: '待同步',
+
+        accountEmail: '账户邮箱',
+        enterEmail: '请输入邮箱',
+        save: '保存',
     },
     en: {
         downloadConfig: 'Download Config',
@@ -197,6 +201,9 @@ const translations = {
         localTotal: 'Local Total',
         remoteTotal: 'Remote Total',
         pendingSync: 'Pending Sync',
+        accountEmail: 'Account Email',
+        enterEmail: 'Enter Email',
+        save: 'Save',
     }
 };
 

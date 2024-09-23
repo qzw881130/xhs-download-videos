@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const { getLikedVideos, openDatabase, dbGet, dbAll, getLocalTotal, getUnSyncedCount, markVideoAsSynced } = require('./database.cjs');
 const { ipcMain } = require('electron');
-const { getStoredDownloadPath } = require('./utils.cjs');
+const { getStoredDownloadPath, getUserEmail } = require('./utils.cjs');
 const path = require('path');
 const fs = require('fs-extra');
 
@@ -14,9 +14,12 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 let syncInterval;
 
 let win;
+
 async function syncServer() {
     try {
-        const user_id = crypto.createHash('md5').update('qianzhiwei5921@gmail.com').digest('hex');
+        const email = await getUserEmail();
+        if (!email) return;
+        const user_id = crypto.createHash('md5').update(email).digest('hex');
         const db = openDatabase();
         console.log('start sync....syncServer')
         // 获取总行数
@@ -86,8 +89,8 @@ async function syncServer() {
                     console.log('no exist localimagepath==', localImagePath)
                 }
 
-
-                return { ...row, image_src: image_src, user_id: user_id };
+                const uuid = `${user_id}_${row.vid}`;
+                return { ...row, image_src: image_src, user_id: user_id, uuid: uuid };
             }));
 
             // 同步到 Supabase
@@ -137,6 +140,14 @@ function setupSyncServerHandlers(browserWindow) {
             event.reply('sync-server-status-change', 'stopped');
             event.reply('log-message', 'Sync server stopped');
         }
+    });
+    ipcMain.on('get-user-email', async (event) => {
+        const email = await getUserEmail();
+        event.reply('user-email', email);
+    });
+    ipcMain.on('store-user-email', async (event, email) => {
+        await storeUserEmail(email);
+        event.reply('user-email-stored', true);
     });
 }
 

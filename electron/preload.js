@@ -56,6 +56,8 @@ contextBridge.exposeInMainWorld('electron', {
 
     // 确保暴露 requestSyncStatistics 方法
     requestSyncStatistics: () => ipcRenderer.send('requestSyncStatistics'),
+    getUserEmail: () => ipcRenderer.invoke('get-user-email'),
+    storeUserEmail: (email) => ipcRenderer.invoke('store-user-email', email),
 });
 
 console.log('Preload script executed');

@@ -20,4 +20,29 @@ async function getStoredDownloadPath() {
     }
 }
 
-module.exports = { getStoredDownloadPath };
+async function getUserEmail() {
+    const downloadPathFile = getDownloadPathFile();
+    try {
+        const data = JSON.parse(await fs.readFile(downloadPathFile, 'utf8'));
+        return data.user_email || '';
+    } catch (error) {
+        console.error('Error reading download path file:', error);
+        return '';
+    }
+}
+
+async function storeUserEmail(userEmail) {
+    if (!userEmail) {
+        return;
+    }
+    try {
+        const downloadPathFile = getDownloadPathFile();
+        const data = JSON.parse(await fs.readFile(downloadPathFile, 'utf8'));
+        data.user_email = userEmail;
+        await fs.writeFile(downloadPathFile, JSON.stringify(data, null, 2), 'utf8');
+    } catch (error) {
+        console.error('Error storing user email:', error);
+    }
+}
+
+module.exports = { getStoredDownloadPath, getUserEmail, storeUserEmail };

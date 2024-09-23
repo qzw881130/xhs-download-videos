@@ -14,6 +14,17 @@ function SyncServer({ language }) {
 
     const [logs, setLogs] = useState([]);
     const logTextareaRef = useRef(null);
+    const [email, setEmail] = useState('');
+
+    useEffect(() => {
+        window.electron.getUserEmail().then((email) => {
+            setEmail(email);
+        });
+    }, []);
+
+    const handleSaveEmail = () => {
+        window.electron.storeUserEmail(email);
+    };
 
     useEffect(() => {
         window.electron.requestSyncStatistics();
@@ -65,6 +76,27 @@ function SyncServer({ language }) {
     return (
         <div className="sync-server-container">
             <h2 className="text-2xl font-bold mb-4 flex items-center">{t('syncServer')}</h2>
+            <div className="account-email-area my-6 bg-gray-100 p-4 rounded-lg shadow w-1/3">
+                <div className="flex items-center">
+                    <span className="mr-2">{t('accountEmail')}</span>
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="border p-2 rounded mr-2 flex-grow"
+                        placeholder={t('enterEmail')}
+                    />
+                    <button
+                        onClick={handleSaveEmail}
+                        className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+                    >
+                        {t('save')}
+                    </button>
+                </div>
+            </div>
+
+
+
             <div className="flex items-center">
                 <button
                     onClick={handleStartServer}
