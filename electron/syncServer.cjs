@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
-const { getLikedVideos, openDatabase, dbGet, dbAll, getLocalTotal, getUnSyncedCount } = require('./database.cjs');
+const { getLikedVideos, openDatabase, dbGet, dbAll, getLocalTotal, getUnSyncedCount, markVideoAsSynced } = require('./database.cjs');
 const { ipcMain } = require('electron');
 const { getStoredDownloadPath } = require('./utils.cjs');
 const path = require('path');
@@ -22,7 +22,7 @@ async function syncServer() {
         // 获取总行数
         let localTotal = 0;
         try {
-            const countResult = await dbGet(db, "SELECT COUNT(*) as count FROM videos", []);
+            const countResult = await dbGet(db, "SELECT COUNT(*) as count FROM videos WHERE is_synced = false", []);
             console.log('countResult===', countResult)
             localTotal = countResult.count;
         } catch (err) {
@@ -35,12 +35,12 @@ async function syncServer() {
         const downloadPath = await getStoredDownloadPath();
 
         // 使用游标逐行读取数据
-        const batchSize = 10; // 每批处理的行数
+        const batchSize = 1; // 每批处理的行数
         let offset = 0;
 
         while (offset < localTotal) {
             console.log('offset:', offset, 'batchSize:', batchSize, 'localTotal:', localTotal);
-            const rows = await dbAll(db, `SELECT * FROM videos LIMIT ? OFFSET ?`, [batchSize, offset]);
+            const rows = await dbAll(db, `SELECT * FROM videos WHERE is_synced = false LIMIT ? OFFSET ?`, [batchSize, offset]);
             if (rows.length === 0) break;
 
             const processedRows = await Promise.all(rows.map(async (row) => {
@@ -98,7 +98,10 @@ async function syncServer() {
             if (error) {
                 console.error('Error inserting/updating data:', error.message);
             } else {
-                console.log('Data inserted/updated successfully:', data);
+                processedRows.map(async (row) => {
+                    await markVideoAsSynced(row.id);
+                })
+                console.log('Data inserted/updated successfully:');
             }
             offset += batchSize;
         }

@@ -398,6 +398,27 @@ async function getUnSyncedCount() {
     }
 }
 
+async function markVideoAsSynced(id) {
+    console.log('markVideoAsSynced function called with id:', id); // 添加日志
+    const db = openDatabase();
+    try {
+        const query = 'UPDATE videos SET is_synced = TRUE, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
+        await new Promise((resolve, reject) => {
+            db.run(query, [id], function (err) {
+                if (err) {
+                    console.error('Error marking video as synced:', err.message);
+                    reject(err);
+                } else {
+                    console.log('Video marked as synced:', id);
+                    resolve(this);
+                }
+            });
+        });
+    } finally {
+        db.close();
+    }
+}
+
 module.exports = {
     getLikedVideos,
     getVideoDetails,
@@ -410,5 +431,6 @@ module.exports = {
     dbGet,
     dbAll,
     getLocalTotal,
-    getUnSyncedCount
+    getUnSyncedCount,
+    markVideoAsSynced
 };

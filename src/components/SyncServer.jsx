@@ -16,6 +16,10 @@ function SyncServer({ language }) {
     const logTextareaRef = useRef(null);
 
     useEffect(() => {
+        window.electron.requestSyncStatistics();
+    }, []);
+
+    useEffect(() => {
         window.electron.onLogMessage((message) => {
             setLogs((prevLogs) => [...prevLogs, message + '\n']);
         });
@@ -35,8 +39,6 @@ function SyncServer({ language }) {
         const intervalId = setInterval(() => {
             setRefreshTime(new Date());
         }, 1000);
-
-        window.electron.requestSyncStatistics();
         // Add a new interval to request statistics every 5 seconds
         const statsIntervalId = setInterval(() => {
             window.electron.requestSyncStatistics();
