@@ -8,6 +8,7 @@ const { getTranslation } = require('./i18n.cjs');
 const database = require('./database.cjs');
 const { setupSyncServerHandlers } = require('./syncServer.cjs');
 const { getStoredDownloadPath } = require('./utils.cjs');
+const { getUserEmail, storeUserEmail } = require('./utils.cjs');
 
 let win;
 let currentLanguage = 'zh'; // 默认语言
@@ -292,8 +293,6 @@ function setupIpcHandlers(browserWindow) {
         }
     });
 
-    // 设置同步服务器处理程
-    setupSyncServerHandlers(ipcMain, win);
 }
 
 // 在 xiaohongshuDownloader 函数中使用 sendTranslatedMessage

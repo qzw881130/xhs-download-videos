@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const { getLikedVideos, openDatabase, dbGet, dbAll, getLocalTotal, getUnSyncedCount, markVideoAsSynced } = require('./database.cjs');
 const { ipcMain } = require('electron');
-const { getStoredDownloadPath, getUserEmail } = require('./utils.cjs');
+const { getStoredDownloadPath, getUserEmail, storeUserEmail } = require('./utils.cjs');
 const path = require('path');
 const fs = require('fs-extra');
 
@@ -141,13 +141,27 @@ function setupSyncServerHandlers(browserWindow) {
             event.reply('log-message', 'Sync server stopped');
         }
     });
-    ipcMain.on('get-user-email', async (event) => {
-        const email = await getUserEmail();
-        event.reply('user-email', email);
+
+    ipcMain.handle('get-user-email', async () => {
+        try {
+            const email = await getUserEmail();
+            console.log('get-user-email', email);
+            return email;
+        } catch (error) {
+            console.error('Error getting user email:', error);
+            throw error;
+        }
     });
-    ipcMain.on('store-user-email', async (event, email) => {
-        await storeUserEmail(email);
-        event.reply('user-email-stored', true);
+
+    ipcMain.handle('store-user-email', async (event, email) => {
+        try {
+            console.log('store-user-email', email);
+            await storeUserEmail(email);
+            return true;
+        } catch (error) {
+            console.error('Error storing user email:', error);
+            throw error;
+        }
     });
 }
 

@@ -3,6 +3,7 @@ const fs = require('fs-extra');
 const { app } = require('electron');
 const isDev = require('electron-is-dev');
 
+
 function getDownloadPathFile() {
     const configFile = isDev ? 'download_path.json' : 'download_path_prod.json';
     // console.log('Getting download path file', path.join(app.getPath('userData'), configFile));

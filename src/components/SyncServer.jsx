@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { getTranslation } from '../i18n';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function SyncServer({ language }) {
     const t = (key) => getTranslation(language, key);
@@ -23,7 +25,12 @@ function SyncServer({ language }) {
     }, []);
 
     const handleSaveEmail = () => {
-        window.electron.storeUserEmail(email);
+        console.log('handleSaveEmail', email);
+        window.electron.storeUserEmail(email).then(() => {
+            toast.success(t('Email saved successfully'), { autoClose: 1000 });
+        }).catch((error) => {
+            toast.error(t('Failed to save email'), { autoClose: 1000 });
+        });
     };
 
     useEffect(() => {
@@ -75,6 +82,7 @@ function SyncServer({ language }) {
 
     return (
         <div className="sync-server-container">
+            <ToastContainer />
             <h2 className="text-2xl font-bold mb-4 flex items-center">{t('syncServer')}</h2>
             <div className="account-email-area my-6 bg-gray-100 p-4 rounded-lg shadow w-1/3">
                 <div className="flex items-center">
@@ -94,8 +102,6 @@ function SyncServer({ language }) {
                     </button>
                 </div>
             </div>
-
-
 
             <div className="flex items-center">
                 <button
