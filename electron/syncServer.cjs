@@ -21,12 +21,12 @@ async function syncServer() {
         if (!email) return;
         const user_id = crypto.createHash('md5').update(email).digest('hex');
         const db = openDatabase();
-        console.log('start sync....syncServer')
+        // console.log('start sync....syncServer')
         // 获取总行数
         let localTotal = 0;
         try {
             const countResult = await dbGet(db, "SELECT COUNT(*) as count FROM videos WHERE is_synced = false", []);
-            console.log('countResult===', countResult)
+            // console.log('countResult===', countResult)
             localTotal = countResult.count;
         } catch (err) {
             console.error('Error fetching total count from videos table:', err.message);
@@ -76,7 +76,7 @@ async function syncServer() {
                             } else {
                                 // 公共URL
                                 image_src = publicUrlData.publicUrl;
-                                console.log('Public URL:', image_src);
+                                // console.log('Public URL:', image_src);
                             }
                         }
 
@@ -185,10 +185,10 @@ async function getRemoteTotal() {
 }
 
 async function getSyncStatistics() {
-    console.log('getSyncStatistics function called'); // 添加日志
+    // console.log('getSyncStatistics function called'); // 添加日志
     // 获取本地总数
     const localTotal = await getLocalTotal();
-    console.log('localTotal:', localTotal); // 添加日志
+    // console.log('localTotal:', localTotal); // 添加日志
     // 模拟获取远程总数和待同步数
     const remoteTotal = await getRemoteTotal();
     const pendingSync = await getUnSyncedCount();
