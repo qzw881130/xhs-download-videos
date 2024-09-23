@@ -151,12 +151,24 @@ function setupSyncServerHandlers(browserWindow) {
     });
 }
 
+async function getRemoteTotal() {
+    try {
+        const { count, error } = await supabase
+            .from('videos')
+            .select('*', { count: 'exact' });
+        return count;
+    } catch (error) {
+        console.error('Error fetching total count from videos table:', error.message);
+        throw error;
+    }
+}
+
 async function getSyncStatistics() {
     // 获取本地总数
     const localTotal = await getLocalTotal();
     // 模拟获取远程总数和待同步数
-    const remoteTotal = Math.floor(Math.random() * 100);
-    const pendingSync = Math.floor(Math.random() * 10);
+    const remoteTotal = await getRemoteTotal();
+    const pendingSync = localTotal - remoteTotal;
 
     return {
         localTotal,
