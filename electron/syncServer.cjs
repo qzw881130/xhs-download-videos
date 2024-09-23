@@ -174,9 +174,14 @@ function setupSyncServerHandlers(browserWindow) {
 
 async function getRemoteTotal() {
     try {
+        const email = await getUserEmail();
+        if (!email) return 0;
+        const user_id = crypto.createHash('md5').update(email).digest('hex');
+
         const { count, error } = await supabase
             .from('videos')
-            .select('*', { count: 'exact' });
+            .select('*', { count: 'exact' })
+            .eq('user_id', user_id);
         return count;
     } catch (error) {
         console.error('Error fetching total count from videos table:', error.message);
