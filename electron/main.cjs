@@ -83,8 +83,9 @@ function createWindow() {
         win.webContents.send('console-error', message);
     });
 
-    ipcMain.on('requestSyncStatistics', (event) => {
-        const stats = getSyncStatistics();
+    ipcMain.on('requestSyncStatistics', async (event) => {
+        const stats = await getSyncStatistics();
+        console.log('Sync statistics:', stats);
         event.sender.send('syncStatisticsUpdate', stats);
     });
 }

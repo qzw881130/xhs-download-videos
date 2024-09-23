@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
-const { getLikedVideos, openDatabase, dbGet, dbAll } = require('./database.cjs');
+const { getLikedVideos, openDatabase, dbGet, dbAll, getLocalTotal } = require('./database.cjs');
 const { ipcMain } = require('electron');
-const { getStoredDownloadPath } = require('./utils.cjs');  // 修改这一行
+const { getStoredDownloadPath } = require('./utils.cjs');
 const path = require('path');
 const fs = require('fs-extra');
 
@@ -151,12 +151,17 @@ function setupSyncServerHandlers(browserWindow) {
     });
 }
 
-function getSyncStatistics() {
-    // 模拟获取统计数据
+async function getSyncStatistics() {
+    // 获取本地总数
+    const localTotal = await getLocalTotal();
+    // 模拟获取远程总数和待同步数
+    const remoteTotal = Math.floor(Math.random() * 100);
+    const pendingSync = Math.floor(Math.random() * 10);
+
     return {
-        localTotal: Math.floor(Math.random() * 100),
-        remoteTotal: Math.floor(Math.random() * 100),
-        pendingSync: Math.floor(Math.random() * 10),
+        localTotal,
+        remoteTotal,
+        pendingSync,
     };
 }
 

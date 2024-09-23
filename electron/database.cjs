@@ -344,6 +344,19 @@ async function hideVideo(vid) {
     }
 }
 
+async function getLocalTotal() {
+    const db = openDatabase();
+    try {
+        const countResult = await dbGet(db, "SELECT COUNT(*) as count FROM videos", []);
+        return countResult.count;
+    } catch (err) {
+        console.error('Error fetching total count from videos table:', err.message);
+        throw err;
+    } finally {
+        db.close();
+    }
+}
+
 module.exports = {
     getLikedVideos,
     getVideoDetails,
@@ -354,5 +367,6 @@ module.exports = {
     hideVideo,
     openDatabase,
     dbGet,
-    dbAll
+    dbAll,
+    getLocalTotal
 };
