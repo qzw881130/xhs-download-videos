@@ -399,7 +399,7 @@ async function getUnSyncedCount() {
 }
 
 async function markVideoAsSynced(id) {
-    console.log('markVideoAsSynced function called with id:', id); // 添加日志
+    // console.log('markVideoAsSynced function called with id:', id); // 添加日志
     const db = openDatabase();
     try {
         const query = 'UPDATE videos SET is_synced = TRUE, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
@@ -409,7 +409,7 @@ async function markVideoAsSynced(id) {
                     console.error('Error marking video as synced:', err.message);
                     reject(err);
                 } else {
-                    console.log('Video marked as synced:', id);
+                    // console.log('Video marked as synced:', id);
                     resolve(this);
                 }
             });

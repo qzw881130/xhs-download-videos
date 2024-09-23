@@ -42,7 +42,7 @@ async function syncServer() {
         let offset = 0;
 
         while (offset < localTotal) {
-            console.log('offset:', offset, 'batchSize:', batchSize, 'localTotal:', localTotal);
+            // console.log('offset:', offset, 'batchSize:', batchSize, 'localTotal:', localTotal);
             const rows = await dbAll(db, `SELECT * FROM videos WHERE is_synced = false LIMIT ? OFFSET ?`, [batchSize, offset]);
             if (rows.length === 0) break;
 
