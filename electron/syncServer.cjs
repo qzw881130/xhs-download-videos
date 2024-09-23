@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
-const { getLikedVideos, openDatabase, dbGet, dbAll, getLocalTotal } = require('./database.cjs');
+const { getLikedVideos, openDatabase, dbGet, dbAll, getLocalTotal, getUnSyncedCount } = require('./database.cjs');
 const { ipcMain } = require('electron');
 const { getStoredDownloadPath } = require('./utils.cjs');
 const path = require('path');
@@ -19,11 +19,8 @@ async function syncServer() {
         const user_id = crypto.createHash('md5').update('qianzhiwei5921@gmail.com').digest('hex');
         const db = openDatabase();
         console.log('start sync....syncServer')
-        let localTotal = 0;
-        let remoteTotal = 0;
-        let pendingSync = 0;
-
         // 获取总行数
+        let localTotal = 0;
         try {
             const countResult = await dbGet(db, "SELECT COUNT(*) as count FROM videos", []);
             console.log('countResult===', countResult)
@@ -33,12 +30,12 @@ async function syncServer() {
             throw err;
         }
 
-        localTotal = 5;
+        // localTotal = 5;
         // 获取本地存储路径
         const downloadPath = await getStoredDownloadPath();
 
         // 使用游标逐行读取数据
-        const batchSize = 5; // 每批处理的行数
+        const batchSize = 10; // 每批处理的行数
         let offset = 0;
 
         while (offset < localTotal) {
@@ -103,17 +100,6 @@ async function syncServer() {
             } else {
                 console.log('Data inserted/updated successfully:', data);
             }
-
-            // remoteTotal += data.length;
-            // pendingSync = localTotal - remoteTotal;
-
-            // // 更新进度
-            // win.webContents.send('sync-statistics-update', {
-            //     localTotal,
-            //     remoteTotal,
-            //     pendingSync
-            // });
-
             offset += batchSize;
         }
 
@@ -164,11 +150,13 @@ async function getRemoteTotal() {
 }
 
 async function getSyncStatistics() {
+    console.log('getSyncStatistics function called'); // 添加日志
     // 获取本地总数
     const localTotal = await getLocalTotal();
+    console.log('localTotal:', localTotal); // 添加日志
     // 模拟获取远程总数和待同步数
     const remoteTotal = await getRemoteTotal();
-    const pendingSync = localTotal - remoteTotal;
+    const pendingSync = await getUnSyncedCount();
 
     return {
         localTotal,
