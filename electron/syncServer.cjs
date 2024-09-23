@@ -151,4 +151,13 @@ function setupSyncServerHandlers(browserWindow) {
     });
 }
 
-module.exports = { setupSyncServerHandlers };
+function getSyncStatistics() {
+    // 模拟获取统计数据
+    return {
+        localTotal: Math.floor(Math.random() * 100),
+        remoteTotal: Math.floor(Math.random() * 100),
+        pendingSync: Math.floor(Math.random() * 10),
+    };
+}
+
+module.exports = { setupSyncServerHandlers, getSyncStatistics };

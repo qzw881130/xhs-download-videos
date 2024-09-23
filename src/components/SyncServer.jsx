@@ -36,12 +36,19 @@ function SyncServer({ language }) {
             setRefreshTime(new Date());
         }, 1000);
 
+        window.electron.requestSyncStatistics();
+        // Add a new interval to request statistics every 5 seconds
+        const statsIntervalId = setInterval(() => {
+            window.electron.requestSyncStatistics();
+        }, 5000);
+
         return () => {
             window.electron.removeLogMessageListener();
             window.electron.removeSyncServerStatusChangeListener();
             window.electron.removeSyncStatisticsUpdateListener();
             window.electron.removeLastSyncTimeUpdateListener();
             clearInterval(intervalId);
+            clearInterval(statsIntervalId); // Clear the new interval
         };
     }, []);
 

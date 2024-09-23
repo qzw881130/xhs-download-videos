@@ -3,7 +3,7 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 const isDev = require('electron-is-dev');
 const { setupIpcHandlers } = require('./ipcHandlers.cjs');
-const { setupSyncServerHandlers } = require('./syncServer.cjs');
+const { setupSyncServerHandlers, getSyncStatistics } = require('./syncServer.cjs');
 const { getStoredDownloadPath } = require('./utils.cjs');
 require('./ipcHandlers.cjs');  // 确保这行存在，它会加载所有的 IPC 处理程序
 
@@ -81,6 +81,11 @@ function createWindow() {
 
     ipcMain.on('error', (event, message) => {
         win.webContents.send('console-error', message);
+    });
+
+    ipcMain.on('requestSyncStatistics', (event) => {
+        const stats = getSyncStatistics();
+        event.sender.send('syncStatisticsUpdate', stats);
     });
 }
 
