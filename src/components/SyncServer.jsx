@@ -14,24 +14,64 @@ function SyncServer({ language }) {
     const [lastSyncTime, setLastSyncTime] = useState(null);
     const [refreshTime, setRefreshTime] = useState(new Date());
 
-    const [logs, setLogs] = useState([]);
-    const logTextareaRef = useRef(null);
-    const [email, setEmail] = useState('');
+    const [supabaseUser, setSupabaseUser] = useState(null);
+    const [showLoginModal, setShowLoginModal] = useState(false);
+    const [loginEmail, setLoginEmail] = useState('');
+    const [loginPassword, setLoginPassword] = useState('');
 
     useEffect(() => {
-        window.electron.getUserEmail().then((email) => {
-            setEmail(email);
-        });
+        checkSupabaseAuth();
     }, []);
 
-    const handleSaveEmail = () => {
-        console.log('handleSaveEmail', email);
-        window.electron.storeUserEmail(email).then(() => {
-            toast.success(t('Email saved successfully'), { autoClose: 1000 });
-        }).catch((error) => {
-            toast.error(t('Failed to save email'), { autoClose: 1000 });
-        });
+    const checkSupabaseAuth = async () => {
+        try {
+            const user = await window.electron.supabaseGetUser();
+            console.log('Supabase user in React:', user); // 添加这行日志
+            if (user) {
+                setSupabaseUser(user);
+            } else {
+                setShowLoginModal(true);
+            }
+        } catch (error) {
+            console.error('Error checking Supabase auth:', error);
+            setShowLoginModal(true);
+        }
     };
+
+    const handleSupabaseSignUp = async () => {
+        try {
+            const user = await window.electron.supabaseSignUp(loginEmail, loginPassword);
+            setSupabaseUser(user);
+            setShowLoginModal(false);
+            toast.success(t('Sign up successful'));
+        } catch (error) {
+            toast.error(t('Error signing up'));
+        }
+    };
+
+    const handleSupabaseSignIn = async () => {
+        try {
+            const user = await window.electron.supabaseSignIn(loginEmail, loginPassword);
+            setSupabaseUser(user);
+            setShowLoginModal(false);
+            toast.success(t('Sign in successful'));
+            await checkSupabaseAuth(); // 添加这行
+        } catch (error) {
+            toast.error(t('Error signing in'));
+        }
+    };
+
+    const handleSupabaseSignOut = async () => {
+        try {
+            await window.electron.supabaseSignOut();
+            setSupabaseUser(null);
+            setShowLoginModal(true);
+            toast.success(t('Sign out successful'));
+        } catch (error) {
+            toast.error(t('Error signing out'));
+        }
+    };
+
 
     useEffect(() => {
         window.electron.requestSyncStatistics();
@@ -84,68 +124,99 @@ function SyncServer({ language }) {
         <div className="sync-server-container">
             <ToastContainer />
             <h2 className="text-2xl font-bold mb-4 flex items-center">{t('syncServer')}</h2>
-            <div className="account-email-area my-6 bg-gray-100 p-4 rounded-lg shadow w-1/3">
-                <div className="flex items-center">
-                    <span className="mr-2">{t('accountEmail')}</span>
-                    <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="border p-2 rounded mr-2 flex-grow"
-                        placeholder={t('enterEmail')}
-                    />
-                    {<button
-                        onClick={handleSaveEmail}
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-                    >
-                        {t('save')}
-                    </button>}
+
+            {showLoginModal ? (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
+                    <div className="bg-white p-8 rounded-lg shadow-xl w-96">
+                        <h3 className="text-xl font-bold mb-4">{t('Login or Sign Up')}</h3>
+                        <input
+                            type="email"
+                            value={loginEmail}
+                            onChange={(e) => setLoginEmail(e.target.value)}
+                            placeholder={t('Email')}
+                            className="w-full p-2 mb-4 border rounded"
+                        />
+                        <input
+                            type="password"
+                            value={loginPassword}
+                            onChange={(e) => setLoginPassword(e.target.value)}
+                            placeholder={t('Password')}
+                            className="w-full p-2 mb-4 border rounded"
+                        />
+                        <div className="flex justify-between">
+                            <button
+                                onClick={handleSupabaseSignIn}
+                                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+                            >
+                                {t('Sign In')}
+                            </button>
+                            <button
+                                onClick={handleSupabaseSignUp}
+                                className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+                            >
+                                {t('Sign Up')}
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-
-            {!!email &&
+            ) : (
                 <>
-                    <div className="flex items-center">
+                    <div className="user-info mb-4 bg-gray-100 p-4 rounded-lg shadow">
+                        <p className="text-lg">{t('Logged in as')}: <span className="font-semibold">{supabaseUser?.email}</span></p>
                         <button
-                            onClick={handleStartServer}
-                            className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mr-2 ${serverStatus === 'running' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            disabled={serverStatus === 'running'}
+                            onClick={handleSupabaseSignOut}
+                            className="mt-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
                         >
-                            {t('startServer')}
+                            {t('Sign Out')}
                         </button>
-                        <button
-                            onClick={handleStopServer}
-                            className={`bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded mr-2 ${serverStatus === 'stopped' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            disabled={serverStatus === 'stopped'}
-                        >
-                            {t('stopServer')}
-                        </button>
-                        <div className="text-gray-600 ml-auto flex flex-col gap-2">
-                            <span>
-                                <span className='font-bold bg-green-200 text-green-600 p-1 rounded-md'>{t('refreshTime')}</span> {refreshTime.toLocaleString()}
-                            </span>
-                        </div>
                     </div>
 
-                    <div className="statistics-area mt-6 bg-gray-100 p-4 rounded-lg shadow">
-                        <h3 className="text-lg font-semibold mb-3">{t('statistics')}</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="stat-item bg-white p-3 rounded shadow">
-                                <span className="stat-label text-gray-600 block mb-1">{t('localTotal')}</span>
-                                <span className="stat-value text-2xl font-bold text-blue-600">{statistics.localTotal}</span>
-                            </div>
-                            <div className="stat-item bg-white p-3 rounded shadow">
-                                <span className="stat-label text-gray-600 block mb-1">{t('remoteTotal')}</span>
-                                <span className="stat-value text-2xl font-bold text-green-600">{statistics.remoteTotal}</span>
-                            </div>
-                            <div className="stat-item bg-white p-3 rounded shadow">
-                                <span className="stat-label text-gray-600 block mb-1">{t('pendingSync')}</span>
-                                <span className="stat-value text-2xl font-bold text-orange-600">{statistics.pendingSync}</span>
-                            </div>
-                        </div>
-                    </div>
 
-                </>}
+                    {!!supabaseUser &&
+                        <>
+                            <div className="flex items-center">
+                                <button
+                                    onClick={handleStartServer}
+                                    className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mr-2 ${serverStatus === 'running' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    disabled={serverStatus === 'running'}
+                                >
+                                    {t('startServer')}
+                                </button>
+                                <button
+                                    onClick={handleStopServer}
+                                    className={`bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded mr-2 ${serverStatus === 'stopped' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    disabled={serverStatus === 'stopped'}
+                                >
+                                    {t('stopServer')}
+                                </button>
+                                <div className="text-gray-600 ml-auto flex flex-col gap-2">
+                                    <span>
+                                        <span className='font-bold bg-green-200 text-green-600 p-1 rounded-md'>{t('refreshTime')}</span> {refreshTime.toLocaleString()}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="statistics-area mt-6 bg-gray-100 p-4 rounded-lg shadow">
+                                <h3 className="text-lg font-semibold mb-3">{t('statistics')}</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="stat-item bg-white p-3 rounded shadow">
+                                        <span className="stat-label text-gray-600 block mb-1">{t('localTotal')}</span>
+                                        <span className="stat-value text-2xl font-bold text-blue-600">{statistics.localTotal}</span>
+                                    </div>
+                                    <div className="stat-item bg-white p-3 rounded shadow">
+                                        <span className="stat-label text-gray-600 block mb-1">{t('remoteTotal')}</span>
+                                        <span className="stat-value text-2xl font-bold text-green-600">{statistics.remoteTotal}</span>
+                                    </div>
+                                    <div className="stat-item bg-white p-3 rounded shadow">
+                                        <span className="stat-label text-gray-600 block mb-1">{t('pendingSync')}</span>
+                                        <span className="stat-value text-2xl font-bold text-orange-600">{statistics.pendingSync}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </>}
+                </>
+            )}
         </div>
     );
 }

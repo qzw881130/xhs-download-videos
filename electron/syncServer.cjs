@@ -10,16 +10,21 @@ console.log('SUPABASE_URL:', process.env.SUPABASE_URL);
 console.log('SUPABASE_KEY:', process.env.SUPABASE_KEY);
 console.log('SUPABASE_STORAGE_BUCKET:', process.env.SUPABASE_STORAGE_BUCKET);
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY, {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false,
+});
 let syncInterval;
 
 let win;
 
 async function syncServer() {
     try {
-        const email = await getUserEmail();
-        if (!email) return;
-        const user_id = crypto.createHash('md5').update(email).digest('hex');
+        const { data: { user } } = await supabase.auth.getUser();
+        console.log('Supabase user in syncServer:', user); // 添加这行日志
+        if (!user?.id) return;
+        const user_id = user.id;
         const db = openDatabase();
         // console.log('start sync....syncServer')
         // 获取总行数
@@ -149,24 +154,52 @@ function setupSyncServerHandlers(browserWindow) {
         }
     });
 
-    ipcMain.handle('get-user-email', async () => {
+    ipcMain.handle('supabase-sign-up', async (event, email, password) => {
         try {
-            const email = await getUserEmail();
-            console.log('get-user-email', email);
-            return email;
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+            });
+            if (error) throw error;
+            return data.user;
         } catch (error) {
-            console.error('Error getting user email:', error);
+            console.error('Error signing up:', error);
             throw error;
         }
     });
 
-    ipcMain.handle('store-user-email', async (event, email) => {
+    ipcMain.handle('supabase-sign-in', async (event, email, password) => {
         try {
-            console.log('store-user-email', email);
-            await storeUserEmail(email);
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+            if (error) throw error;
+            return data.user;
+        } catch (error) {
+            console.error('Error signing in:', error);
+            throw error;
+        }
+    });
+
+    ipcMain.handle('supabase-sign-out', async () => {
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
             return true;
         } catch (error) {
-            console.error('Error storing user email:', error);
+            console.error('Error signing out:', error);
+            throw error;
+        }
+    });
+
+    ipcMain.handle('supabase-get-user', async () => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            console.log('Supabase user:', user); // 添加这行日志
+            return user;
+        } catch (error) {
+            console.error('Error getting user:', error);
             throw error;
         }
     });
@@ -174,9 +207,9 @@ function setupSyncServerHandlers(browserWindow) {
 
 async function getRemoteTotal() {
     try {
-        const email = await getUserEmail();
-        if (!email) return 0;
-        const user_id = crypto.createHash('md5').update(email).digest('hex');
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user?.id) return 0;
+        const user_id = user?.id;
 
         const { count, error } = await supabase
             .from('videos')

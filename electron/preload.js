@@ -58,6 +58,12 @@ contextBridge.exposeInMainWorld('electron', {
     requestSyncStatistics: () => ipcRenderer.send('requestSyncStatistics'),
     getUserEmail: () => ipcRenderer.invoke('get-user-email'),
     storeUserEmail: (email) => ipcRenderer.invoke('store-user-email', email), // 使用 invoke 而不是 send
+
+    // 添加 Supabase 相关方法
+    supabaseSignUp: (email, password) => ipcRenderer.invoke('supabase-sign-up', email, password),
+    supabaseSignIn: (email, password) => ipcRenderer.invoke('supabase-sign-in', email, password),
+    supabaseSignOut: () => ipcRenderer.invoke('supabase-sign-out'),
+    supabaseGetUser: () => ipcRenderer.invoke('supabase-get-user'),
 });
 
 console.log('Preload script executed');
