@@ -2,8 +2,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import { getTranslation } from '../i18n';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
-// 导入第三方登录的图标（你需要安装这些图标库或使用自定义图标）
 import { FaFacebook, FaGithub, FaGoogle, FaTwitter, FaApple } from 'react-icons/fa';
 
 function SyncServer({ language }) {
@@ -21,15 +19,30 @@ function SyncServer({ language }) {
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [loginEmail, setLoginEmail] = useState('');
     const [loginPassword, setLoginPassword] = useState('');
+    const [rememberMe, setRememberMe] = useState(false); // Add remember me state
+    const [isLoading, setIsLoading] = useState(false); // Add loading state
 
     useEffect(() => {
         checkSupabaseAuth();
     }, []);
 
+    useEffect(() => {
+        // Retrieve email and password from local storage if remember me is checked
+        const storedEmail = localStorage.getItem('loginEmail');
+        const storedPassword = localStorage.getItem('loginPassword');
+        const storedRememberMe = localStorage.getItem('rememberMe') === 'true';
+
+        if (storedRememberMe) {
+            setLoginEmail(storedEmail || '');
+            setLoginPassword(storedPassword || '');
+            setRememberMe(storedRememberMe);
+        }
+    }, []);
+
     const checkSupabaseAuth = async () => {
         try {
             const user = await window.electron.supabaseGetUser();
-            console.log('Supabase user in React:', user); // 添加这行日志
+            console.log('Supabase user in React:', user);
             if (user) {
                 setSupabaseUser(user);
             } else {
@@ -42,29 +55,46 @@ function SyncServer({ language }) {
     };
 
     const handleSupabaseSignUp = async () => {
+        setIsLoading(true); // Set loading state
         try {
             const user = await window.electron.supabaseSignUp(loginEmail, loginPassword);
             setSupabaseUser(user);
             setShowLoginModal(false);
             toast.success(t('Sign up successful'), { autoClose: 1000 });
+            if (rememberMe) {
+                localStorage.setItem('loginEmail', loginEmail);
+                localStorage.setItem('loginPassword', loginPassword);
+                localStorage.setItem('rememberMe', rememberMe);
+            }
         } catch (error) {
             toast.error(t('Error signing up'));
+        } finally {
+            setIsLoading(false); // Reset loading state
         }
     };
 
     const handleSupabaseSignIn = async () => {
+        setIsLoading(true); // Set loading state
         try {
             const user = await window.electron.supabaseSignIn(loginEmail, loginPassword);
             setSupabaseUser(user);
             setShowLoginModal(false);
             toast.success(t('Sign in successful'), { autoClose: 1000 });
-            await checkSupabaseAuth(); // 添加这行
+            await checkSupabaseAuth();
+            if (rememberMe) {
+                localStorage.setItem('loginEmail', loginEmail);
+                localStorage.setItem('loginPassword', loginPassword);
+                localStorage.setItem('rememberMe', rememberMe);
+            }
         } catch (error) {
             toast.error(t('Error signing in'));
+        } finally {
+            setIsLoading(false); // Reset loading state
         }
     };
 
     const handleSupabaseSignOut = async () => {
+        setIsLoading(true); // Set loading state
         try {
             await window.electron.supabaseSignOut();
             setSupabaseUser(null);
@@ -72,10 +102,13 @@ function SyncServer({ language }) {
             toast.success(t('Sign out successful'), { autoClose: 1000 });
         } catch (error) {
             toast.error(t('Error signing out'));
+        } finally {
+            setIsLoading(false); // Reset loading state
         }
     };
 
     const handleThirdPartySignIn = async (provider) => {
+        setIsLoading(true); // Set loading state
         try {
             const data = await window.electron.supabaseSignInWithProvider(provider);
             if (data.url) {
@@ -94,12 +127,15 @@ function SyncServer({ language }) {
                     } catch (error) {
                         console.error('Error exchanging code for session:', error);
                         toast.error(t('Error signing in'));
+                    } finally {
+                        setIsLoading(false); // Reset loading state
                     }
                 });
             }
         } catch (error) {
             console.error(`Error signing in with ${provider}:`, error);
             toast.error(t(`Error signing in with ${provider}`));
+            setIsLoading(false); // Reset loading state
         }
     };
 
@@ -127,7 +163,6 @@ function SyncServer({ language }) {
         const intervalId = setInterval(() => {
             setRefreshTime(new Date());
         }, 1000);
-        // Add a new interval to request statistics every 5 seconds
 
         const statsIntervalId = setInterval(() => {
             if (!!supabaseUser) window.electron.requestSyncStatistics();
@@ -139,7 +174,7 @@ function SyncServer({ language }) {
             window.electron.removeSyncStatisticsUpdateListener();
             window.electron.removeLastSyncTimeUpdateListener();
             clearInterval(intervalId);
-            clearInterval(statsIntervalId); // Clear the new interval
+            clearInterval(statsIntervalId);
         };
     }, []);
 
@@ -174,21 +209,32 @@ function SyncServer({ language }) {
                             placeholder={t('Password')}
                             className="w-full p-2 mb-4 border rounded"
                         />
+                        <div className="flex items-center mb-4">
+                            <input
+                                type="checkbox"
+                                checked={rememberMe}
+                                onChange={(e) => setRememberMe(e.target.checked)}
+                                className="mr-2"
+                            />
+                            <label>{t('Remember Me')}</label>
+                        </div>
                         <div className="flex justify-between mb-4">
                             <button
                                 onClick={handleSupabaseSignIn}
                                 className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+                                disabled={isLoading} // Disable button when loading
                             >
-                                {t('Sign In')}
+                                {isLoading ? t('Logging in...') : t('Sign In')}
                             </button>
                             <button
                                 onClick={handleSupabaseSignUp}
                                 className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+                                disabled={isLoading} // Disable button when loading
                             >
-                                {t('Sign Up')}
+                                {isLoading ? t('Signing up...') : t('Sign Up')}
                             </button>
                         </div>
-                        {/* <div className="mt-4">
+                        <div className="mt-4">
                             <p className="text-center mb-2">{t('Or sign in with')}</p>
                             <div className="flex justify-center space-x-4">
                                 <button onClick={() => handleThirdPartySignIn('facebook')} className="text-blue-600 hover:border hover:border-blue-700 bg-white hover:bg-gray-100 border-none">
@@ -207,7 +253,7 @@ function SyncServer({ language }) {
                                     <FaApple size={24} />
                                 </button>
                             </div>
-                        </div> */}
+                        </div>
                     </div>
                 </div>
             ) : (
@@ -217,11 +263,11 @@ function SyncServer({ language }) {
                         <button
                             onClick={handleSupabaseSignOut}
                             className="mt-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+                            disabled={isLoading} // Disable button when loading
                         >
-                            {t('Sign Out')}
+                            {isLoading ? t('Signing out...') : t('Sign Out')}
                         </button>
                     </div>
-
 
                     {!!supabaseUser &&
                         <>
@@ -264,8 +310,8 @@ function SyncServer({ language }) {
                                     </div>
                                 </div>
                             </div>
-
-                        </>}
+                        </>
+                    }
                 </>
             )}
         </div>
