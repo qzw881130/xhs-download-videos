@@ -3,6 +3,9 @@ import { getTranslation } from '../i18n';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+// 导入第三方登录的图标（你需要安装这些图标库或使用自定义图标）
+import { FaFacebook, FaGithub, FaGoogle, FaTwitter, FaApple } from 'react-icons/fa';
+
 function SyncServer({ language }) {
     const t = (key) => getTranslation(language, key);
     const [statistics, setStatistics] = useState({
@@ -72,6 +75,33 @@ function SyncServer({ language }) {
         }
     };
 
+    const handleThirdPartySignIn = async (provider) => {
+        try {
+            const data = await window.electron.supabaseSignInWithProvider(provider);
+            if (data.url) {
+                window.electron.openAuthWindow(data.url);
+                window.electron.onOAuthCallback(async (code) => {
+                    try {
+                        const { session, user } = await window.electron.supabaseExchangeCodeForSession(code);
+                        if (user) {
+                            setSupabaseUser(user);
+                            setShowLoginModal(false);
+                            toast.success(t('Sign in successful'));
+                            await checkSupabaseAuth();
+                        } else {
+                            throw new Error('No user returned from session exchange');
+                        }
+                    } catch (error) {
+                        console.error('Error exchanging code for session:', error);
+                        toast.error(t('Error signing in'));
+                    }
+                });
+            }
+        } catch (error) {
+            console.error(`Error signing in with ${provider}:`, error);
+            toast.error(t(`Error signing in with ${provider}`));
+        }
+    };
 
     useEffect(() => {
         window.electron.requestSyncStatistics();
@@ -98,8 +128,9 @@ function SyncServer({ language }) {
             setRefreshTime(new Date());
         }, 1000);
         // Add a new interval to request statistics every 5 seconds
+
         const statsIntervalId = setInterval(() => {
-            window.electron.requestSyncStatistics();
+            if (!!supabaseUser) window.electron.requestSyncStatistics();
         }, 5000);
 
         return () => {
@@ -143,7 +174,7 @@ function SyncServer({ language }) {
                             placeholder={t('Password')}
                             className="w-full p-2 mb-4 border rounded"
                         />
-                        <div className="flex justify-between">
+                        <div className="flex justify-between mb-4">
                             <button
                                 onClick={handleSupabaseSignIn}
                                 className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
@@ -157,6 +188,26 @@ function SyncServer({ language }) {
                                 {t('Sign Up')}
                             </button>
                         </div>
+                        {/* <div className="mt-4">
+                            <p className="text-center mb-2">{t('Or sign in with')}</p>
+                            <div className="flex justify-center space-x-4">
+                                <button onClick={() => handleThirdPartySignIn('facebook')} className="text-blue-600 hover:border hover:border-blue-700 bg-white hover:bg-gray-100 border-none">
+                                    <FaFacebook size={24} />
+                                </button>
+                                <button onClick={() => handleThirdPartySignIn('github')} className="text-gray-800 hover:border hover:border-gray-900 bg-white hover:bg-gray-100 border-none">
+                                    <FaGithub size={24} />
+                                </button>
+                                <button onClick={() => handleThirdPartySignIn('google')} className="text-red-600 hover:border hover:border-red-700 bg-white hover:bg-gray-100 border-none">
+                                    <FaGoogle size={24} />
+                                </button>
+                                <button onClick={() => handleThirdPartySignIn('twitter')} className="text-blue-400 hover:border hover:border-blue-500 bg-white hover:bg-gray-100 border-none">
+                                    <FaTwitter size={24} />
+                                </button>
+                                <button onClick={() => handleThirdPartySignIn('apple')} className="text-gray-800 hover:border hover:border-gray-900 bg-white hover:bg-gray-100 border-none">
+                                    <FaApple size={24} />
+                                </button>
+                            </div>
+                        </div> */}
                     </div>
                 </div>
             ) : (

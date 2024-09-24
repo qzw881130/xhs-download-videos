@@ -3,7 +3,7 @@ import { spawn } from 'child_process';
 
 const checkServer = async () => {
     try {
-        const response = await fetch('http://localhost:5173');
+        const response = await fetch('http://localhost:3000');
         if (response.ok) {
             console.log('Vite server is ready. Starting Electron...');
             const electron = spawn('electron', ['.'], { stdio: 'inherit' });

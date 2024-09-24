@@ -1,23 +1,64 @@
 const { createClient } = require('@supabase/supabase-js');
 const { getLikedVideos, openDatabase, dbGet, dbAll, getLocalTotal, getUnSyncedCount, markVideoAsSynced } = require('./database.cjs');
-const { ipcMain } = require('electron');
-const { getStoredDownloadPath, getUserEmail, storeUserEmail } = require('./utils.cjs');
+const { ipcMain, protocol } = require('electron');
+const { getStoredDownloadPath, getUserEmail, storeUserEmail, loadEnv } = require('./utils.cjs');
 const path = require('path');
 const fs = require('fs-extra');
+const { app, shell, BrowserWindow } = require('electron');
+const isDev = require('electron-is-dev');
 
-const crypto = require('crypto');
-console.log('SUPABASE_URL:', process.env.SUPABASE_URL);
-console.log('SUPABASE_KEY:', process.env.SUPABASE_KEY);
-console.log('SUPABASE_STORAGE_BUCKET:', process.env.SUPABASE_STORAGE_BUCKET);
-
+loadEnv();
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: false,
 });
 let syncInterval;
-
 let win;
+let authWindow = null;
+
+function createAuthWindow(url) {
+    authWindow = new BrowserWindow({
+        width: 800,
+        height: 600,
+        show: false,
+        'node-integration': false,
+        'web-security': false,
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, 'preload.js')
+        },
+    });
+
+    authWindow.loadURL(url);
+    authWindow.show();
+
+    if (isDev) {
+        authWindow.webContents.openDevTools();
+    }
+
+    authWindow.on('closed', () => {
+        authWindow = null;
+    });
+}
+
+
+function setupOAuth() {
+    protocol.registerHttpProtocol('myapp', (request) => {
+        console.log('myapp protocol request:', request);
+        const url = new URL(request.url);
+        const code = url.searchParams.get('code');
+        if (code) {
+            // 发送授权码回主窗口
+            win.webContents.send('oauth-callback', code);
+            if (authWindow) {
+                authWindow.close();
+            }
+        }
+    });
+}
+
 
 async function syncServer() {
     try {
@@ -203,6 +244,61 @@ function setupSyncServerHandlers(browserWindow) {
             throw error;
         }
     });
+
+    ipcMain.handle('supabase-sign-in-with-provider', async (event, provider) => {
+        try {
+            const url = isDev
+                ? `http://localhost:3000/#/callback`
+                : `file://${path.join(__dirname, '../dist/index.html')}#/callback`;
+
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: provider,
+                options: {
+                    redirectTo: 'myapp://callback',
+                },
+            });
+            console.log('supabase-sign-in-with-provider data===', data)
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error(`Error signing in with ${provider}:`, error);
+            throw error;
+        }
+    });
+
+
+    // 添加这个处理程序
+    ipcMain.handle('supabase-exchange-code-for-session', async (event, code) => {
+        try {
+            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+            console.log('exchangeCodeForSession data===', data)
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error exchanging code for session:', error);
+            throw error;
+        }
+    });
+
+    ipcMain.handle('open-auth-window', (event, url) => {
+        console.log('open-auth-window url===', url)
+        createAuthWindow(url);
+    });
+
+
+    app.on('open-url', async (event, url) => {
+        event.preventDefault();
+
+        // Use the URL to verify the OAuth flow if needed
+        const { data, error } = await supabase.auth.getSessionFromUrl({ url });
+        if (error) {
+            console.error('Error fetching session:', error);
+            return;
+        }
+
+        console.log('Logged in user:', data.user);
+    });
+
 }
 
 async function getRemoteTotal() {
@@ -238,4 +334,4 @@ async function getSyncStatistics() {
     };
 }
 
-module.exports = { setupSyncServerHandlers, getSyncStatistics };
+module.exports = { setupSyncServerHandlers, getSyncStatistics, setupOAuth };

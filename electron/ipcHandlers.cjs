@@ -114,7 +114,7 @@ function setupIpcHandlers(browserWindow) {
 
     ipcMain.handle('open-video-player', (event, vid) => {
         const url = isDev
-            ? `http://localhost:5173/#/video-player/${vid}`
+            ? `http://localhost:3000/#/video-player/${vid}`
             : `file://${path.join(__dirname, '../dist/index.html')}#/video-player/${vid}`;
 
         if (playerWindow && !playerWindow.isDestroyed()) {
@@ -243,6 +243,11 @@ function setupIpcHandlers(browserWindow) {
     // 假设这个已经存在
     ipcMain.handle('get-db-path', () => {
         return getDbPath();
+    });
+
+    ipcMain.handle('app-path', () => {
+        console.log('app-path', app.getAppPath());
+        return app.getAppPath() + '[' + process.env.SUPABASE_URL + ']';
     });
 
     ipcMain.on('log', (event, message) => {

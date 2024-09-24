@@ -25,6 +25,7 @@ contextBridge.exposeInMainWorld('electron', {
     getStoredDownloadPath: () => ipcRenderer.invoke('get-stored-download-path'),
     getDbPath: () => ipcRenderer.invoke('get-db-path'),
     getConfigPath: () => ipcRenderer.invoke('get-config-path'), // 新增这一行
+    appPath: () => ipcRenderer.invoke('app-path'), // 新增这一行
     log: (message) => ipcRenderer.send('log', message),
     error: (message) => ipcRenderer.send('error', message),
     ipcRenderer: {
@@ -64,6 +65,10 @@ contextBridge.exposeInMainWorld('electron', {
     supabaseSignIn: (email, password) => ipcRenderer.invoke('supabase-sign-in', email, password),
     supabaseSignOut: () => ipcRenderer.invoke('supabase-sign-out'),
     supabaseGetUser: () => ipcRenderer.invoke('supabase-get-user'),
+    supabaseSignInWithProvider: (provider) => ipcRenderer.invoke('supabase-sign-in-with-provider', provider),
+    openAuthWindow: (url) => ipcRenderer.invoke('open-auth-window', url),
+    onOAuthCallback: (callback) => ipcRenderer.on('oauth-callback', (_, code) => callback(code)),
+    supabaseExchangeCodeForSession: (code) => ipcRenderer.invoke('supabase-exchange-code-for-session', code),
 });
 
 console.log('Preload script executed');

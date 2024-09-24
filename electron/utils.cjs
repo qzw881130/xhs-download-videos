@@ -46,4 +46,13 @@ async function storeUserEmail(userEmail) {
     }
 }
 
-module.exports = { getStoredDownloadPath, getUserEmail, storeUserEmail };
+function loadEnv() {
+    if (isDev) {
+        require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
+    } else {
+        require('dotenv').config({ path: path.resolve(app.getAppPath(), '.env') });
+    }
+    console.log('SUPABASE_URL:', process.env.SUPABASE_URL);
+}
+
+module.exports = { getStoredDownloadPath, getUserEmail, storeUserEmail, loadEnv };
