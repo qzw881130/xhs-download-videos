@@ -46,7 +46,7 @@ function SyncServer({ language }) {
             const user = await window.electron.supabaseSignUp(loginEmail, loginPassword);
             setSupabaseUser(user);
             setShowLoginModal(false);
-            toast.success(t('Sign up successful'));
+            toast.success(t('Sign up successful'), { autoClose: 1000 });
         } catch (error) {
             toast.error(t('Error signing up'));
         }
@@ -57,7 +57,7 @@ function SyncServer({ language }) {
             const user = await window.electron.supabaseSignIn(loginEmail, loginPassword);
             setSupabaseUser(user);
             setShowLoginModal(false);
-            toast.success(t('Sign in successful'));
+            toast.success(t('Sign in successful'), { autoClose: 1000 });
             await checkSupabaseAuth(); // 添加这行
         } catch (error) {
             toast.error(t('Error signing in'));
@@ -69,7 +69,7 @@ function SyncServer({ language }) {
             await window.electron.supabaseSignOut();
             setSupabaseUser(null);
             setShowLoginModal(true);
-            toast.success(t('Sign out successful'));
+            toast.success(t('Sign out successful'), { autoClose: 1000 });
         } catch (error) {
             toast.error(t('Error signing out'));
         }
@@ -86,7 +86,7 @@ function SyncServer({ language }) {
                         if (user) {
                             setSupabaseUser(user);
                             setShowLoginModal(false);
-                            toast.success(t('Sign in successful'));
+                            toast.success(t('Sign in successful'), { autoClose: 1000 });
                             await checkSupabaseAuth();
                         } else {
                             throw new Error('No user returned from session exchange');
