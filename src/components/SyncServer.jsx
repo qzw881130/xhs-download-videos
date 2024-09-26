@@ -194,7 +194,7 @@ function SyncServer({ language }) {
             {showLoginModal ? (
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
                     <div className="bg-white p-8 rounded-lg shadow-xl w-96">
-                        <h3 className="text-xl font-bold mb-4">{t('Login or Sign Up')}</h3>
+                        <h3 className="text-xl font-bold mb-4">{t('Login_or_SignUp')}</h3>
                         <input
                             type="email"
                             value={loginEmail}
@@ -224,14 +224,14 @@ function SyncServer({ language }) {
                                 className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
                                 disabled={isLoading} // Disable button when loading
                             >
-                                {isLoading ? t('Logging in...') : t('Sign In')}
+                                {isLoading ? t('Logging in...') : t('SignIn')}
                             </button>
                             <button
                                 onClick={handleSupabaseSignUp}
                                 className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
                                 disabled={isLoading} // Disable button when loading
                             >
-                                {isLoading ? t('Signing up...') : t('Sign Up')}
+                                {isLoading ? t('Signing up...') : t('SignUp')}
                             </button>
                         </div>
                         <div className="mt-4">
@@ -259,13 +259,13 @@ function SyncServer({ language }) {
             ) : (
                 <>
                     <div className="user-info mb-4 bg-gray-100 p-4 rounded-lg shadow">
-                        <p className="text-lg">{t('Logged in as')}: <span className="font-semibold">{supabaseUser?.email}</span></p>
+                        <p className="text-lg">{t('logged_in_as')}: <span className="font-semibold">{supabaseUser?.email}</span></p>
                         <button
                             onClick={handleSupabaseSignOut}
                             className="mt-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
                             disabled={isLoading} // Disable button when loading
                         >
-                            {isLoading ? t('Signing out...') : t('Sign Out')}
+                            {isLoading ? t('Signing out...') : t('signOut')}
                         </button>
                     </div>
 
