@@ -145,7 +145,7 @@ function SyncServer({ language }) {
 
     useEffect(() => {
         window.electron.onLogMessage((message) => {
-            setLogs((prevLogs) => [...prevLogs, message + '\n']);
+            // setLogs((prevLogs) => [...prevLogs, message + '\n']);
         });
 
         window.electron.onSyncServerStatusChange((status) => {
