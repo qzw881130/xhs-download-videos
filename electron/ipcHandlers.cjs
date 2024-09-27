@@ -248,7 +248,7 @@ function setupIpcHandlers(browserWindow) {
 
     ipcMain.handle('app-path', () => {
         console.log('app-path', app.getAppPath());
-        return app.getAppPath() + '[' + process.env.SUPABASE_URL + ']';
+        return app.getAppPath();
     });
 
     ipcMain.on('log', (event, message) => {
