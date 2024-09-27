@@ -65,13 +65,13 @@ function setupIpcHandlers(browserWindow) {
             const modifiedVideoDetails = {
                 ...videoDetails,
                 image_src: `local-file://${path.join(downloadDir, `img_${videoDetails.vid}.jpg`).replace(/\\/g, '/')}`,
-                video_src: `local-file://${path.join(downloadDir, `video_${videoDetails.vid}.mp4`).replace(/\\/g, '/')}`,
+                // video_src: `local-file://${path.join(downloadDir, `video_${videoDetails.vid}.mp4`).replace(/\\/g, '/')}`,
                 adjacentVideos: videoDetails.adjacentVideos.map(v => ({
                     ...v,
                     image_src: `local-file://${path.join(downloadDir, `img_${v.vid}.jpg`).replace(/\\/g, '/')}`
                 }))
             };
-            console.log('get-video-details result:', modifiedVideoDetails);
+            // console.log('get-video-details result:', modifiedVideoDetails);
             return modifiedVideoDetails;
         } catch (error) {
             console.error('Error getting video details:', error);

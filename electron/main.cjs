@@ -4,11 +4,9 @@ const isDev = require('electron-is-dev');
 const { setupIpcHandlers } = require('./ipcHandlers.cjs');
 const { setupSyncServerHandlers, getSyncStatistics, setupOAuth } = require('./syncServer.cjs');
 const { getStoredDownloadPath, loadEnv } = require('./utils.cjs');
-require('./ipcHandlers.cjs');  // 确保这行存在，它会加载所有的 IPC 处理程序
+const { setupVideoProxy } = require('./videoProxy.cjs');
 
-const { fork } = require('child_process');
 console.log('Electron main process starting...');
-
 
 loadEnv();
 
@@ -70,7 +68,7 @@ function createWindow() {
         // win.webContents.send('log-message', 'Window loaded successfully');
     });
 
-    // 在这里调用 setupIpcHandlers，并传入 win 对象
+    // 在这调用 setupIpcHandlers，并传入 win 对象
     setupIpcHandlers(win);
     // 正确调用 setupSyncServerHandlers
 
@@ -91,6 +89,8 @@ function createWindow() {
         event.sender.send('syncStatisticsUpdate', stats);
     });
 
+    // 设置视频代理
+    setupVideoProxy();
 }
 
 app.whenReady().then(async () => {
