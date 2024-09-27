@@ -39,6 +39,7 @@ function setupIpcHandlers(browserWindow) {
 
     ipcMain.handle('get-liked-videos', async (event, page, pageSize, type, keyword) => {
         try {
+            console.log('page, pageSize, type, keyword==', page, pageSize, type, keyword)
             const downloadDir = await getStoredDownloadPath();
             console.log('Attempting to get liked videos');
             const result = await getLikedVideos(page, pageSize, type, keyword);
