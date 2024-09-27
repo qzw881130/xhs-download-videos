@@ -106,6 +106,8 @@ const translations = {
         Login_or_SignUp: '登陆&注册',
         logged_in_as: '登陆帐号',
         collected: '收藏的',
+        DownloadVideoToLocal: '下载视频到本地',
+        remoteVideoReminder: '提醒：视频播放链接来自远程，不受本地影响。因此可以选择不下载到本地。'
     },
     en: {
         downloadConfig: 'Download Config',
@@ -214,6 +216,8 @@ const translations = {
         Login_or_SignUp: 'Login&Register',
         logged_in_as: 'Logged in as',
         collected: 'Collected',
+        DownloadVideoToLocal: 'Download Video To Local',
+        remoteVideoReminder: 'Reminder: The video playback link comes from a remote source and is not affected by local settings. Therefore, you can choose not to download it locally.'
     }
 };
 
