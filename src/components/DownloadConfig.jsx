@@ -9,6 +9,7 @@ function DownloadConfig({ language }) {
     const [startPosition, setStartPosition] = useState(0);
     const [endPosition, setEndPosition] = useState(10);
     const [downloadPath, setDownloadPath] = useState('');
+    const [isDownloadVideo, setIsDownloadVideo] = useState(false);
     const [logs, setLogs] = useState([]);
     const logTextareaRef = useRef(null);
 
@@ -23,6 +24,11 @@ function DownloadConfig({ language }) {
             }
         }
         fetchDownloadPath();
+        async function fetchIsDownloadVideo() {
+            const isDownloadVideo = await window.electron.getIsDownloadVideo();
+            setIsDownloadVideo(isDownloadVideo);
+        }
+        fetchIsDownloadVideo();
 
         window.electron.onLogMessage((message) => {
             setLogs((prevLogs) => [...prevLogs, message + '\n']);
@@ -54,6 +60,12 @@ function DownloadConfig({ language }) {
     const handleOpenDirectory = async () => {
         await window.electron.openDirectory(downloadPath);
     };
+
+    const handleIsDownloadVideo = async (evt) => {
+        console.log('isDownloadVideo===', isDownloadVideo, !!evt.target.checked)
+        setIsDownloadVideo(!!evt.target.checked);
+        await window.electron.storeIsDownloadVideo(!!evt.target.checked);
+    }
 
     return (
         <div className="download-configd">
@@ -90,6 +102,18 @@ function DownloadConfig({ language }) {
                         >
                             {t('openDownloadDir')}
                         </button>
+                    </div>
+                </div>
+                <div className="form-row mt-3  w-1/5">
+                    <div className="form-group flex items-center">
+                        <label htmlFor="downloadVideo">{t('DownloadVideoToLocal')}</label>
+                        <input
+                            type="checkbox"
+                            id="downloadVideo"
+                            checked={isDownloadVideo}
+                            onChange={handleIsDownloadVideo}
+                            className="mr-2"
+                        />
                     </div>
                 </div>
                 <div className="form-row mt-3">

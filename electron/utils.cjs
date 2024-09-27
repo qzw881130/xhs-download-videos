@@ -21,6 +21,30 @@ async function getStoredDownloadPath() {
     }
 }
 
+async function getIsDownloadVideo() {
+    const downloadPathFile = getDownloadPathFile();
+    try {
+        const data = JSON.parse(await fs.readFile(downloadPathFile, 'utf8'));
+        console.log('getIsDownloadVideo data', data);
+        return data.is_download_video && true;
+    } catch (error) {
+        console.error('Error reading is download video:', error);
+        return false;
+    }
+}
+
+async function storeIsDownloadVideo(is_download_video) {
+    try {
+        const downloadPathFile = getDownloadPathFile();
+        const data = JSON.parse(await fs.readFile(downloadPathFile, 'utf8'));
+        data.is_download_video = is_download_video ? 1 : 0;
+        await fs.writeFile(downloadPathFile, JSON.stringify(data, null, 2), 'utf8');
+        console.log('success storeIsDownloadVideo');
+    } catch (error) {
+        console.error('Error storing is_download_video :', error);
+    }
+}
+
 async function getUserEmail() {
     const downloadPathFile = getDownloadPathFile();
     try {
@@ -55,4 +79,4 @@ function loadEnv() {
     console.log('SUPABASE_URL:', process.env.SUPABASE_URL);
 }
 
-module.exports = { getStoredDownloadPath, getUserEmail, storeUserEmail, loadEnv };
+module.exports = { getStoredDownloadPath, getUserEmail, storeUserEmail, loadEnv, getIsDownloadVideo, storeIsDownloadVideo };

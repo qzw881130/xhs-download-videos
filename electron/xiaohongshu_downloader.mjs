@@ -21,7 +21,7 @@ let fetch;
 })();
 
 class XiaohongshuDownloader {
-    constructor(scrollAttempts = 0, maxScrollAttempts = 200, type, downloadDir, dbPath, userDataPath, language) {
+    constructor(scrollAttempts = 0, maxScrollAttempts = 200, type, downloadDir, dbPath, userDataPath, language, downloadVideo = false) {
         this.baseUrl = 'https://www.xiaohongshu.com';
         this.loginUrl = `${this.baseUrl}/login`;
         this.likedNotesUrl = `${this.baseUrl}/user/profile/liked`;
@@ -56,6 +56,7 @@ class XiaohongshuDownloader {
         this.userDataPath = userDataPath;
         this.cookiesPath = path.join(this.userDataPath, 'cookies.json');
         this.language = language;
+        this.downloadVideo = downloadVideo;
     }
 
     generateDeviceId() {
@@ -550,8 +551,10 @@ class XiaohongshuDownloader {
         let videoDownloaded = false;
         let imageDownloaded = false;
 
-        if (videoData.videoSrc && videoData.videoSrc.startsWith('http')) {
+        if (this.downloadVideo && videoData.videoSrc && videoData.videoSrc.startsWith('http')) {
             videoDownloaded = await this.downloadVideo(videoData.videoSrc, videoData.savePath);
+        } else if (!this.downloadVideo) {
+            this.sendMessage('videoDownloadSkipped', { url: videoData.url });
         } else {
             this.sendMessage('videoNoSource', { url: videoData.url });
         }
@@ -563,7 +566,7 @@ class XiaohongshuDownloader {
             this.sendMessage('imageNoSource', { url: videoData.url });
         }
 
-        return videoDownloaded || imageDownloaded;
+        return this.downloadVideo ? (videoDownloaded || imageDownloaded) : imageDownloaded;
     }
 
     async saveVideoDataIfDownloaded(videoData) {
@@ -688,6 +691,12 @@ const argv = yargs(hideBin(process.argv))
         type: 'string',
         default: 'zh'
     })
+    .option('downloadVideo', {
+        alias: 'dv',
+        description: '是否下载视频',
+        type: 'boolean',
+        default: false
+    })
     .argv;
 
 const downloader = new XiaohongshuDownloader(
@@ -697,6 +706,7 @@ const downloader = new XiaohongshuDownloader(
     argv.downloadDir,
     argv.dbPath,
     argv.userDataPath,
-    argv.language
+    argv.language,
+    argv.downloadVideo
 );
 downloader.run().catch(error => downloader.sendMessage('downloaderError', { error: error.message }));

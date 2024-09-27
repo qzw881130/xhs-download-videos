@@ -59,6 +59,8 @@ contextBridge.exposeInMainWorld('electron', {
     requestSyncStatistics: () => ipcRenderer.send('requestSyncStatistics'),
     getUserEmail: () => ipcRenderer.invoke('get-user-email'),
     storeUserEmail: (email) => ipcRenderer.invoke('store-user-email', email), // 使用 invoke 而不是 send
+    getIsDownloadVideo: () => ipcRenderer.invoke('get-is-download-video'),
+    storeIsDownloadVideo: (isDownloadVideo) => ipcRenderer.invoke('store-is-download-video', isDownloadVideo), // 使用 invoke 而不是 send
 
     // 添加 Supabase 相关方法
     supabaseSignUp: (email, password) => ipcRenderer.invoke('supabase-sign-up', email, password),

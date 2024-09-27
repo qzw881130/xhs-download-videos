@@ -7,7 +7,7 @@ const isDev = require('electron-is-dev');
 const { getTranslation } = require('./i18n.cjs');
 const database = require('./database.cjs');
 const { setupSyncServerHandlers } = require('./syncServer.cjs');
-const { getStoredDownloadPath } = require('./utils.cjs');
+const { getStoredDownloadPath, getIsDownloadVideo, storeIsDownloadVideo } = require('./utils.cjs');
 const { getUserEmail, storeUserEmail } = require('./utils.cjs');
 
 let win;
@@ -149,7 +149,8 @@ function setupIpcHandlers(browserWindow) {
         // }
         const downloadDir = await getStoredDownloadPath();
         const dbPath = getDbPath();
-        await xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type);
+        const downloadVideo = await getIsDownloadVideo();
+        await xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type, downloadVideo);
     });
 
     ipcMain.handle('get-default-download-path', () => {
@@ -298,10 +299,25 @@ function setupIpcHandlers(browserWindow) {
         }
     });
 
+    ipcMain.handle('get-is-download-video', async (event) => {
+        return await getIsDownloadVideo();
+    })
+
+    ipcMain.handle('store-is-download-video', async (event, isDownloadVideo) => {
+        try {
+            console.log('main isDownloadVideo==', isDownloadVideo);
+            await storeIsDownloadVideo(isDownloadVideo);
+            return { success: true };
+        } catch (error) {
+            console.error('Error store-is-download-video:', error);
+            return { success: false, error: error.message };
+        }
+    })
+
 }
 
 // 在 xiaohongshuDownloader 函数中使用 sendTranslatedMessage
-async function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type) {
+async function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type, downloadVideo) {
     try {
         sendTranslatedMessage('startingDownloader_2', { start: startPosition, end: endPosition });
         const downloaderPath = path.join(__dirname, 'xiaohongshu_downloader.mjs');
@@ -317,7 +333,8 @@ async function xiaohongshuDownloader(startPosition, endPosition, downloadDir, db
                 '--dbPath', dbPath,
                 '--type', type,
                 '--userDataPath', app.getPath('userData'),
-                '--language', language
+                '--language', language,
+                '--downloadVideo', downloadVideo,
             ], {
                 env: {
                     ...process.env,
