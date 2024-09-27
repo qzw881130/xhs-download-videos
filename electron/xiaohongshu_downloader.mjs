@@ -21,7 +21,7 @@ let fetch;
 })();
 
 class XiaohongshuDownloader {
-    constructor(scrollAttempts = 0, maxScrollAttempts = 200, type, downloadDir, dbPath, userDataPath, language, downloadVideo = false) {
+    constructor(scrollAttempts = 0, maxScrollAttempts = 200, type, downloadDir, dbPath, userDataPath, language, isDownloadVideo = false) {
         this.baseUrl = 'https://www.xiaohongshu.com';
         this.loginUrl = `${this.baseUrl}/login`;
         this.likedNotesUrl = `${this.baseUrl}/user/profile/liked`;
@@ -56,7 +56,8 @@ class XiaohongshuDownloader {
         this.userDataPath = userDataPath;
         this.cookiesPath = path.join(this.userDataPath, 'cookies.json');
         this.language = language;
-        this.downloadVideo = downloadVideo;
+        this.isDownloadVideo = isDownloadVideo;
+        console.log(this);
     }
 
     generateDeviceId() {
@@ -551,9 +552,9 @@ class XiaohongshuDownloader {
         let videoDownloaded = false;
         let imageDownloaded = false;
 
-        if (this.downloadVideo && videoData.videoSrc && videoData.videoSrc.startsWith('http')) {
+        if (this.isDownloadVideo && videoData.videoSrc && videoData.videoSrc.startsWith('http')) {
             videoDownloaded = await this.downloadVideo(videoData.videoSrc, videoData.savePath);
-        } else if (!this.downloadVideo) {
+        } else if (!this.isDownloadVideo) {
             this.sendMessage('videoDownloadSkipped', { url: videoData.url });
         } else {
             this.sendMessage('videoNoSource', { url: videoData.url });
@@ -566,7 +567,7 @@ class XiaohongshuDownloader {
             this.sendMessage('imageNoSource', { url: videoData.url });
         }
 
-        return this.downloadVideo ? (videoDownloaded || imageDownloaded) : imageDownloaded;
+        return this.isDownloadVideo ? (videoDownloaded || imageDownloaded) : imageDownloaded;
     }
 
     async saveVideoDataIfDownloaded(videoData) {
@@ -691,7 +692,7 @@ const argv = yargs(hideBin(process.argv))
         type: 'string',
         default: 'zh'
     })
-    .option('downloadVideo', {
+    .option('isDownloadVideo', {
         alias: 'dv',
         description: '是否下载视频',
         type: 'boolean',
@@ -707,6 +708,6 @@ const downloader = new XiaohongshuDownloader(
     argv.dbPath,
     argv.userDataPath,
     argv.language,
-    argv.downloadVideo
+    argv.isDownloadVideo
 );
 downloader.run().catch(error => downloader.sendMessage('downloaderError', { error: error.message }));

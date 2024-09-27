@@ -149,8 +149,7 @@ function setupIpcHandlers(browserWindow) {
         // }
         const downloadDir = await getStoredDownloadPath();
         const dbPath = getDbPath();
-        const downloadVideo = await getIsDownloadVideo();
-        await xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type, downloadVideo);
+        await xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type);
     });
 
     ipcMain.handle('get-default-download-path', () => {
@@ -317,12 +316,13 @@ function setupIpcHandlers(browserWindow) {
 }
 
 // 在 xiaohongshuDownloader 函数中使用 sendTranslatedMessage
-async function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type, downloadVideo) {
+async function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type) {
     try {
         sendTranslatedMessage('startingDownloader_2', { start: startPosition, end: endPosition });
         const downloaderPath = path.join(__dirname, 'xiaohongshu_downloader.mjs');
 
         const language = await getLanguageSetting();
+        const downloadVideo = await getIsDownloadVideo();
 
         let downloader;
         try {
@@ -334,7 +334,7 @@ async function xiaohongshuDownloader(startPosition, endPosition, downloadDir, db
                 '--type', type,
                 '--userDataPath', app.getPath('userData'),
                 '--language', language,
-                '--downloadVideo', downloadVideo,
+                '--isDownloadVideo', downloadVideo,
             ], {
                 env: {
                     ...process.env,
