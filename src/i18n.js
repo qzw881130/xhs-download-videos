@@ -104,7 +104,8 @@ const translations = {
         loggedInAs: '登录账号：',
         signOut: '退出登录',
         Login_or_SignUp: '登陆&注册',
-        logged_in_as: '登陆帐号'
+        logged_in_as: '登陆帐号',
+        collected: '收藏的',
     },
     en: {
         downloadConfig: 'Download Config',
@@ -211,7 +212,8 @@ const translations = {
         loggedInAs: 'Logged Account',
         signOut: 'Logout',
         Login_or_SignUp: 'Login&Register',
-        logged_in_as: 'Logged in as'
+        logged_in_as: 'Logged in as',
+        collected: 'Collected',
     }
 };
 

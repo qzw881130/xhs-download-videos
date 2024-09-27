@@ -165,7 +165,7 @@ function SyncServer({ language }) {
         }, 1000);
 
         const statsIntervalId = setInterval(() => {
-            if (!!supabaseUser) window.electron.requestSyncStatistics();
+            window.electron.requestSyncStatistics();
         }, 5000);
 
         return () => {
