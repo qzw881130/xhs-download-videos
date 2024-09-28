@@ -104,20 +104,19 @@ function DownloadConfig({ language }) {
                         </button>
                     </div>
                 </div>
-                <div className="form-row mt-3  w-5/5 flex">
-                    <div className="form-group flex items-center">
+                <div className="form-row mt-3 flex">
+                    <div className="form-group flex flex-row items-center w-1/6">
                         <label htmlFor="downloadVideo" className=''>{t('DownloadVideoToLocal')}</label>
                         <input
                             type="checkbox"
                             id="downloadVideo"
                             checked={isDownloadVideo}
                             onChange={handleIsDownloadVideo}
-                            className="mr-2 w-auto ml-5 flex-1"
+                            className="mr-2 flex-1"
                         />
-
                     </div>
-                    <div className='w-3/4'>
-                        <p className="text-sm bg-yellow-100 border-yellow-500 text-yellow-700 p-2 ml-2">
+                    <div className='w-5/6'>
+                        <p className="text-sm bg-yellow-100 border-yellow-500 text-yellow-700 p-2 ml-2 inline-block">
                             {t('remoteVideoReminder', '提醒：视频播放链接来自远程，不受本地影响。因此可以选择不下载到本地。')}
                         </p>
                     </div>
