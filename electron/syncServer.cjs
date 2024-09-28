@@ -146,6 +146,11 @@ async function syncServer() {
 
             if (error) {
                 console.error('Error inserting/updating data:', error.message);
+                if (error.message.indexOf('duplicate key value violates') >= 0) {
+                    processedRows.map(async (row) => {
+                        await markVideoAsSynced(row.id);
+                    })
+                }
             } else {
                 processedRows.map(async (row) => {
                     await markVideoAsSynced(row.id);
