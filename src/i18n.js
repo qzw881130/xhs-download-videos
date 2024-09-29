@@ -107,7 +107,12 @@ const translations = {
         logged_in_as: '登陆帐号',
         collected: '收藏的',
         DownloadVideoToLocal: '下载视频到本地',
-        remoteVideoReminder: '提醒：视频播放链接来自远程，不受本地影响。因此可以选择不下载到本地。'
+        remoteVideoReminder: '提醒：视频播放链接来自远程，不受本地影响。因此可以选择不下载到本地。',
+        Remember_Me: '记住我',
+        Logging_in: '登陆中...',
+        Signing_up: '注册中...',
+        SignIn: '登陆',
+        SignUp: '注册'
     },
     en: {
         downloadConfig: 'Download Config',
@@ -217,7 +222,12 @@ const translations = {
         logged_in_as: 'Logged in as',
         collected: 'Collected',
         DownloadVideoToLocal: 'Download Video To Local',
-        remoteVideoReminder: 'Reminder: The video playback link comes from a remote source and is not affected by local settings. Therefore, you can choose not to download it locally.'
+        remoteVideoReminder: 'Reminder: The video playback link comes from a remote source and is not affected by local settings. Therefore, you can choose not to download it locally.',
+        Remember_Me: 'Remember Me',
+        Logging_in: 'Loggin in...',
+        Signing_up: 'Signing up...',
+        SignIn: 'Sign In',
+        SignUp: 'Sign Up'
     }
 };
 

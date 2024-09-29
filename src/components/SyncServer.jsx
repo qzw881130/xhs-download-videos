@@ -216,7 +216,7 @@ function SyncServer({ language }) {
                                 onChange={(e) => setRememberMe(e.target.checked)}
                                 className="mr-2"
                             />
-                            <label>{t('Remember Me')}</label>
+                            <label>{t('Remember_Me')}</label>
                         </div>
                         <div className="flex justify-between mb-4">
                             <button
@@ -224,14 +224,14 @@ function SyncServer({ language }) {
                                 className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
                                 disabled={isLoading} // Disable button when loading
                             >
-                                {isLoading ? t('Logging in...') : t('SignIn')}
+                                {isLoading ? t('Logging_in') : t('SignIn')}
                             </button>
                             <button
                                 onClick={handleSupabaseSignUp}
                                 className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
                                 disabled={isLoading} // Disable button when loading
                             >
-                                {isLoading ? t('Signing up...') : t('SignUp')}
+                                {isLoading ? t('Signing_up') : t('SignUp')}
                             </button>
                         </div>
                         {/* <div className="mt-4">
