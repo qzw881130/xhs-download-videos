@@ -193,7 +193,7 @@ function SyncServer({ language }) {
 
             {showLoginModal ? (
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
-                    <div className="bg-white p-8 rounded-lg shadow-xl w-96 relative">
+                    <div className="bg-white p-4 rounded-lg shadow-xl w-96 relative">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-xl font-bold">{t('Login_or_SignUp')}</h3>
 
