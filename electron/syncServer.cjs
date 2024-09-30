@@ -139,23 +139,24 @@ async function syncServer() {
                 return { ...row, image_src: image_src, user_id: user_id, uuid: uuid };
             }));
 
-            // 同步到 Supabase
+            // 修改这部分代码
             const { data, error } = await supabase
                 .from('videos')
-                .upsert(processedRows);
+                .upsert(processedRows, { onConflict: 'uuid' });
 
             if (error) {
                 console.error('Error inserting/updating data:', error.message);
-                if (error.message.indexOf('duplicate key value violates') >= 0) {
-                    processedRows.map(async (row) => {
+                // 如果是重复键错误，我们仍然需要标记这些记录为已同步
+                if (error.message.includes('duplicate key value violates')) {
+                    await Promise.all(processedRows.map(async (row) => {
                         await markVideoAsSynced(row.id);
-                    })
+                    }));
                 }
             } else {
-                processedRows.map(async (row) => {
+                await Promise.all(processedRows.map(async (row) => {
                     await markVideoAsSynced(row.id);
-                })
-                console.log('Data inserted/updated successfully:');
+                }));
+                console.log('Data inserted/updated successfully');
             }
             offset += batchSize;
         }

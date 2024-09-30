@@ -102,6 +102,7 @@ const translations = {
         enterEmail: '请输入邮箱',
         save: '保存',
         loggedInAs: '登录账号：',
+        Signingout: '退出中...',
         signOut: '退出登录',
         Login_or_SignUp: '登陆&注册',
         logged_in_as: '登陆帐号',
@@ -112,7 +113,10 @@ const translations = {
         Logging_in: '登陆中...',
         Signing_up: '注册中...',
         SignIn: '登陆',
-        SignUp: '注册'
+        SignUp: '注册',
+        Sign_in_successful: '登陆成功',
+        Sign_up_successful: '注册成功',
+        Sign_out_successful: '已退出',
     },
     en: {
         downloadConfig: 'Download Config',
@@ -217,6 +221,7 @@ const translations = {
         enterEmail: 'Enter Email',
         save: 'Save',
         loggedInAs: 'Logged Account',
+        Signingout: 'Signing out',
         signOut: 'Logout',
         Login_or_SignUp: 'Login&Register',
         logged_in_as: 'Logged in as',
@@ -227,7 +232,10 @@ const translations = {
         Logging_in: 'Loggin in...',
         Signing_up: 'Signing up...',
         SignIn: 'Sign In',
-        SignUp: 'Sign Up'
+        SignUp: 'Sign Up',
+        Sign_in_successful: 'Sign in successful',
+        Sign_up_successful: 'Sign up successful',
+        Sign_out_successful: 'Sign out successful',
     }
 };
 

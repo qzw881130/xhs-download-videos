@@ -60,7 +60,7 @@ function SyncServer({ language }) {
             const user = await window.electron.supabaseSignUp(loginEmail, loginPassword);
             setSupabaseUser(user);
             setShowLoginModal(false);
-            toast.success(t('Sign up successful'), { autoClose: 1000 });
+            toast.success(t('Sign_up_successful'), { autoClose: 1000 });
             if (rememberMe) {
                 localStorage.setItem('loginEmail', loginEmail);
                 localStorage.setItem('loginPassword', loginPassword);
@@ -79,7 +79,7 @@ function SyncServer({ language }) {
             const user = await window.electron.supabaseSignIn(loginEmail, loginPassword);
             setSupabaseUser(user);
             setShowLoginModal(false);
-            toast.success(t('Sign in successful'), { autoClose: 1000 });
+            toast.success(t('Sign_in_successful'), { autoClose: 1000 });
             await checkSupabaseAuth();
             if (rememberMe) {
                 localStorage.setItem('loginEmail', loginEmail);
@@ -99,7 +99,7 @@ function SyncServer({ language }) {
             await window.electron.supabaseSignOut();
             setSupabaseUser(null);
             setShowLoginModal(true);
-            toast.success(t('Sign out successful'), { autoClose: 1000 });
+            toast.success(t('Sign_out_successful'), { autoClose: 1000 });
         } catch (error) {
             toast.error(t('Error signing out'));
         } finally {
@@ -119,7 +119,7 @@ function SyncServer({ language }) {
                         if (user) {
                             setSupabaseUser(user);
                             setShowLoginModal(false);
-                            toast.success(t('Sign in successful'), { autoClose: 1000 });
+                            toast.success(t('Sign_in_successful'), { autoClose: 1000 });
                             await checkSupabaseAuth();
                         } else {
                             throw new Error('No user returned from session exchange');
@@ -210,14 +210,14 @@ function SyncServer({ language }) {
                             type="email"
                             value={loginEmail}
                             onChange={(e) => setLoginEmail(e.target.value)}
-                            placeholder={t('Email')}
+                            placeholder={'Email'}
                             className="w-full p-2 mb-4 border rounded"
                         />
                         <input
                             type="password"
                             value={loginPassword}
                             onChange={(e) => setLoginPassword(e.target.value)}
-                            placeholder={t('Password')}
+                            placeholder={'Password'}
                             className="w-full p-2 mb-4 border rounded"
                         />
                         <div className="flex items-center mb-4">
@@ -278,7 +278,7 @@ function SyncServer({ language }) {
                                     className="mt-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
                                     disabled={isLoading}
                                 >
-                                    {isLoading ? t('Signing out...') : t('signOut')}
+                                    {isLoading ? t('Signingout') : t('signOut')}
                                 </button>
                             </>
                         ) : (
