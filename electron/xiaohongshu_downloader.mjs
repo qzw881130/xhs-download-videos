@@ -400,21 +400,35 @@ class XiaohongshuDownloader {
     async downloadImage(imageUrl, savePath) {
         this.sendMessage('startingImageDownload', { url: imageUrl, savePath });
 
-        try {
-            const response = await fetch(imageUrl);
-            if (!response.ok) {
-                this.sendMessage(`HTTP error! status: ${response.status}`)
-                throw new Error(`HTTP error! status: ${response.status}`);
+        const maxRetries = 3;
+        const timeout = 5000; // 5 seconds
+
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+                const response = await fetch(imageUrl, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    this.sendMessage(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const buffer = await response.arrayBuffer();
+                await fs.writeFile(savePath, Buffer.from(buffer));
+
+                this.sendMessage('imageDownloadComplete', { savePath });
+                return true;
+            } catch (error) {
+                if (attempt === maxRetries) {
+                    this.sendMessage('imageDownloadError', { error: error.message });
+                    return false;
+                } else {
+                    this.sendMessage(`Image download attempt ${attempt} failed. Retrying...`);
+                }
             }
-
-            const buffer = await response.arrayBuffer();
-            await fs.writeFile(savePath, Buffer.from(buffer));
-
-            this.sendMessage('imageDownloadComplete', { savePath });
-            return true;
-        } catch (error) {
-            this.sendMessage('imageDownloadError', { error: error.message });
-            return false;
         }
     }
 
