@@ -57,7 +57,7 @@ class XiaohongshuDownloader {
         this.cookiesPath = path.join(this.userDataPath, 'cookies.json');
         this.language = language;
         this.isDownloadVideo = isDownloadVideo;
-        console.log(this);
+        // console.log(this);
     }
 
     generateDeviceId() {
@@ -648,7 +648,9 @@ class XiaohongshuDownloader {
     }
 
     t(key, params = {}) {
-        return getTranslation(this.language, key, params);
+        const msg = getTranslation(this.language, key, params);
+        console.log(msg)
+        return msg;
     }
 }
 

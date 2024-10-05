@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import '../styles/DownloadConfig.css';
-import { getTranslation } from '../i18n';
+import { getTranslation } from '../i18n';  // Make sure this import is correct
 
 function DownloadConfig({ language }) {
     const t = (key) => getTranslation(language, key);

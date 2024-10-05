@@ -40,7 +40,7 @@ const translations = {
         cookiesLoaded: 'Cookies 已加载',
         cookiesFileNotFound: 'Cookies 文件不存在，将在首次登录后创建',
         saveVideoDataError: '保存视频数据到数据库时出错：{error}',
-        gettingVideos: '���在获取{type}视频...',
+        gettingVideos: '在获取{type}视频...',
         startingPreScroll: '开始预滚动，共 {attempts} 次',
         preScrollComplete: '完成第 {attempt} 次预滚动',
         preScrollSectionMarked: '已标记第 {attempt} 次滚动加载的内容为已处理',
@@ -63,6 +63,7 @@ const translations = {
         downloaderError: '下载器错误: {error}',
         downloaderProcessExited: '下载器进程退出，退出码 {code}, 信号 {signal}',
         generalError: '发生错误: {error}',
+        videoDownloadSkipped: '视频下载已跳过',
     },
     en: {
         startingBrowser: 'Starting browser...',

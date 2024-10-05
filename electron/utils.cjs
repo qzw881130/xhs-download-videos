@@ -25,7 +25,7 @@ async function getIsDownloadVideo() {
     const downloadPathFile = getDownloadPathFile();
     try {
         const data = JSON.parse(await fs.readFile(downloadPathFile, 'utf8'));
-        console.log('getIsDownloadVideo data', data);
+        // console.log('getIsDownloadVideo data', data);
         return !!data.is_download_video;
     } catch (error) {
         console.error('Error reading is download video:', error);
