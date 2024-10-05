@@ -413,7 +413,7 @@ class XiaohongshuDownloader {
 
             try {
                 // 使用 fetch 请求图片数据，传入 AbortController 来处理超时
-                const response = await fetch(url, { signal: controller.signal });
+                const response = await fetch(url + '?' + attempt, { signal: controller.signal });
                 clearTimeout(timeoutId); // 如果请求成功，清除超时定时器
 
                 if (!response.ok) {
@@ -425,20 +425,19 @@ class XiaohongshuDownloader {
                 // 将 ArrayBuffer 转换为 Buffer 并写入文件
                 await writeFile(savePath, Buffer.from(buffer));
 
-                console.log(getTranslation('zh', 'imageDownloadComplete', { savePath }));
+                this.sendMessage('imageDownloadComplete', { savePath });
                 return true;
             } catch (error) {
                 clearTimeout(timeoutId); // 如果请求失败，清除定时器
 
                 if (error.name === 'AbortError') {
-                    console.log(getTranslation('zh', 'imageDownloadTimeout'));
+                    this.sendMessage('imageDownloadTimeout');
                 } else {
-                    console.log('error.message====', error.message);
-                    console.log(getTranslation('zh', 'imageDownloadAttemptFailed', { attempt }));
+                    this.sendMessage('imageDownloadAttemptFailed', { attempt, error: error.message });
                 }
 
                 if (attempt === maxRetries) {
-                    console.error(getTranslation('zh', 'imageDownloadError', { error: error.message }));
+                    this.sendMessage('imageDownloadError', { error: error.message });
                     return false;
                 }
 
