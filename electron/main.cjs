@@ -85,7 +85,7 @@ function createWindow() {
 
     ipcMain.on('requestSyncStatistics', async (event) => {
         const stats = await getSyncStatistics();
-        console.log('Sync statistics:', stats);
+        // console.log('Sync statistics:', stats);
         event.sender.send('syncStatisticsUpdate', stats);
     });
 

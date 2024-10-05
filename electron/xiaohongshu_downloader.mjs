@@ -402,7 +402,10 @@ class XiaohongshuDownloader {
 
         try {
             const response = await fetch(imageUrl);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {
+                this.sendMessage(`HTTP error! status: ${response.status}`)
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
             const buffer = await response.arrayBuffer();
             await fs.writeFile(savePath, Buffer.from(buffer));

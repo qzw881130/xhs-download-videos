@@ -63,7 +63,7 @@ function setupOAuth() {
 async function syncServer() {
     try {
         const { data: { user } } = await supabase.auth.getUser();
-        console.log('Supabase user in syncServer:', user); // 添加这行日志
+        // console.log('Supabase user in syncServer:', user); // 添加这行日志
         if (!user?.id) return;
         const user_id = user.id;
         const db = openDatabase();
@@ -243,7 +243,7 @@ function setupSyncServerHandlers(browserWindow) {
     ipcMain.handle('supabase-get-user', async () => {
         try {
             const { data: { user } } = await supabase.auth.getUser();
-            console.log('Supabase user:', user); // 添加这行日志
+            // console.log('Supabase user:', user); // 添加这行日志
             return user;
         } catch (error) {
             console.error('Error getting user:', error);

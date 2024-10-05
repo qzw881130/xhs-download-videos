@@ -51,7 +51,7 @@ function setupIpcHandlers(browserWindow) {
                     image_src: `local-file://${path.join(downloadDir, `img_${video.vid}.jpg`).replace(/\\/g, '/')}`
                 }))
             };
-            console.log('get-liked-videos result:', modifiedResult);
+            // console.log('get-liked-videos result:', modifiedResult);
             return modifiedResult;
         } catch (error) {
             console.error('Error in get-liked-videos handler:', error);

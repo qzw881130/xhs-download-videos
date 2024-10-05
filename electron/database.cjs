@@ -27,7 +27,7 @@ function openDatabase() {
         if (err) {
             error(`Error opening database: ${err.message}`);
         } else {
-            log(`Database opened successfully: ${dbPath}`);
+            // log(`Database opened successfully: ${dbPath}`);
         }
     });
 }
@@ -257,7 +257,7 @@ async function ensureDatabaseExists() {
         if (err) {
             console.error('Error opening database:', err.message);
         } else {
-            console.log('Database opened successfully');
+            // console.log('Database opened successfully');
             try {
                 await initializeDatabase(db);
                 await updateDatabaseSchema(db);
@@ -373,11 +373,11 @@ async function hideVideo(vid) {
 }
 
 async function getLocalTotal() {
-    console.log('getLocalTotal function called'); // 添加日志
+    // console.log('getLocalTotal function called'); // 添加日志
     const db = openDatabase();
     try {
         const countResult = await dbGet(db, "SELECT COUNT(*) as count FROM videos", []);
-        console.log('countResult:', countResult); // 添加日志
+        // console.log('countResult:', countResult); // 添加日志
         return countResult.count;
     } catch (err) {
         console.error('Error fetching total count from videos table:', err.message);
