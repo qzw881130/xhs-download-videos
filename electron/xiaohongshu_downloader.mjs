@@ -1,6 +1,7 @@
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import fs from 'fs/promises';
+import { writeFile } from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
@@ -19,6 +20,7 @@ let fetch;
     const module = await import('node-fetch');
     fetch = module.default;
 })();
+
 
 class XiaohongshuDownloader {
     constructor(scrollAttempts = 0, maxScrollAttempts = 200, type, downloadDir, dbPath, userDataPath, language, isDownloadVideo = false) {
@@ -347,7 +349,11 @@ class XiaohongshuDownloader {
             const vid = urlParams.get('xsec_token') || 'unknown';
             this.sendMessage('vidExtracted', { vid });
 
-            if (await this.videoExists(vid)) {
+
+            const imagePath = path.join(this.downloadDir, `img_${vid}.jpg`);
+            const imageExists = await fs.access(imagePath).then(() => true).catch(() => false);
+            console.log('imageExists ===', imageExists);
+            if (await this.videoExists(vid) && imageExists) {
                 this.sendMessage('videoExists', { vid });
                 return null;
             }
@@ -364,7 +370,8 @@ class XiaohongshuDownloader {
                 title: detailInfo.title,
                 vid: vid,
                 type: this.type,
-                savePath: path.join(this.downloadDir, `video_${vid}.mp4`)
+                savePath: path.join(this.downloadDir, `video_${vid}.mp4`),
+                is_synced: false,
             };
 
             await this.saveVideoData(videoData);
@@ -397,37 +404,46 @@ class XiaohongshuDownloader {
         }
     }
 
-    async downloadImage(imageUrl, savePath) {
-        this.sendMessage('startingImageDownload', { url: imageUrl, savePath });
-
-        const maxRetries = 3;
-        const timeout = 5000; // 5 seconds
+    async downloadImage(url, savePath, maxRetries = 3) {
+        const timeoutDuration = 5000; // 5秒超时
 
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), timeout);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
 
-                const response = await fetch(imageUrl, { signal: controller.signal });
-                clearTimeout(timeoutId);
+            try {
+                // 使用 fetch 请求图片数据，传入 AbortController 来处理超时
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId); // 如果请求成功，清除超时定时器
 
                 if (!response.ok) {
-                    this.sendMessage(`HTTP error! status: ${response.status}`);
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
+                // 将响应数据转换为 ArrayBuffer
                 const buffer = await response.arrayBuffer();
-                await fs.writeFile(savePath, Buffer.from(buffer));
+                // 将 ArrayBuffer 转换为 Buffer 并写入文件
+                await writeFile(savePath, Buffer.from(buffer));
 
-                this.sendMessage('imageDownloadComplete', { savePath });
+                console.log(getTranslation('zh', 'imageDownloadComplete', { savePath }));
                 return true;
             } catch (error) {
-                if (attempt === maxRetries) {
-                    this.sendMessage('imageDownloadError', { error: error.message });
-                    return false;
+                clearTimeout(timeoutId); // 如果请求失败，清除定时器
+
+                if (error.name === 'AbortError') {
+                    console.log(getTranslation('zh', 'imageDownloadTimeout'));
                 } else {
-                    this.sendMessage(`Image download attempt ${attempt} failed. Retrying...`);
+                    console.log('error.message====', error.message);
+                    console.log(getTranslation('zh', 'imageDownloadAttemptFailed', { attempt }));
                 }
+
+                if (attempt === maxRetries) {
+                    console.error(getTranslation('zh', 'imageDownloadError', { error: error.message }));
+                    return false;
+                }
+
+                // 如果下载失败，等待1秒后重试
+                await new Promise(resolve => setTimeout(resolve, 1000));
             }
         }
     }
@@ -643,9 +659,9 @@ class XiaohongshuDownloader {
     async saveVideoData(videoData) {
         return new Promise((resolve, reject) => {
             this.db.run(`
-                INSERT OR REPLACE INTO videos (vid, title, page_url, video_src, image_src, type)
-                VALUES (?, ?, ?, ?, ?, ?)
-            `, [videoData.vid, videoData.title, videoData.url, videoData.videoSrc, videoData.imageSrc, this.type], (err) => {
+                INSERT OR REPLACE INTO videos (vid, title, page_url, video_src, image_src, type, is_synced)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            `, [videoData.vid, videoData.title, videoData.url, videoData.videoSrc, videoData.imageSrc, this.type, videoData.is_synced], (err) => {
                 if (err) {
                     this.sendMessage('saveVideoDataError', { error: err.message });
                     reject(err);

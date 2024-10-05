@@ -132,7 +132,7 @@ async function syncServer() {
                         console.error('Error during image upload:', error);
                     }
                 } else {
-                    console.log('no exist localimagepath==', localImagePath)
+                    // console.log('no exist localimagepath==', localImagePath)
                 }
 
                 const uuid = `${user_id}_${row.vid}`;
@@ -156,7 +156,7 @@ async function syncServer() {
                 await Promise.all(processedRows.map(async (row) => {
                     await markVideoAsSynced(row.id);
                 }));
-                console.log('Data inserted/updated successfully');
+                // console.log('Data inserted/updated successfully');
             }
             offset += batchSize;
         }

@@ -64,6 +64,7 @@ const translations = {
         downloaderProcessExited: '下载器进程退出，退出码 {code}, 信号 {signal}',
         generalError: '发生错误: {error}',
         videoDownloadSkipped: '视频下载已跳过',
+        imageDownloadAttemptFailed: '图片下载尝试 {attempt} 失败。正在重试...',
     },
     en: {
         startingBrowser: 'Starting browser...',
@@ -129,6 +130,7 @@ const translations = {
         downloaderError: 'Downloader error: {error}',
         downloaderProcessExited: 'Downloader process exited with code {code}, signal {signal}',
         generalError: 'An error occurred: {error}',
+        imageDownloadAttemptFailed: 'Image download attempt {attempt} failed. Retrying...',
     }
 };
 
