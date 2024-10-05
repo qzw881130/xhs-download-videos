@@ -126,8 +126,7 @@ async function syncServer() {
                             }
                         }
 
-                        console.log('storageData===', storageData, 'storageError===', storageError);
-                        console.log('image_src==', image_src)
+                        console.log('image_src==', image_src, 'storageError===', storageError);
                     } catch (error) {
                         console.error('Error during image upload:', error);
                     }
