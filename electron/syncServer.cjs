@@ -132,6 +132,7 @@ async function syncServer() {
                     }
                 } else {
                     // console.log('no exist localimagepath==', localImagePath)
+                    image_src = `https://via.placeholder.com/150x200`;
                 }
 
                 const uuid = `${user_id}_${row.vid}`;
