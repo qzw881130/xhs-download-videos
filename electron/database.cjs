@@ -77,10 +77,11 @@ async function getLikedVideos(page = 1, pageSize = 20, type = 'liked', keyword =
     }
 
     if (keyword) {
-        query += ` AND title LIKE ?`;
-        countQuery += ` AND title LIKE ?`;
+        query += ` AND (title LIKE ? OR id = ?)`;
+        countQuery += ` AND (title LIKE ? OR id = ?)`;
         if (!!type) {
             params.push(`%${keyword}%`);
+            params.push(keyword);
         }
     }
 
