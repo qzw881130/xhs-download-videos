@@ -412,7 +412,7 @@ class XiaohongshuDownloader {
 
             try {
                 // 使用 fetch 请求图片数据，传入 AbortController 来处理超时
-                const proxyUrl = `https://woouwxrgdkgxobbikbdj.supabase.co/functions/v1/proxyImageDownload?imageUrl=${encodeURIComponent(url)}`;
+                const proxyUrl = `${process.env.SUPABASE_URL}/functions/v1/proxyImageDownload?imageUrl=${encodeURIComponent(url)}`;
                 const response = await fetch(proxyUrl + '&' + attempt, {
                     signal: controller.signal,
                     headers: {
