@@ -406,14 +406,20 @@ class XiaohongshuDownloader {
 
     async downloadImage(url, savePath, maxRetries = 3) {
         const timeoutDuration = 5000; // 5秒超时
-
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
 
             try {
                 // 使用 fetch 请求图片数据，传入 AbortController 来处理超时
-                const response = await fetch(url + '?' + attempt, { signal: controller.signal });
+                const proxyUrl = `https://woouwxrgdkgxobbikbdj.supabase.co/functions/v1/proxyImageDownload?imageUrl=${encodeURIComponent(url)}`;
+                const response = await fetch(proxyUrl + '&' + attempt, {
+                    signal: controller.signal,
+                    headers: {
+                        'Referer': 'https://www.xiaohongshu.com/',
+                        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+                    },
+                });
                 clearTimeout(timeoutId); // 如果请求成功，清除超时定时器
 
                 if (!response.ok) {

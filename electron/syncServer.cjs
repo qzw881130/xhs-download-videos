@@ -161,11 +161,11 @@ async function syncServer() {
             offset += batchSize;
         }
 
-        win.webContents.send('last-sync-time-update', new Date().toISOString());
-        win.webContents.send('log-message', 'Sync completed successfully');
+        win?.webContents?.send('last-sync-time-update', new Date().toISOString());
+        win?.webContents?.send('log-message', 'Sync completed successfully');
     } catch (error) {
         console.error('sync error', error);
-        win.webContents.send('log-message', `Sync error: ${error.message}`);
+        win?.webContents?.send('log-message', `Sync error: ${error.message}`);
     }
 }
 
