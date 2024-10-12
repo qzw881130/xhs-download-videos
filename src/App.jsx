@@ -12,6 +12,7 @@ import LoginModal from './components/LoginModal';
 import UserMenu from './components/UserMenu';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { AuthProvider } from './contexts/AuthContext';
 
 function Footer({ language }) {
     const t = (key) => getTranslation(language, key);
@@ -109,94 +110,96 @@ function App() {
     }
 
     return (
-        <Router>
-            <div className="App flex flex-col min-h-screen">
-                <ToastContainer />
-                {!location.hash.startsWith('#/video-player') && (
-                    <>
-                        <div className="bg-gray-800 p-2 flex items-center">
-                            <img src={logo} alt="Logo" className="mr-4" />
-                            <nav className="flex-grow">
-                                <ul className="flex justify-center space-x-8">
-                                    <li>
-                                        <NavLink to="/" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
-                                            {t('downloadConfig')}
-                                        </NavLink>
-                                    </li>
-                                    <li>
-                                        <NavLink to="/liked" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
-                                            {t('likedVideos')}
-                                        </NavLink>
-                                    </li>
-                                    <li>
-                                        <NavLink to="/collected" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
-                                            {t('collectedVideos')}
-                                        </NavLink>
-                                    </li>
-                                    <li>
-                                        <NavLink to="/post" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
-                                            {t('videoNotes')}
-                                        </NavLink>
-                                    </li>
-                                    <li>
-                                        <NavLink to="/sync-server" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
-                                            {t('syncServer')}
-                                        </NavLink>
-                                    </li>
-                                    <li>
-                                        <NavLink to="/about" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
-                                            {t('about')}
-                                        </NavLink>
-                                    </li>
-                                </ul>
-                            </nav>
-                            <div className="ml-auto flex items-center">
-                                {user ? (
-                                    <UserMenu
-                                        user={user}
-                                        language={language}
-                                        onSignOut={handleSignOut}
-                                    />
-                                ) : (
-                                    <button
-                                        onClick={() => setShowLoginModal(true)}
-                                        className="text-white hover:text-gray-300 mr-4"
+        <AuthProvider>
+            <Router>
+                <div className="App flex flex-col min-h-screen">
+                    <ToastContainer />
+                    {!location.hash.startsWith('#/video-player') && (
+                        <>
+                            <div className="bg-gray-800 p-2 flex items-center">
+                                <img src={logo} alt="Logo" className="mr-4" />
+                                <nav className="flex-grow">
+                                    <ul className="flex justify-center space-x-8">
+                                        <li>
+                                            <NavLink to="/" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
+                                                {t('downloadConfig')}
+                                            </NavLink>
+                                        </li>
+                                        <li>
+                                            <NavLink to="/liked" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
+                                                {t('likedVideos')}
+                                            </NavLink>
+                                        </li>
+                                        <li>
+                                            <NavLink to="/collected" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
+                                                {t('collectedVideos')}
+                                            </NavLink>
+                                        </li>
+                                        <li>
+                                            <NavLink to="/post" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
+                                                {t('videoNotes')}
+                                            </NavLink>
+                                        </li>
+                                        <li>
+                                            <NavLink to="/sync-server" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
+                                                {t('syncServer')}
+                                            </NavLink>
+                                        </li>
+                                        <li>
+                                            <NavLink to="/about" className={({ isActive }) => isActive ? "text-white font-bold" : "text-gray-300 hover:text-white"}>
+                                                {t('about')}
+                                            </NavLink>
+                                        </li>
+                                    </ul>
+                                </nav>
+                                <div className="ml-auto flex items-center">
+                                    {user ? (
+                                        <UserMenu
+                                            user={user}
+                                            language={language}
+                                            onSignOut={handleSignOut}
+                                        />
+                                    ) : (
+                                        <button
+                                            onClick={() => setShowLoginModal(true)}
+                                            className="text-white hover:text-gray-300 mr-4"
+                                        >
+                                            {t('login')}
+                                        </button>
+                                    )}
+                                    <select
+                                        value={language}
+                                        onChange={handleLanguageChange}
+                                        className="bg-gray-700 text-white rounded"
                                     >
-                                        {t('login')}
-                                    </button>
-                                )}
-                                <select
-                                    value={language}
-                                    onChange={handleLanguageChange}
-                                    className="bg-gray-700 text-white rounded"
-                                >
-                                    <option value="zh">中文</option>
-                                    <option value="en">English</option>
-                                </select>
+                                        <option value="zh">中文</option>
+                                        <option value="en">English</option>
+                                    </select>
+                                </div>
                             </div>
-                        </div>
-                    </>
-                )}
-                <div className="container mx-auto mt-8 flex-grow">
-                    <Routes>
-                        <Route path="/about" element={<AboutPage language={language} />} />
-                        <Route path="/" element={<DownloadConfigPage language={language} />} />
-                        <Route path="/liked" element={<FavoriteVideos type="liked" language={language} />} />
-                        <Route path="/collected" element={<FavoriteVideos type="collected" language={language} />} />
-                        <Route path="/post" element={<FavoriteVideos type="post" language={language} />} />
-                        <Route path="/video-player/:vid" element={<VideoPlayer language={language} />} />
-                        <Route path="/sync-server" element={<SyncServerPage language={language} />} />
-                    </Routes>
+                        </>
+                    )}
+                    <div className="container mx-auto mt-8 flex-grow">
+                        <Routes>
+                            <Route path="/about" element={<AboutPage language={language} />} />
+                            <Route path="/" element={<DownloadConfigPage language={language} />} />
+                            <Route path="/liked" element={<FavoriteVideos type="liked" language={language} />} />
+                            <Route path="/collected" element={<FavoriteVideos type="collected" language={language} />} />
+                            <Route path="/post" element={<FavoriteVideos type="post" language={language} />} />
+                            <Route path="/video-player/:vid" element={<VideoPlayer language={language} />} />
+                            <Route path="/sync-server" element={<SyncServerPage language={language} />} />
+                        </Routes>
+                    </div>
+                    <Footer language={language} />
+                    <LoginModal
+                        language={language}
+                        isOpen={showLoginModal}
+                        onClose={() => setShowLoginModal(false)}
+                        onLoginSuccess={handleLoginSuccess}
+                    />
                 </div>
-                <Footer language={language} />
-                <LoginModal
-                    language={language}
-                    isOpen={showLoginModal}
-                    onClose={() => setShowLoginModal(false)}
-                    onLoginSuccess={handleLoginSuccess}
-                />
-            </div>
-        </Router>
+            </Router>
+        </AuthProvider>
     );
 }
 

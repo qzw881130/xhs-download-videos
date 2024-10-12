@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { FaFacebook, FaGithub, FaGoogle, FaTwitter, FaApple } from 'react-icons/fa';
 import { getTranslation } from '../i18n';
+import { useAuth } from '../contexts/AuthContext';
 
-function LoginModal({ language, isOpen, onClose, onLoginSuccess }) {
+function LoginModal({ language }) {
+    const { showLoginModal, login, closeLoginModal } = useAuth();
     const t = (key) => getTranslation(language, key);
     const [loginEmail, setLoginEmail] = useState('');
     const [loginPassword, setLoginPassword] = useState('');
@@ -43,8 +45,7 @@ function LoginModal({ language, isOpen, onClose, onLoginSuccess }) {
         setIsLoading(true);
         try {
             const user = await window.electron.supabaseSignIn(loginEmail, loginPassword);
-
-            onLoginSuccess(user);
+            login(user);
             // toast.success(t('Sign_in_successful'), { autoClose: 200 });
             if (rememberMe) {
                 localStorage.setItem('loginEmail', loginEmail);
@@ -68,7 +69,7 @@ function LoginModal({ language, isOpen, onClose, onLoginSuccess }) {
                     try {
                         const { session, user } = await window.electron.supabaseExchangeCodeForSession(code);
                         if (user) {
-                            onLoginSuccess(user);
+                            login(user);
                             // toast.success(t('Sign_in_successful'), { autoClose: 1000 });
                         } else {
                             throw new Error('No user returned from session exchange');
@@ -88,7 +89,7 @@ function LoginModal({ language, isOpen, onClose, onLoginSuccess }) {
         }
     };
 
-    if (!isOpen) return null;
+    if (!showLoginModal) return null;
 
     return (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
@@ -97,7 +98,7 @@ function LoginModal({ language, isOpen, onClose, onLoginSuccess }) {
                     <h3 className="text-xl font-bold">{t('Login_or_SignUp')}</h3>
                 </div>
                 <a
-                    onClick={onClose}
+                    onClick={closeLoginModal}
                     className="text-gray-500 hover:text-gray-700 absolute right-5 top-5 cursor-pointer"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

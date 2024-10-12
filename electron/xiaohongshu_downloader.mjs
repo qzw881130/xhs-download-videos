@@ -10,6 +10,7 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { getTranslation } from './i18n.mjs';
 import { downloadBrowsers } from "puppeteer/internal/node/install.js";
+import { createClient } from '@supabase/supabase-js';
 puppeteer.use(StealthPlugin());
 
 const __filename = fileURLToPath(import.meta.url);
@@ -60,7 +61,8 @@ class XiaohongshuDownloader {
         this.language = language;
         this.isDownloadVideo = isDownloadVideo;
         this.isSyncServer = isSyncServer;
-        console.log(this);
+        // console.log(this);
+        this.supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
     }
 
     generateDeviceId() {
@@ -375,8 +377,11 @@ class XiaohongshuDownloader {
                 is_synced: false,
             };
 
-            await this.saveVideoData(videoData);
+            const recordId = await this.saveVideoData(videoData);
             this.sendMessage('videoAddedToDatabase', { vid });
+
+            // 同步新记录
+            await this.syncNewRecord(recordId);
 
             return videoData;
         } catch (error) {
@@ -618,8 +623,10 @@ class XiaohongshuDownloader {
             const imageExists = await fs.access(imagePath).then(() => true).catch(() => false);
 
             if (videoExists || imageExists) {
-                await this.saveVideoData(videoData);
+                const recordId = await this.saveVideoData(videoData);
                 this.sendMessage('videoSavedToDatabase', { vid: videoData.vid });
+                // 同步新记录
+                await this.syncNewRecord(recordId);
             } else {
                 this.sendMessage('videoDownloadFailed', { vid: videoData.vid });
             }
@@ -667,13 +674,124 @@ class XiaohongshuDownloader {
             this.db.run(`
                 INSERT OR REPLACE INTO videos (vid, title, page_url, video_src, image_src, type, is_synced)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
-            `, [videoData.vid, videoData.title, videoData.url, videoData.videoSrc, videoData.imageSrc, this.type, videoData.is_synced], (err) => {
+            `, [videoData.vid, videoData.title, videoData.url, videoData.videoSrc, videoData.imageSrc, this.type, videoData.is_synced], function (err) {
                 if (err) {
                     this.sendMessage('saveVideoDataError', { error: err.message });
                     reject(err);
                 } else {
-                    resolve();
+                    resolve(this.lastID); // 返回插入或更新的记录ID
                 }
+            });
+        });
+    }
+
+    async syncNewRecord(recordId) {
+        this.sendMessage('enter syncNewRecord')
+        if (this.isSyncServer) {
+            return;
+        }
+
+        try {
+            const record = await this.getRecordById(recordId);
+            if (!record) {
+                this.sendMessage('Record not found')
+                throw new Error('Record not found');
+            }
+
+            // 上传图片到 Supabase Storage
+            const imagePath = path.join(this.downloadDir, `img_${record.vid}.jpg`);
+            const imageUrl = await this.uploadImageToSupabase(imagePath, record.vid);
+
+            // 获取当前用户的 ID
+            const { data: { user } } = await this.supabase.auth.getUser();
+            if (!user) {
+                throw new Error('User not logged in');
+            }
+            const user_id = user.id;
+
+            // 生成 UUID
+            const uuid = `${user_id}_${record.vid}`;
+
+            // 准备要同步的数据
+            const processedRecord = {
+                vid: record.vid,
+                title: record.title,
+                page_url: record.page_url,
+                video_src: record.video_src,
+                image_src: imageUrl, // 使用上传后的图片 URL
+                type: record.type,
+                created_at: record.created_at,
+                user_id: user_id,
+                uuid: uuid
+            };
+
+            // 更新或插入记录到 Supabase
+            const { data, error } = await this.supabase
+                .from('videos')
+                .upsert([processedRecord], { onConflict: 'uuid' });
+
+            if (error) {
+                console.error('Error inserting/updating data:', error.message);
+                // 如果是重复键错误，我们仍然需要标记这条记录为已同步
+                if (error.message.includes('duplicate key value violates')) {
+                    await this.updateSyncStatus(recordId, true);
+                    this.sendMessage('recordSyncedWithConflict', { vid: record.vid });
+                } else {
+                    throw error;
+                }
+            } else {
+                // 更新本地记录的同步状态
+                await this.updateSyncStatus(recordId, true);
+                this.sendMessage('recordSynced', { vid: record.vid });
+            }
+        } catch (error) {
+            console.error('Sync error:', error);
+            this.sendMessage('syncError', { error: error.message, vid: record?.vid });
+            // 可以选择在这里重试同步或者将失败的同步记录到一个队列中以便后续处理
+        }
+    }
+
+    async uploadImageToSupabase(imagePath, vid) {
+        try {
+            const fileBuffer = await fs.promises.readFile(imagePath);
+            const fileName = `img_${vid}.jpg`;
+            const { data, error } = await this.supabase.storage
+                .from('video-images')
+                .upload(fileName, fileBuffer, {
+                    contentType: 'image/jpeg',
+                    upsert: true
+                });
+
+            if (error) {
+                throw error;
+            }
+
+            // 获取公共 URL
+            const { data: urlData } = this.supabase.storage
+                .from('video-images')
+                .getPublicUrl(fileName);
+
+            return urlData.publicUrl;
+        } catch (error) {
+            this.sendMessage('imageUploadError', { error: error.message });
+            throw error;
+        }
+    }
+
+    async getRecordById(id) {
+        return new Promise((resolve, reject) => {
+            this.db.get('SELECT * FROM videos WHERE id = ?', [id], (err, row) => {
+                if (err) reject(err);
+                resolve(row);
+            });
+        });
+    }
+
+    async updateSyncStatus(id, isSynced) {
+        return new Promise((resolve, reject) => {
+            this.db.run('UPDATE videos SET is_synced = ? WHERE id = ?', [isSynced ? 1 : 0, id], (err) => {
+                if (err) reject(err);
+                resolve();
             });
         });
     }

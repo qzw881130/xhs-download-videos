@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { getTranslation } from '../i18n';
+import { useAuth } from '../contexts/AuthContext';
 
-function UserMenu({ user, language, onSignOut }) {
+function UserMenu({ language }) {
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const { user, logout } = useAuth();
     const t = (key) => getTranslation(language, key);
 
     const handleSignOut = async () => {
         try {
             await window.electron.supabaseSignOut();
-            onSignOut();
+            logout();
             toast.success(t('Sign_out_successful'), { autoClose: 1000 });
         } catch (error) {
             console.error('Error signing out:', error);

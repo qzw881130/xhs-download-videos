@@ -1,9 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import '../styles/DownloadConfig.css';
 import { getTranslation } from '../i18n';  // Make sure this import is correct
+import { useAuth } from '../hooks/useAuth';
+import LoginModal from './LoginModal';
 
 function DownloadConfig({ language }) {
     const t = (key) => getTranslation(language, key);
+    const { user, showLoginModal, login, openLoginModal, closeLoginModal } = useAuth();
 
     const [downloadType, setDownloadType] = useState('liked');
     const [startPosition, setStartPosition] = useState(0);
@@ -51,15 +54,21 @@ function DownloadConfig({ language }) {
     }, []);
 
     const handleStartDownload = async () => {
+        if (!user) {
+            openLoginModal();
+            return;
+        }
+
         try {
             await window.electron.startDownloader(startPosition, endPosition, downloadType, syncServer);
             setLogs(prevLogs => [...prevLogs,
             t('startDownloadLog',
-                { type: t(downloadType), start: startPosition, end: endPosition, syncServer }).replace('{type}',
-                    t(downloadType))
+                { type: t(downloadType), start: startPosition, end: endPosition, syncServer })
+                .replace('{type}', t(downloadType))
                 .replace('{start}', startPosition)
                 .replace('{end}', endPosition)
-                .replace('{syncServer}', syncServer)]);
+                .replace('{syncServer}', syncServer)
+            ]);
         } catch (error) {
             console.error('Error starting downloader:', error);
             setLogs(prevLogs => [...prevLogs, t('downloadUnavailable')]);
@@ -214,6 +223,12 @@ function DownloadConfig({ language }) {
                     rows="10"
                 />
             </div>
+            <LoginModal
+                language={language}
+                isOpen={showLoginModal}
+                onClose={closeLoginModal}
+                onLoginSuccess={login}
+            />
         </div>
     );
 }
