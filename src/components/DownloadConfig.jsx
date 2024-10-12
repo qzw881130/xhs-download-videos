@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import '../styles/DownloadConfig.css';
 import { getTranslation } from '../i18n';  // Make sure this import is correct
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../contexts/AuthContext';
 import LoginModal from './LoginModal';
 
 function DownloadConfig({ language }) {

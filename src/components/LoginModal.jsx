@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { toast } from 'react-toastify';
 import { FaFacebook, FaGithub, FaGoogle, FaTwitter, FaApple } from 'react-icons/fa';
 import { getTranslation } from '../i18n';
 import { useAuth } from '../contexts/AuthContext';
 
 function LoginModal({ language }) {
-    const { showLoginModal, login, closeLoginModal } = useAuth();
+    const { showLoginModal, isLoading, closeLoginModal, handleSupabaseSignUp, handleSupabaseSignIn, handleThirdPartySignIn } = useAuth();
     const t = (key) => getTranslation(language, key);
     const [loginEmail, setLoginEmail] = useState('');
     const [loginPassword, setLoginPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         const storedEmail = localStorage.getItem('loginEmail');
@@ -24,68 +22,21 @@ function LoginModal({ language }) {
         }
     }, []);
 
-    const handleSupabaseSignUp = async () => {
-        setIsLoading(true);
-        try {
-            const user = await window.electron.supabaseSignUp(loginEmail, loginPassword);
-            // toast.success(t('Sign_up_successful'), { autoClose: 200 });
-            if (rememberMe) {
-                localStorage.setItem('loginEmail', loginEmail);
-                localStorage.setItem('loginPassword', loginPassword);
-                localStorage.setItem('rememberMe', rememberMe);
-            }
-        } catch (error) {
-            toast.error(t('Error signing up'));
-        } finally {
-            setIsLoading(false);
+    const handleSignUp = async () => {
+        await handleSupabaseSignUp(loginEmail, loginPassword);
+        if (rememberMe) {
+            localStorage.setItem('loginEmail', loginEmail);
+            localStorage.setItem('loginPassword', loginPassword);
+            localStorage.setItem('rememberMe', rememberMe);
         }
     };
 
-    const handleSupabaseSignIn = async () => {
-        setIsLoading(true);
-        try {
-            const user = await window.electron.supabaseSignIn(loginEmail, loginPassword);
-            login(user);
-            // toast.success(t('Sign_in_successful'), { autoClose: 200 });
-            if (rememberMe) {
-                localStorage.setItem('loginEmail', loginEmail);
-                localStorage.setItem('loginPassword', loginPassword);
-                localStorage.setItem('rememberMe', rememberMe);
-            }
-        } catch (error) {
-            toast.error(t('Error signing in'));
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleThirdPartySignIn = async (provider) => {
-        setIsLoading(true);
-        try {
-            const data = await window.electron.supabaseSignInWithProvider(provider);
-            if (data.url) {
-                window.electron.openAuthWindow(data.url);
-                window.electron.onOAuthCallback(async (code) => {
-                    try {
-                        const { session, user } = await window.electron.supabaseExchangeCodeForSession(code);
-                        if (user) {
-                            login(user);
-                            // toast.success(t('Sign_in_successful'), { autoClose: 1000 });
-                        } else {
-                            throw new Error('No user returned from session exchange');
-                        }
-                    } catch (error) {
-                        console.error('Error exchanging code for session:', error);
-                        toast.error(t('Error signing in'));
-                    } finally {
-                        setIsLoading(false);
-                    }
-                });
-            }
-        } catch (error) {
-            console.error(`Error signing in with ${provider}:`, error);
-            toast.error(t(`Error signing in with ${provider}`));
-            setIsLoading(false);
+    const handleSignIn = async () => {
+        await handleSupabaseSignIn(loginEmail, loginPassword);
+        if (rememberMe) {
+            localStorage.setItem('loginEmail', loginEmail);
+            localStorage.setItem('loginPassword', loginPassword);
+            localStorage.setItem('rememberMe', rememberMe);
         }
     };
 
@@ -130,14 +81,14 @@ function LoginModal({ language }) {
                 </div>
                 <div className="flex justify-between mb-4">
                     <button
-                        onClick={handleSupabaseSignIn}
+                        onClick={handleSignIn}
                         className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
                         disabled={isLoading}
                     >
                         {isLoading ? t('Logging_in') : t('SignIn')}
                     </button>
                     <button
-                        onClick={handleSupabaseSignUp}
+                        onClick={handleSignUp}
                         className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
                         disabled={isLoading}
                     >
