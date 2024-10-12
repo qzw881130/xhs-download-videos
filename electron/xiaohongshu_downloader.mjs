@@ -11,6 +11,7 @@ import { hideBin } from 'yargs/helpers';
 import { getTranslation } from './i18n.mjs';
 import { downloadBrowsers } from "puppeteer/internal/node/install.js";
 import { createClient } from '@supabase/supabase-js';
+import { existsSync } from 'fs';  // 添加这行
 puppeteer.use(StealthPlugin());
 
 const __filename = fileURLToPath(import.meta.url);
@@ -626,7 +627,7 @@ class XiaohongshuDownloader {
                 const recordId = await this.saveVideoData(videoData);
                 this.sendMessage('videoSavedToDatabase', { vid: videoData.vid });
                 // 同步新记录
-                await this.syncNewRecord(recordId);
+                if (imageExists) await this.syncNewRecord(recordId);
             } else {
                 this.sendMessage('videoDownloadFailed', { vid: videoData.vid });
             }
@@ -686,20 +687,26 @@ class XiaohongshuDownloader {
     }
 
     async syncNewRecord(recordId) {
-        this.sendMessage('enter syncNewRecord')
-        if (this.isSyncServer) {
+        this.sendMessage('enter syncNewRecord=' + this.isSyncServer + ',recordId==' + recordId);
+        if (!this.isSyncServer) {
             return;
         }
 
+        let record;
         try {
-            const record = await this.getRecordById(recordId);
+            record = await this.getRecordById(recordId);
             if (!record) {
-                this.sendMessage('Record not found')
-                throw new Error('Record not found');
+                this.sendMessage('Record not found');
+                return;
             }
 
             // 上传图片到 Supabase Storage
             const imagePath = path.join(this.downloadDir, `img_${record.vid}.jpg`);
+            const isExist = await fs.access(imagePath).then(() => true).catch(() => false);
+            if (!isExist) {
+                console.log(`Image file not found[1]: ${imagePath}`);
+                this.sendMessage('imageFileNotFound[1]', { path: imagePath });
+            }
             const imageUrl = await this.uploadImageToSupabase(imagePath, record.vid);
 
             // 获取当前用户的 ID
@@ -747,31 +754,46 @@ class XiaohongshuDownloader {
         } catch (error) {
             console.error('Sync error:', error);
             this.sendMessage('syncError', { error: error.message, vid: record?.vid });
-            // 可以选择在这里重试同步或者将失败的同步记录到一个队列中以便后续处理
         }
     }
 
     async uploadImageToSupabase(imagePath, vid) {
         try {
-            const fileBuffer = await fs.promises.readFile(imagePath);
-            const fileName = `img_${vid}.jpg`;
-            const { data, error } = await this.supabase.storage
-                .from('video-images')
-                .upload(fileName, fileBuffer, {
+            // 使用 existsSync 检查文件是否存在
+            if (!existsSync(imagePath)) {
+                console.log(`Image file not found: ${imagePath}`);
+                this.sendMessage('imageFileNotFound', { path: imagePath });
+                return null; // Return null if the file doesn't exist
+            }
+            console.log(`Uploading image: ${imagePath}`);
+            let image_src = '';
+            const fileBuffer = await fs.readFile(imagePath);
+            const { data: storageData, error: storageError } = await this.supabase
+                .storage
+                .from(process.env.SUPABASE_STORAGE_BUCKET)
+                .upload(`images/${vid}.jpg`, fileBuffer, {
                     contentType: 'image/jpeg',
+                    cacheControl: '3600',
                     upsert: true
                 });
 
-            if (error) {
-                throw error;
+            if (storageError) {
+                console.error('Error uploading image to Supabase storage:', storageError.message);
+            } else {
+                const { data: publicUrlData, error: publicUrlError } = this.supabase
+                    .storage
+                    .from(process.env.SUPABASE_STORAGE_BUCKET)
+                    .getPublicUrl(`images/${vid}.jpg`);
+
+                if (publicUrlError) {
+                    console.error('Error getting public URL:', publicUrlError.message);
+                } else {
+                    // 公共URL
+                    image_src = publicUrlData.publicUrl;
+                    console.log('Public URL:', image_src);
+                    return image_src;
+                }
             }
-
-            // 获取公共 URL
-            const { data: urlData } = this.supabase.storage
-                .from('video-images')
-                .getPublicUrl(fileName);
-
-            return urlData.publicUrl;
         } catch (error) {
             this.sendMessage('imageUploadError', { error: error.message });
             throw error;
@@ -876,4 +898,7 @@ const downloader = new XiaohongshuDownloader(
     argv.isDownloadVideo,
     argv.isSyncServer
 );
-downloader.run().catch(error => downloader.sendMessage('downloaderError', { error: error.message }));
+downloader.run().catch(error => {
+    console.log(error)
+    downloader.sendMessage('downloaderError', { error: error.message })
+});

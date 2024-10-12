@@ -12,7 +12,7 @@ function UserMenu({ language }) {
         try {
             await window.electron.supabaseSignOut();
             logout();
-            toast.success(t('Sign_out_successful'), { autoClose: 1000 });
+            // toast.success(t('Sign_out_successful'), { autoClose: 1000 });
         } catch (error) {
             console.error('Error signing out:', error);
             toast.error(t('Error signing out'));
