@@ -16,7 +16,11 @@ let currentLanguage = 'zh'; // 默认语言
 let authToken = null;
 
 // 创建 Supabase 客户端
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY, {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false,
+});
 
 function sendTranslatedMessage(key, params = {}) {
     const message = getTranslation(currentLanguage, key, params);

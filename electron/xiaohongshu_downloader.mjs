@@ -188,16 +188,12 @@ class XiaohongshuDownloader {
 
         this.sendMessage('databaseOpened');
 
-        const token = await this.getAuthToken();
-        if (token) {
-            console.log('supabase token==', token)
-            const { data, error } = await this.supabase.auth.setSession(token);
-            if (error) {
-                console.error('Error setting Supabase session:', error);
-            } else {
-                console.log('Supabase session set successfully');
-            }
-        }
+        // const token = await this.getAuthToken();
+        // if (token) {
+        //     console.log('supabase token==', token)
+        //     const { data: { user } } = await this.supabase.auth.getUser(token);
+        //     console.log('user===', user)
+        // }
     }
 
     setupLogging() {
@@ -741,7 +737,8 @@ class XiaohongshuDownloader {
             const imageUrl = await this.uploadImageToSupabase(imagePath, record.vid);
 
             // 获取当前用户的 ID
-            const { data: { user } } = await this.supabase.auth.getUser();
+            const token = await this.getAuthToken();
+            const { data: { user } } = await this.supabase.auth.getUser(token);
             if (!user) {
                 throw new Error('User not logged in');
             }
