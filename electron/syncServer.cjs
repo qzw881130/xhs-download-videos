@@ -201,96 +201,10 @@ function setupSyncServerHandlers(browserWindow) {
         }
     });
 
-    ipcMain.handle('supabase-sign-up', async (event, email, password) => {
-        try {
-            const { data, error } = await supabase.auth.signUp({
-                email,
-                password,
-            });
-            if (error) throw error;
-            return data.user;
-        } catch (error) {
-            console.error('Error signing up:', error);
-            throw error;
-        }
-    });
-
-    ipcMain.handle('supabase-sign-in', async (event, email, password) => {
-        try {
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
-            if (error) throw error;
-            return data.user;
-        } catch (error) {
-            console.error('Error signing in:', error);
-            throw error;
-        }
-    });
-
-    ipcMain.handle('supabase-sign-out', async () => {
-        try {
-            const { error } = await supabase.auth.signOut();
-            if (error) throw error;
-            return true;
-        } catch (error) {
-            console.error('Error signing out:', error);
-            throw error;
-        }
-    });
-
-    ipcMain.handle('supabase-get-user', async () => {
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            // console.log('Supabase user:', user); // 添加这行日志
-            return user;
-        } catch (error) {
-            console.error('Error getting user:', error);
-            throw error;
-        }
-    });
-
-    ipcMain.handle('supabase-sign-in-with-provider', async (event, provider) => {
-        try {
-            const url = isDev
-                ? `http://localhost:3000/#/callback`
-                : `file://${path.join(__dirname, '../dist/index.html')}#/callback`;
-
-            const { data, error } = await supabase.auth.signInWithOAuth({
-                provider: provider,
-                options: {
-                    redirectTo: 'myapp://callback',
-                },
-            });
-            console.log('supabase-sign-in-with-provider data===', data)
-            if (error) throw error;
-            return data;
-        } catch (error) {
-            console.error(`Error signing in with ${provider}:`, error);
-            throw error;
-        }
-    });
-
-
-    // 添加这个处理程序
-    ipcMain.handle('supabase-exchange-code-for-session', async (event, code) => {
-        try {
-            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-            console.log('exchangeCodeForSession data===', data)
-            if (error) throw error;
-            return data;
-        } catch (error) {
-            console.error('Error exchanging code for session:', error);
-            throw error;
-        }
-    });
-
     ipcMain.handle('open-auth-window', (event, url) => {
         console.log('open-auth-window url===', url)
         createAuthWindow(url);
     });
-
 
     app.on('open-url', async (event, url) => {
         event.preventDefault();
@@ -304,7 +218,6 @@ function setupSyncServerHandlers(browserWindow) {
 
         console.log('Logged in user:', data.user);
     });
-
 }
 
 async function getRemoteTotal() {

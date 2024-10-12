@@ -64,13 +64,16 @@ export function AuthProvider({ children }) {
     const handleSupabaseSignIn = async (email, password) => {
         setIsLoading(true);
         try {
-            const user = await window.electron.supabaseSignIn(email, password);
-            login(user);
+            const result = await window.electron.supabaseSignIn(email, password);
+            console.log('Sign in result:', result);
+            if (result.error) throw result.error;
+            login(result.user);
+            await window.electron.setAuthToken(result.session.access_token);
             setSignal(x => x + 1);
-            // toast.success('Sign in successful', { autoClose: 1000 });
-
+            toast.success('Sign in successful', { autoClose: 1000 });
         } catch (error) {
-            toast.error('Error signing in');
+            console.error('Sign in error:', error);
+            toast.error(`Error signing in: ${error.message}`);
         } finally {
             setIsLoading(false);
         }

@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import fs from 'fs/promises';
-import { writeFile } from 'fs/promises';
+import { writeFile, readFile } from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
@@ -11,7 +11,7 @@ import { hideBin } from 'yargs/helpers';
 import { getTranslation } from './i18n.mjs';
 import { downloadBrowsers } from "puppeteer/internal/node/install.js";
 import { createClient } from '@supabase/supabase-js';
-import { existsSync } from 'fs';  // 添加这行
+import { existsSync } from 'fs';
 puppeteer.use(StealthPlugin());
 
 const __filename = fileURLToPath(import.meta.url);
@@ -25,7 +25,8 @@ let fetch;
 
 
 class XiaohongshuDownloader {
-    constructor(scrollAttempts = 0, maxScrollAttempts = 200, type, downloadDir, dbPath, userDataPath, language, isDownloadVideo = false, isSyncServer) {
+    constructor(scrollAttempts = 0, maxScrollAttempts = 200, type, downloadDir, downloadConfigPath, dbPath, userDataPath, language, isDownloadVideo = false, isSyncServer) {
+        console.log({ scrollAttempts, maxScrollAttempts, type, downloadDir, downloadConfigPath, dbPath, userDataPath, language, isDownloadVideo, isSyncServer })
         this.baseUrl = 'https://www.xiaohongshu.com';
         this.loginUrl = `${this.baseUrl}/login`;
         this.likedNotesUrl = `${this.baseUrl}/user/profile/liked`;
@@ -47,6 +48,7 @@ class XiaohongshuDownloader {
         };
         this.deviceId = this.generateDeviceId();
         this.downloadDir = downloadDir || path.join(__dirname, 'downloads');
+        this.downloadConfigPath = downloadConfigPath;
         this.dbPath = dbPath;
         this.scrollAttempts = scrollAttempts;
         this.maxScrollAttempts = maxScrollAttempts;
@@ -63,11 +65,29 @@ class XiaohongshuDownloader {
         this.isDownloadVideo = isDownloadVideo;
         this.isSyncServer = isSyncServer;
         // console.log(this);
-        this.supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+        this.supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY, {
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: false,
+            },
+        });
     }
 
     generateDeviceId() {
         return crypto.createHash('md5').update(Date.now().toString()).digest('hex');
+    }
+
+    async getAuthToken() {
+        try {
+            if (existsSync(this.downloadConfigPath)) {
+                const config = JSON.parse(await readFile(this.downloadConfigPath, 'utf8'));
+                return config.authToken;
+            }
+        } catch (error) {
+            console.error('Error reading auth token from storage:', error);
+        }
+        return null;
     }
 
     async init() {
@@ -167,6 +187,17 @@ class XiaohongshuDownloader {
         `);
 
         this.sendMessage('databaseOpened');
+
+        const token = await this.getAuthToken();
+        if (token) {
+            console.log('supabase token==', token)
+            const { data, error } = await this.supabase.auth.setSession(token);
+            if (error) {
+                console.error('Error setting Supabase session:', error);
+            } else {
+                console.log('Supabase session set successfully');
+            }
+        }
     }
 
     setupLogging() {
@@ -856,6 +887,12 @@ const argv = yargs(hideBin(process.argv))
         type: 'string',
         required: true
     })
+    .option('downloadConfigPath', {
+        alias: 'dcp',
+        description: '下载配置路径',
+        type: 'string',
+        required: true
+    })
     .option('dbPath', {
         alias: 'db',
         description: '数据库文件路径',
@@ -892,13 +929,16 @@ const downloader = new XiaohongshuDownloader(
     argv.maxScrollAttempts,
     argv.type,
     argv.downloadDir,
+    argv.downloadConfigPath,
     argv.dbPath,
     argv.userDataPath,
     argv.language,
     argv.isDownloadVideo,
     argv.isSyncServer
 );
-downloader.run().catch(error => {
-    console.log(error)
-    downloader.sendMessage('downloaderError', { error: error.message })
+downloader.init().then(() => {
+    downloader.run().catch(error => {
+        console.log(error);
+        downloader.sendMessage('downloaderError', { error: error.message });
+    });
 });

@@ -9,9 +9,14 @@ const database = require('./database.cjs');
 const { setupSyncServerHandlers } = require('./syncServer.cjs');
 const { getStoredDownloadPath, getIsDownloadVideo, storeIsDownloadVideo } = require('./utils.cjs');
 const { getUserEmail, storeUserEmail } = require('./utils.cjs');
+const { createClient } = require('@supabase/supabase-js');
 
 let win;
 let currentLanguage = 'zh'; // 默认语言
+let authToken = null;
+
+// 创建 Supabase 客户端
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 function sendTranslatedMessage(key, params = {}) {
     const message = getTranslation(currentLanguage, key, params);
@@ -31,6 +36,18 @@ async function getLanguageSetting() {
         console.error('Error reading language setting:', error);
         currentLanguage = 'zh';
         return currentLanguage;
+    }
+}
+
+// 添加这个函数来处理本地存储
+function setAuthTokenToStorage(token) {
+    const downloadConfigPath = getDownloadPathFile();
+    try {
+        const config = fs.existsSync(downloadConfigPath) ? JSON.parse(fs.readFileSync(downloadConfigPath, 'utf8')) : {};
+        config.authToken = token;
+        fs.writeFileSync(downloadConfigPath, JSON.stringify(config, null, 2));
+    } catch (error) {
+        console.error('Error setting auth token to storage:', error);
     }
 }
 
@@ -146,12 +163,14 @@ function setupIpcHandlers(browserWindow) {
     ipcMain.handle('start-downloader', async (event, startPosition, endPosition, type, syncServer) => {
         // 向页面发送测试消息
         // if (win && !win.isDestroyed()) {
-        //     win.webContents.send('log-message', '这是一条来自 ipcHandlers.cjs [start-downloader]的测试消息');
+        //     win.webContents.send('log-message', '是一条来自 ipcHandlers.cjs [start-downloader]的测试消息');
         // }
         const downloadDir = await getStoredDownloadPath();
         const dbPath = getDbPath();
         const isSyncServer = syncServer == 'yes';
-        await xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type, isSyncServer);
+        const downloadConfigPath = await getDownloadPathFile();
+
+        await xiaohongshuDownloader(startPosition, endPosition, downloadDir, downloadConfigPath, dbPath, type, isSyncServer);
     });
 
     ipcMain.handle('get-default-download-path', () => {
@@ -187,7 +206,7 @@ function setupIpcHandlers(browserWindow) {
                 // 确保新路径存在
                 await fs.ensureDir(newPath);
 
-                // 如果旧路径存在且不为空，则复文件
+                // 如果旧路径存在不为空，则复文件
                 if (oldPath && fs.existsSync(oldPath)) {
                     const files = await fs.readdir(oldPath);
                     for (const file of files) {
@@ -242,7 +261,7 @@ function setupIpcHandlers(browserWindow) {
         return getDownloadPathFile();
     });
 
-    // 假设这个已经存在
+    // 假这个已经存在
     ipcMain.handle('get-db-path', () => {
         return getDbPath();
     });
@@ -315,10 +334,47 @@ function setupIpcHandlers(browserWindow) {
         }
     })
 
+    ipcMain.handle('set-auth-token', (event, token) => {
+        setAuthTokenToStorage(token);
+        console.log('authToken saved to storage');
+        console.log(`save supabase token==\n`, token)
+    });
+
+    ipcMain.handle('supabase-get-user', async () => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            console.log('Supabase user:', user);
+            return user;
+        } catch (error) {
+            console.error('Error getting user:', error);
+            throw error;
+        }
+    });
+
+    ipcMain.handle('supabase-sign-in', async (event, email, password) => {
+        try {
+            console.log('Supabase URL:', process.env.SUPABASE_URL);
+            console.log('Supabase Key:', process.env.SUPABASE_KEY.substring(0, 5) + '...');
+            console.log('Attempting to sign in with email:', email);
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+            if (error) {
+                console.error('Supabase sign in error:', error);
+                throw error;
+            }
+            console.log('Sign in successful:', data);
+            return data;
+        } catch (error) {
+            console.error('Error in supabase-sign-in handler:', error);
+            throw error;
+        }
+    });
 }
 
 // 在 xiaohongshuDownloader 函数中使用 sendTranslatedMessage
-async function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type, isSyncServer) {
+async function xiaohongshuDownloader(startPosition, endPosition, downloadDir, downloadConfigPath, dbPath, type, isSyncServer) {
     try {
         sendTranslatedMessage('startingDownloader_2', { start: startPosition, end: endPosition });
         const downloaderPath = path.join(__dirname, 'xiaohongshu_downloader.mjs');
@@ -332,6 +388,7 @@ async function xiaohongshuDownloader(startPosition, endPosition, downloadDir, db
                 '--scrollAttempts', startPosition,
                 '--maxScrollAttempts', endPosition,
                 '--downloadDir', downloadDir,
+                '--downloadConfigPath', downloadConfigPath,
                 '--dbPath', dbPath,
                 '--type', type,
                 '--userDataPath', app.getPath('userData'),
@@ -390,4 +447,8 @@ function ensureDownloadPathFileExists() {
     }
 }
 
-module.exports = { setupIpcHandlers, getLanguageSetting };
+// 修改模块导出
+module.exports = {
+    setupIpcHandlers,
+    getLanguageSetting
+};

@@ -71,6 +71,9 @@ contextBridge.exposeInMainWorld('electron', {
     openAuthWindow: (url) => ipcRenderer.invoke('open-auth-window', url),
     onOAuthCallback: (callback) => ipcRenderer.on('oauth-callback', (_, code) => callback(code)),
     supabaseExchangeCodeForSession: (code) => ipcRenderer.invoke('supabase-exchange-code-for-session', code),
+
+    setAuthToken: (token) => ipcRenderer.invoke('set-auth-token', token),
+    getAuthToken: () => ipcRenderer.invoke('get-auth-token'),
 });
 
 console.log('Preload script executed');
