@@ -7,6 +7,7 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isAuthChecking, setIsAuthChecking] = useState(true); // 新增状态
     const [signal, setSignal] = useState(0);
 
     useEffect(() => {
@@ -14,11 +15,14 @@ export function AuthProvider({ children }) {
     }, [signal]);
 
     const checkAuth = async () => {
+        setIsAuthChecking(true); // 开始检查认证状态
         try {
             const currentUser = await window.electron.supabaseGetUser();
             setUser(currentUser);
         } catch (error) {
             console.error('Error checking auth:', error);
+        } finally {
+            setIsAuthChecking(false); // 结束检查认证状态
         }
     };
 
@@ -53,7 +57,6 @@ export function AuthProvider({ children }) {
             login(user);
             setSignal(x => x + 1);
             // toast.success('Sign up successful', { autoClose: 1000 });
-
         } catch (error) {
             toast.error('Error signing up');
         } finally {
@@ -114,6 +117,7 @@ export function AuthProvider({ children }) {
             user,
             showLoginModal,
             isLoading,
+            isAuthChecking, // 新增
             login,
             logout,
             openLoginModal,
