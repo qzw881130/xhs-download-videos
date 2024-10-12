@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const { getLikedVideos, openDatabase, dbGet, dbAll, getLocalTotal, getUnSyncedCount, markVideoAsSynced } = require('./database.cjs');
 const { ipcMain, protocol } = require('electron');
-const { getStoredDownloadPath, getUserEmail, storeUserEmail, loadEnv } = require('./utils.cjs');
+const { getStoredDownloadPath, getUserEmail, storeUserEmail, loadEnv, getAuthToken } = require('./utils.cjs');
 const path = require('path');
 const fs = require('fs-extra');
 const { app, shell, BrowserWindow } = require('electron');
@@ -62,7 +62,8 @@ function setupOAuth() {
 
 async function syncServer() {
     try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const token = await getAuthToken();
+        const { data: { user } } = await supabase.auth.getUser(token);
         // console.log('Supabase user in syncServer:', user); // 添加这行日志
         if (!user?.id) return;
         const user_id = user.id;
@@ -222,7 +223,9 @@ function setupSyncServerHandlers(browserWindow) {
 
 async function getRemoteTotal() {
     try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const token = await getAuthToken();
+        // console.log('getRemoteTotal token=', token)
+        const { data: { user } } = await supabase.auth.getUser(token);
         if (!user?.id) return 0;
         const user_id = user?.id;
 
@@ -236,6 +239,7 @@ async function getRemoteTotal() {
         throw error;
     }
 }
+
 
 async function getSyncStatistics() {
     // console.log('getSyncStatistics function called'); // 添加日志

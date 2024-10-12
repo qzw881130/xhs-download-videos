@@ -70,6 +70,18 @@ async function storeUserEmail(userEmail) {
     }
 }
 
+
+async function getAuthToken() {
+    const downloadConfigPath = getDownloadPathFile();
+    try {
+        const config = JSON.parse(await fs.readFile(downloadConfigPath, 'utf8'));
+        return config.authToken;
+    } catch (error) {
+        console.error('Error reading auth token from storage:', error);
+    }
+    return null;
+}
+
 function loadEnv() {
     if (isDev) {
         require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
@@ -79,4 +91,4 @@ function loadEnv() {
     console.log('SUPABASE_URL:', process.env.SUPABASE_URL);
 }
 
-module.exports = { getStoredDownloadPath, getUserEmail, storeUserEmail, loadEnv, getIsDownloadVideo, storeIsDownloadVideo };
+module.exports = { getStoredDownloadPath, getUserEmail, storeUserEmail, loadEnv, getIsDownloadVideo, storeIsDownloadVideo, getAuthToken };
