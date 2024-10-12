@@ -1,10 +1,13 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getTranslation } from '../i18n';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useAuth } from '../contexts/AuthContext';
+import LoginModal from './LoginModal';
 
 function SyncServer({ language }) {
     const t = (key) => getTranslation(language, key);
+    const { user, isLoading, isAuthChecking, openLoginModal, logout } = useAuth();
     const [statistics, setStatistics] = useState({
         localTotal: 0,
         remoteTotal: 0,
@@ -13,130 +16,6 @@ function SyncServer({ language }) {
     const [serverStatus, setServerStatus] = useState('stopped');
     const [lastSyncTime, setLastSyncTime] = useState(null);
     const [refreshTime, setRefreshTime] = useState(new Date());
-
-    const [supabaseUser, setSupabaseUser] = useState(null);
-    const [showLoginModal, setShowLoginModal] = useState(false);
-    const [loginEmail, setLoginEmail] = useState('');
-    const [loginPassword, setLoginPassword] = useState('');
-    const [rememberMe, setRememberMe] = useState(false); // Add remember me state
-    const [isLoading, setIsLoading] = useState(false); // Add loading state
-
-    useEffect(() => {
-        checkSupabaseAuth();
-    }, []);
-
-    useEffect(() => {
-        // Retrieve email and password from local storage if remember me is checked
-        const storedEmail = localStorage.getItem('loginEmail');
-        const storedPassword = localStorage.getItem('loginPassword');
-        const storedRememberMe = localStorage.getItem('rememberMe') === 'true';
-
-        if (storedRememberMe) {
-            setLoginEmail(storedEmail || '');
-            setLoginPassword(storedPassword || '');
-            setRememberMe(storedRememberMe);
-        }
-    }, []);
-
-    const checkSupabaseAuth = async () => {
-        try {
-            const user = await window.electron.supabaseGetUser();
-            console.log('Supabase user in React:', user);
-            if (user) {
-                setSupabaseUser(user);
-            } else {
-                setShowLoginModal(true);
-            }
-        } catch (error) {
-            console.error('Error checking Supabase auth:', error);
-            setShowLoginModal(true);
-        }
-    };
-
-    const handleSupabaseSignUp = async () => {
-        setIsLoading(true); // Set loading state
-        try {
-            const user = await window.electron.supabaseSignUp(loginEmail, loginPassword);
-            setSupabaseUser(user);
-            setShowLoginModal(false);
-            toast.success(t('Sign_up_successful'), { autoClose: 1000 });
-            if (rememberMe) {
-                localStorage.setItem('loginEmail', loginEmail);
-                localStorage.setItem('loginPassword', loginPassword);
-                localStorage.setItem('rememberMe', rememberMe);
-            }
-        } catch (error) {
-            toast.error(t('Error signing up'));
-        } finally {
-            setIsLoading(false); // Reset loading state
-        }
-    };
-
-    const handleSupabaseSignIn = async () => {
-        setIsLoading(true); // Set loading state
-        try {
-            const user = await window.electron.supabaseSignIn(loginEmail, loginPassword);
-            setSupabaseUser(user);
-            setShowLoginModal(false);
-            toast.success(t('Sign_in_successful'), { autoClose: 1000 });
-            await checkSupabaseAuth();
-            if (rememberMe) {
-                localStorage.setItem('loginEmail', loginEmail);
-                localStorage.setItem('loginPassword', loginPassword);
-                localStorage.setItem('rememberMe', rememberMe);
-            }
-        } catch (error) {
-            toast.error(t('Error signing in'));
-        } finally {
-            setIsLoading(false); // Reset loading state
-        }
-    };
-
-    const handleSupabaseSignOut = async () => {
-        setIsLoading(true); // Set loading state
-        try {
-            await window.electron.supabaseSignOut();
-            setSupabaseUser(null);
-            setShowLoginModal(true);
-            toast.success(t('Sign_out_successful'), { autoClose: 1000 });
-        } catch (error) {
-            toast.error(t('Error signing out'));
-        } finally {
-            setIsLoading(false); // Reset loading state
-        }
-    };
-
-    const handleThirdPartySignIn = async (provider) => {
-        setIsLoading(true); // Set loading state
-        try {
-            const data = await window.electron.supabaseSignInWithProvider(provider);
-            if (data.url) {
-                window.electron.openAuthWindow(data.url);
-                window.electron.onOAuthCallback(async (code) => {
-                    try {
-                        const { session, user } = await window.electron.supabaseExchangeCodeForSession(code);
-                        if (user) {
-                            setSupabaseUser(user);
-                            setShowLoginModal(false);
-                            toast.success(t('Sign_in_successful'), { autoClose: 1000 });
-                            await checkSupabaseAuth();
-                        } else {
-                            throw new Error('No user returned from session exchange');
-                        }
-                    } catch (error) {
-                        console.error('Error exchanging code for session:', error);
-                        toast.error(t('Error signing in'));
-                    } finally {
-                        setIsLoading(false); // Reset loading state
-                    }
-                });
-            }
-        } catch (error) {
-            console.error(`Error signing in with ${provider}:`, error);
-            toast.error(t(`Error signing in with ${provider}`));
-            setIsLoading(false); // Reset loading state
-        }
-    };
 
     useEffect(() => {
         window.electron.requestSyncStatistics();
@@ -185,129 +64,66 @@ function SyncServer({ language }) {
         window.electron.stopSyncServer();
     };
 
+    const handleSignOut = async () => {
+        try {
+            await logout();
+            toast.success(t('Sign_out_successful'), { autoClose: 1000 });
+        } catch (error) {
+            console.error('Error signing out:', error);
+            toast.error(t('Error signing out'));
+        }
+    };
+
     return (
         <div className="sync-server-container">
-            <ToastContainer />
             <h2 className="text-2xl font-bold mb-4 flex items-center">{t('syncServer')}</h2>
 
-            {showLoginModal ? (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
-                    <div className="bg-white p-4 rounded-lg shadow-xl w-96 relative">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-bold">{t('Login_or_SignUp')}</h3>
-
-                        </div>
-                        <a
-                            onClick={() => setShowLoginModal(false)}
-                            className="text-gray-500 hover:text-gray-700 absolute right-5 top-5"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </a>
-                        <input
-                            type="email"
-                            value={loginEmail}
-                            onChange={(e) => setLoginEmail(e.target.value)}
-                            placeholder={'Email'}
-                            className="w-full p-2 mb-4 border rounded"
-                        />
-                        <input
-                            type="password"
-                            value={loginPassword}
-                            onChange={(e) => setLoginPassword(e.target.value)}
-                            placeholder={'Password'}
-                            className="w-full p-2 mb-4 border rounded"
-                        />
-                        <div className="flex items-center mb-4">
-                            <input
-                                type="checkbox"
-                                checked={rememberMe}
-                                onChange={(e) => setRememberMe(e.target.checked)}
-                                className="mr-2"
-                            />
-                            <label>{t('Remember_Me')}</label>
-                        </div>
-                        <div className="flex justify-between mb-4">
-                            <button
-                                onClick={handleSupabaseSignIn}
-                                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-                                disabled={isLoading} // Disable button when loading
-                            >
-                                {isLoading ? t('Logging_in') : t('SignIn')}
-                            </button>
-                            <button
-                                onClick={handleSupabaseSignUp}
-                                className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
-                                disabled={isLoading} // Disable button when loading
-                            >
-                                {isLoading ? t('Signing_up') : t('SignUp')}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            ) : (
+            {isAuthChecking ? (
+                <div>Checking authentication...</div>
+            ) : user ? (
                 <>
-                    <div className="user-info mb-4 bg-gray-100 p-4 rounded-lg shadow">
-                        {supabaseUser?.email ? (
-                            <>
-                                <p className="text-lg">{t('logged_in_as')}: <span className="font-semibold">{supabaseUser.email}</span></p>
-                                <button
-                                    onClick={handleSupabaseSignOut}
-                                    className="mt-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-                                    disabled={isLoading}
-                                >
-                                    {isLoading ? t('Signingout') : t('signOut')}
-                                </button>
-                            </>
-                        ) : (
-                            <button
-                                onClick={() => setShowLoginModal(true)}
-                                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-                            >
-                                {t('Login_or_SignUp')}
-                            </button>
-                        )}
+                    <div className="flex items-center">
+                        <button
+                            onClick={handleStartServer}
+                            className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mr-2 ${serverStatus === 'running' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            disabled={serverStatus === 'running'}
+                        >
+                            {t('startServer')}
+                        </button>
+                        <div className="text-gray-600 ml-auto flex flex-col gap-2">
+                            <span>
+                                <span className='font-bold bg-green-200 text-green-600 p-1 rounded-md'>{t('refreshTime')}</span> {refreshTime.toLocaleString()}
+                            </span>
+                        </div>
                     </div>
 
-                    {!!supabaseUser &&
-                        <>
-                            <div className="flex items-center">
-                                <button
-                                    onClick={handleStartServer}
-                                    className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mr-2 ${serverStatus === 'running' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    disabled={serverStatus === 'running'}
-                                >
-                                    {t('startServer')}
-                                </button>
-                                <div className="text-gray-600 ml-auto flex flex-col gap-2">
-                                    <span>
-                                        <span className='font-bold bg-green-200 text-green-600 p-1 rounded-md'>{t('refreshTime')}</span> {refreshTime.toLocaleString()}
-                                    </span>
-                                </div>
+                    <div className="statistics-area mt-6 bg-gray-100 p-4 rounded-lg shadow">
+                        <h3 className="text-lg font-semibold mb-3">{t('statistics')}</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="stat-item bg-white p-3 rounded shadow">
+                                <span className="stat-label text-gray-600 block mb-1">{t('localTotal')}</span>
+                                <span className="stat-value text-2xl font-bold text-blue-600">{statistics.localTotal}</span>
                             </div>
-
-                            <div className="statistics-area mt-6 bg-gray-100 p-4 rounded-lg shadow">
-                                <h3 className="text-lg font-semibold mb-3">{t('statistics')}</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="stat-item bg-white p-3 rounded shadow">
-                                        <span className="stat-label text-gray-600 block mb-1">{t('localTotal')}</span>
-                                        <span className="stat-value text-2xl font-bold text-blue-600">{statistics.localTotal}</span>
-                                    </div>
-                                    <div className="stat-item bg-white p-3 rounded shadow">
-                                        <span className="stat-label text-gray-600 block mb-1">{t('remoteTotal')}</span>
-                                        <span className="stat-value text-2xl font-bold text-green-600">{statistics.remoteTotal}</span>
-                                    </div>
-                                    <div className="stat-item bg-white p-3 rounded shadow">
-                                        <span className="stat-label text-gray-600 block mb-1">{t('pendingSync')}</span>
-                                        <span className="stat-value text-2xl font-bold text-orange-600">{statistics.pendingSync}</span>
-                                    </div>
-                                </div>
+                            <div className="stat-item bg-white p-3 rounded shadow">
+                                <span className="stat-label text-gray-600 block mb-1">{t('remoteTotal')}</span>
+                                <span className="stat-value text-2xl font-bold text-green-600">{statistics.remoteTotal}</span>
                             </div>
-                        </>
-                    }
+                            <div className="stat-item bg-white p-3 rounded shadow">
+                                <span className="stat-label text-gray-600 block mb-1">{t('pendingSync')}</span>
+                                <span className="stat-value text-2xl font-bold text-orange-600">{statistics.pendingSync}</span>
+                            </div>
+                        </div>
+                    </div>
                 </>
+            ) : (
+                <button
+                    onClick={openLoginModal}
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+                >
+                    {t('Login_or_SignUp')}
+                </button>
             )}
+            <LoginModal language={language} />
         </div>
     );
 }
