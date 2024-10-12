@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import { getTranslation } from '../i18n';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { FaFacebook, FaGithub, FaGoogle, FaTwitter, FaApple } from 'react-icons/fa';
 
 function SyncServer({ language }) {
     const t = (key) => getTranslation(language, key);
@@ -245,26 +244,6 @@ function SyncServer({ language }) {
                                 {isLoading ? t('Signing_up') : t('SignUp')}
                             </button>
                         </div>
-                        {/* <div className="mt-4">
-                            <p className="text-center mb-2">{t('Or sign in with')}</p>
-                            <div className="flex justify-center space-x-4">
-                                <button onClick={() => handleThirdPartySignIn('facebook')} className="text-blue-600 hover:border hover:border-blue-700 bg-white hover:bg-gray-100 border-none">
-                                    <FaFacebook size={24} />
-                                </button>
-                                <button onClick={() => handleThirdPartySignIn('github')} className="text-gray-800 hover:border hover:border-gray-900 bg-white hover:bg-gray-100 border-none">
-                                    <FaGithub size={24} />
-                                </button>
-                                <button onClick={() => handleThirdPartySignIn('google')} className="text-red-600 hover:border hover:border-red-700 bg-white hover:bg-gray-100 border-none">
-                                    <FaGoogle size={24} />
-                                </button>
-                                <button onClick={() => handleThirdPartySignIn('twitter')} className="text-blue-400 hover:border hover:border-blue-500 bg-white hover:bg-gray-100 border-none">
-                                    <FaTwitter size={24} />
-                                </button>
-                                <button onClick={() => handleThirdPartySignIn('apple')} className="text-gray-800 hover:border hover:border-gray-900 bg-white hover:bg-gray-100 border-none">
-                                    <FaApple size={24} />
-                                </button>
-                            </div>
-                        </div> */}
                     </div>
                 </div>
             ) : (
@@ -301,13 +280,6 @@ function SyncServer({ language }) {
                                 >
                                     {t('startServer')}
                                 </button>
-                                {/* <button
-                                    onClick={handleStopServer}
-                                    className={`bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded mr-2 ${serverStatus === 'stopped' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    disabled={serverStatus === 'stopped'}
-                                >
-                                    {t('stopServer')}
-                                </button> */}
                                 <div className="text-gray-600 ml-auto flex flex-col gap-2">
                                     <span>
                                         <span className='font-bold bg-green-200 text-green-600 p-1 rounded-md'>{t('refreshTime')}</span> {refreshTime.toLocaleString()}

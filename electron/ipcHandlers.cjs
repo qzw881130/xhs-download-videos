@@ -347,7 +347,7 @@ function setupIpcHandlers(browserWindow) {
     ipcMain.handle('supabase-get-user', async () => {
         try {
             const { data: { user } } = await supabase.auth.getUser();
-            console.log('Supabase user:', user);
+            // console.log('Supabase user:', user);
             return user;
         } catch (error) {
             console.error('Error getting user:', error);
@@ -372,6 +372,19 @@ function setupIpcHandlers(browserWindow) {
             return data;
         } catch (error) {
             console.error('Error in supabase-sign-in handler:', error);
+            throw error;
+        }
+    });
+
+    ipcMain.handle('supabase-sign-out', async () => {
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+            setAuthTokenToStorage('');
+            console.log('User signed out successfully');
+            return { success: true };
+        } catch (error) {
+            console.error('Error signing out:', error);
             throw error;
         }
     });

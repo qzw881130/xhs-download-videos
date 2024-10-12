@@ -33,9 +33,11 @@ export function AuthProvider({ children }) {
 
     const logout = async () => {
         try {
-            await window.electron.supabaseSignOut();
+            const { success, error } = await window.electron.supabaseSignOut();
+            if (error) throw error;
             setUser(null);
-            // toast.success('Sign out successful', { autoClose: 1000 });
+            await window.electron.setAuthToken(null);  // 清除存储的 token
+            toast.success('Sign out successful', { autoClose: 1000 });
         } catch (error) {
             console.error('Error signing out:', error);
             toast.error('Error signing out');
