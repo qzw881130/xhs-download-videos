@@ -72,6 +72,7 @@ class XiaohongshuDownloader {
                 detectSessionInUrl: false,
             },
         });
+
     }
 
     generateDeviceId() {
@@ -91,6 +92,10 @@ class XiaohongshuDownloader {
     }
 
     async init() {
+        const user_id = await this.getUserId();
+        console.log('test user_id======', user_id);
+        this.sendMessage('test user_id======' + user_id);
+
         await downloadBrowsers();
         this.sendMessage('startingBrowser');
         this.browser = await puppeteer.launch({
@@ -713,6 +718,18 @@ class XiaohongshuDownloader {
         });
     }
 
+    async getUserId() {
+        // 获取当前用户的 ID
+        const token = await this.getAuthToken();
+        const { data: { user } } = await this.supabase.auth.getUser(token);
+        if (!user) {
+            // throw new Error('User not logged in');
+            this.sendMessage('User not logged in');
+            return '';
+        }
+        return user.id;
+    }
+
     async syncNewRecord(recordId) {
         this.sendMessage('enter syncNewRecord=' + this.isSyncServer + ',recordId==' + recordId);
         if (!this.isSyncServer) {
@@ -727,6 +744,9 @@ class XiaohongshuDownloader {
                 return;
             }
 
+            const user_id = await this.getUserId();
+            if (!user_id) return;
+
             // 上传图片到 Supabase Storage
             const imagePath = path.join(this.downloadDir, `img_${record.vid}.jpg`);
             const isExist = await fs.access(imagePath).then(() => true).catch(() => false);
@@ -736,13 +756,6 @@ class XiaohongshuDownloader {
             }
             const imageUrl = await this.uploadImageToSupabase(imagePath, record.vid);
 
-            // 获取当前用户的 ID
-            const token = await this.getAuthToken();
-            const { data: { user } } = await this.supabase.auth.getUser(token);
-            if (!user) {
-                throw new Error('User not logged in');
-            }
-            const user_id = user.id;
 
             // 生成 UUID
             const uuid = `${user_id}_${record.vid}`;
