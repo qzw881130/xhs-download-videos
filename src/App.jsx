@@ -8,6 +8,10 @@ import DownloadConfigPage from './pages/DownloadConfigPage';
 import { getTranslation } from './i18n';
 import logo from '@/assets/images/icon_48x48.png';
 import SyncServerPage from './pages/SyncServerPage';
+import LoginModal from './components/LoginModal';
+import UserMenu from './components/UserMenu';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function Footer({ language }) {
     const t = (key) => getTranslation(language, key);
@@ -23,6 +27,8 @@ function Footer({ language }) {
 function App() {
     const [language, setLanguage] = useState('zh');
     const [logs, setLogs] = useState([]);
+    const [showLoginModal, setShowLoginModal] = useState(false);
+    const [user, setUser] = useState(null);
 
     useEffect(() => {
         // 保留原有的日志监听器代码
@@ -58,7 +64,7 @@ function App() {
         setLanguage(newLanguage);
         localStorage.setItem('language', newLanguage);
 
-        // 调用 Electron API 保存语言设置到配置文件
+        // 调用 Electron API 保存语言设置到配置文档
         await window.electron.saveLanguageSetting(newLanguage);
     };
 
@@ -72,9 +78,19 @@ function App() {
         fetchLanguage();
     }, []);
 
+    const handleLoginSuccess = (user) => {
+        setUser(user);
+        setShowLoginModal(false);
+    };
+
+    const handleSignOut = () => {
+        setUser(null);
+    };
+
     return (
         <Router>
             <div className="App flex flex-col min-h-screen">
+                <ToastContainer />
                 {!location.hash.startsWith('#/video-player') && (
                     <>
                         <div className="bg-gray-800 p-2 flex items-center">
@@ -113,7 +129,21 @@ function App() {
                                     </li>
                                 </ul>
                             </nav>
-                            <div className="ml-auto">
+                            <div className="ml-auto flex items-center">
+                                {user ? (
+                                    <UserMenu
+                                        user={user}
+                                        language={language}
+                                        onSignOut={handleSignOut}
+                                    />
+                                ) : (
+                                    <button
+                                        onClick={() => setShowLoginModal(true)}
+                                        className="text-white hover:text-gray-300 mr-4"
+                                    >
+                                        {t('login')}
+                                    </button>
+                                )}
                                 <select
                                     value={language}
                                     onChange={handleLanguageChange}
@@ -138,6 +168,12 @@ function App() {
                     </Routes>
                 </div>
                 <Footer language={language} />
+                <LoginModal
+                    language={language}
+                    isOpen={showLoginModal}
+                    onClose={() => setShowLoginModal(false)}
+                    onLoginSuccess={handleLoginSuccess}
+                />
             </div>
         </Router>
     );
