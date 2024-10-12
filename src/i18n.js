@@ -117,6 +117,8 @@ const translations = {
         Sign_in_successful: '登陆成功',
         Sign_up_successful: '注册成功',
         Sign_out_successful: '已退出',
+        login: '登陆',
+        recharge: '充值',
     },
     en: {
         downloadConfig: 'Download Config',
@@ -236,6 +238,8 @@ const translations = {
         Sign_in_successful: 'Sign in successful',
         Sign_up_successful: 'Sign up successful',
         Sign_out_successful: 'Sign out successful',
+        login: 'Sign In',
+        recharge: 'Recharge',
     }
 };
 

@@ -29,8 +29,10 @@ function App() {
     const [logs, setLogs] = useState([]);
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [user, setUser] = useState(null);
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
     useEffect(() => {
+        checkSupabaseAuth();
         // 保留原有的日志监听器代码
         window.electron.ipcRenderer.on('console-log', (message) => {
             console.log('Received log message:', message);
@@ -78,6 +80,21 @@ function App() {
         fetchLanguage();
     }, []);
 
+    const checkSupabaseAuth = async () => {
+        setIsCheckingAuth(true);
+        try {
+            const user = await window.electron.supabaseGetUser();
+            console.log('Supabase user in App:', user);
+            if (user) {
+                setUser(user);
+            }
+        } catch (error) {
+            console.error('Error checking Supabase auth:', error);
+        } finally {
+            setIsCheckingAuth(false);
+        }
+    };
+
     const handleLoginSuccess = (user) => {
         setUser(user);
         setShowLoginModal(false);
@@ -86,6 +103,10 @@ function App() {
     const handleSignOut = () => {
         setUser(null);
     };
+
+    if (isCheckingAuth) {
+        return <div>{t('loading')}</div>; // 或者使用一个加载动画组件
+    }
 
     return (
         <Router>
