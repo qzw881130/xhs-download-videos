@@ -10,6 +10,7 @@ function DownloadConfig({ language }) {
     const [endPosition, setEndPosition] = useState(10);
     const [downloadPath, setDownloadPath] = useState('');
     const [isDownloadVideo, setIsDownloadVideo] = useState(false);
+    const [syncServer, setSyncServer] = useState(false);
     const [logs, setLogs] = useState([]);
     const logTextareaRef = useRef(null);
 
@@ -155,6 +156,17 @@ function DownloadConfig({ language }) {
                             min="0"
                             max="100"
                         />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="syncServer">{t('syncServer')}</label>
+                        <select
+                            id="syncServer"
+                            value={syncServer}
+                            onChange={(e) => setSyncServer(e.target.value)}
+                        >
+                            <option value="yes">{t('yes')}</option>
+                            <option value="no">{t('no')}</option>
+                        </select>
                     </div>
                     <div className="form-group">
                         <label>&nbsp;</label>
