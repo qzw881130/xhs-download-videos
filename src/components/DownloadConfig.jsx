@@ -10,12 +10,12 @@ function DownloadConfig({ language }) {
     const [endPosition, setEndPosition] = useState(10);
     const [downloadPath, setDownloadPath] = useState('');
     const [isDownloadVideo, setIsDownloadVideo] = useState(false);
-    const [syncServer, setSyncServer] = useState(false);
+    const [syncServer, setSyncServer] = useState('no');
     const [logs, setLogs] = useState([]);
     const logTextareaRef = useRef(null);
 
     useEffect(() => {
-        async function fetchDownloadPath() {
+        async function fetchSettings() {
             const storedPath = await window.electron.getStoredDownloadPath();
             if (storedPath) {
                 setDownloadPath(storedPath);
@@ -23,13 +23,23 @@ function DownloadConfig({ language }) {
                 const defaultPath = await window.electron.getDefaultDownloadPath();
                 setDownloadPath(defaultPath);
             }
-        }
-        fetchDownloadPath();
-        async function fetchIsDownloadVideo() {
+
             const isDownloadVideo = await window.electron.getIsDownloadVideo();
             setIsDownloadVideo(isDownloadVideo);
+
+            // 从本地存储读取 downloadType
+            const storedDownloadType = localStorage.getItem('downloadType');
+            if (storedDownloadType) {
+                setDownloadType(storedDownloadType);
+            }
+
+            // 从本地存储读取 syncServer
+            const storedSyncServer = localStorage.getItem('syncServer');
+            if (storedSyncServer) {
+                setSyncServer(storedSyncServer);
+            }
         }
-        fetchIsDownloadVideo();
+        fetchSettings();
 
         window.electron.onLogMessage((message) => {
             setLogs((prevLogs) => [...prevLogs, message + '\n']);
@@ -67,6 +77,18 @@ function DownloadConfig({ language }) {
         setIsDownloadVideo(!!evt.target.checked);
         await window.electron.storeIsDownloadVideo(!!evt.target.checked);
     }
+
+    const handleDownloadTypeChange = (e) => {
+        const newValue = e.target.value;
+        setDownloadType(newValue);
+        localStorage.setItem('downloadType', newValue);
+    };
+
+    const handleSyncServerChange = (e) => {
+        const newValue = e.target.value;
+        setSyncServer(newValue);
+        localStorage.setItem('syncServer', newValue);
+    };
 
     return (
         <div className="download-configd">
@@ -128,7 +150,7 @@ function DownloadConfig({ language }) {
                         <select
                             id="downloadType"
                             value={downloadType}
-                            onChange={(e) => setDownloadType(e.target.value)}
+                            onChange={handleDownloadTypeChange}
                         >
                             <option value="liked">{t('likedVideos')}</option>
                             <option value="collected">{t('collectedVideos')}</option>
@@ -162,7 +184,7 @@ function DownloadConfig({ language }) {
                         <select
                             id="syncServer"
                             value={syncServer}
-                            onChange={(e) => setSyncServer(e.target.value)}
+                            onChange={handleSyncServerChange}
                         >
                             <option value="yes">{t('yes')}</option>
                             <option value="no">{t('no')}</option>
