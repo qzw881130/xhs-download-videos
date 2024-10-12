@@ -26,7 +26,7 @@ function LoginModal({ language, isOpen, onClose, onLoginSuccess }) {
         setIsLoading(true);
         try {
             const user = await window.electron.supabaseSignUp(loginEmail, loginPassword);
-            toast.success(t('Sign_up_successful'), { autoClose: 1000 });
+            // toast.success(t('Sign_up_successful'), { autoClose: 200 });
             if (rememberMe) {
                 localStorage.setItem('loginEmail', loginEmail);
                 localStorage.setItem('loginPassword', loginPassword);
@@ -45,7 +45,7 @@ function LoginModal({ language, isOpen, onClose, onLoginSuccess }) {
             const user = await window.electron.supabaseSignIn(loginEmail, loginPassword);
 
             onLoginSuccess(user);
-            toast.success(t('Sign_in_successful'), { autoClose: 1000 });
+            // toast.success(t('Sign_in_successful'), { autoClose: 200 });
             if (rememberMe) {
                 localStorage.setItem('loginEmail', loginEmail);
                 localStorage.setItem('loginPassword', loginPassword);
@@ -69,7 +69,7 @@ function LoginModal({ language, isOpen, onClose, onLoginSuccess }) {
                         const { session, user } = await window.electron.supabaseExchangeCodeForSession(code);
                         if (user) {
                             onLoginSuccess(user);
-                            toast.success(t('Sign_in_successful'), { autoClose: 1000 });
+                            // toast.success(t('Sign_in_successful'), { autoClose: 1000 });
                         } else {
                             throw new Error('No user returned from session exchange');
                         }
@@ -95,15 +95,15 @@ function LoginModal({ language, isOpen, onClose, onLoginSuccess }) {
             <div className="bg-white p-4 rounded-lg shadow-xl w-96 relative">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl font-bold">{t('Login_or_SignUp')}</h3>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-500 hover:text-gray-700"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
                 </div>
+                <a
+                    onClick={onClose}
+                    className="text-gray-500 hover:text-gray-700 absolute right-5 top-5 cursor-pointer"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </a>
                 <input
                     type="email"
                     value={loginEmail}
