@@ -52,8 +52,14 @@ function DownloadConfig({ language }) {
 
     const handleStartDownload = async () => {
         try {
-            await window.electron.startDownloader(startPosition, endPosition, downloadType);
-            setLogs(prevLogs => [...prevLogs, t('startDownloadLog', { type: t(downloadType), start: startPosition, end: endPosition }).replace('{type}', t(downloadType)).replace('{start}', startPosition).replace('{end}', endPosition)]);
+            await window.electron.startDownloader(startPosition, endPosition, downloadType, syncServer);
+            setLogs(prevLogs => [...prevLogs,
+            t('startDownloadLog',
+                { type: t(downloadType), start: startPosition, end: endPosition, syncServer }).replace('{type}',
+                    t(downloadType))
+                .replace('{start}', startPosition)
+                .replace('{end}', endPosition)
+                .replace('{syncServer}', syncServer)]);
         } catch (error) {
             console.error('Error starting downloader:', error);
             setLogs(prevLogs => [...prevLogs, t('downloadUnavailable')]);

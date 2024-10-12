@@ -23,7 +23,7 @@ let fetch;
 
 
 class XiaohongshuDownloader {
-    constructor(scrollAttempts = 0, maxScrollAttempts = 200, type, downloadDir, dbPath, userDataPath, language, isDownloadVideo = false) {
+    constructor(scrollAttempts = 0, maxScrollAttempts = 200, type, downloadDir, dbPath, userDataPath, language, isDownloadVideo = false, isSyncServer) {
         this.baseUrl = 'https://www.xiaohongshu.com';
         this.loginUrl = `${this.baseUrl}/login`;
         this.likedNotesUrl = `${this.baseUrl}/user/profile/liked`;
@@ -59,7 +59,8 @@ class XiaohongshuDownloader {
         this.cookiesPath = path.join(this.userDataPath, 'cookies.json');
         this.language = language;
         this.isDownloadVideo = isDownloadVideo;
-        // console.log(this);
+        this.isSyncServer = isSyncServer;
+        console.log(this);
     }
 
     generateDeviceId() {
@@ -738,6 +739,12 @@ const argv = yargs(hideBin(process.argv))
         type: 'boolean',
         default: false
     })
+    .option('isSyncServer', {
+        alias: 'ss',
+        description: '是否同步到服务器',
+        type: 'boolean',
+        default: true
+    })
     .argv;
 
 const downloader = new XiaohongshuDownloader(
@@ -748,6 +755,7 @@ const downloader = new XiaohongshuDownloader(
     argv.dbPath,
     argv.userDataPath,
     argv.language,
-    argv.isDownloadVideo
+    argv.isDownloadVideo,
+    argv.isSyncServer
 );
 downloader.run().catch(error => downloader.sendMessage('downloaderError', { error: error.message }));

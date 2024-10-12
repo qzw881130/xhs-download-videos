@@ -143,14 +143,15 @@ function setupIpcHandlers(browserWindow) {
         }
     });
 
-    ipcMain.handle('start-downloader', async (event, startPosition, endPosition, type) => {
+    ipcMain.handle('start-downloader', async (event, startPosition, endPosition, type, syncServer) => {
         // 向页面发送测试消息
         // if (win && !win.isDestroyed()) {
         //     win.webContents.send('log-message', '这是一条来自 ipcHandlers.cjs [start-downloader]的测试消息');
         // }
         const downloadDir = await getStoredDownloadPath();
         const dbPath = getDbPath();
-        await xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type);
+        const isSyncServer = syncServer == 'yes';
+        await xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type, isSyncServer);
     });
 
     ipcMain.handle('get-default-download-path', () => {
@@ -317,7 +318,7 @@ function setupIpcHandlers(browserWindow) {
 }
 
 // 在 xiaohongshuDownloader 函数中使用 sendTranslatedMessage
-async function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type) {
+async function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type, isSyncServer) {
     try {
         sendTranslatedMessage('startingDownloader_2', { start: startPosition, end: endPosition });
         const downloaderPath = path.join(__dirname, 'xiaohongshu_downloader.mjs');
@@ -336,6 +337,7 @@ async function xiaohongshuDownloader(startPosition, endPosition, downloadDir, db
                 '--userDataPath', app.getPath('userData'),
                 '--language', language,
                 '--isDownloadVideo', downloadVideo,
+                '--isSyncServer', isSyncServer
             ], {
                 env: {
                     ...process.env,

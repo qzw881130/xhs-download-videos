@@ -16,8 +16,8 @@ contextBridge.exposeInMainWorld('electron', {
     navigateVideo: (currentVid, direction, type) => ipcRenderer.invoke('navigate-video', currentVid, direction, type),
     getStatistics: () => ipcRenderer.invoke('get-statistics'),
     openExternal: (url) => ipcRenderer.invoke('open-external', url),
-    startDownloader: (startPosition, endPosition, type) =>
-        ipcRenderer.invoke('start-downloader', startPosition, endPosition, type),
+    startDownloader: (startPosition, endPosition, type, syncServer) =>
+        ipcRenderer.invoke('start-downloader', startPosition, endPosition, type, syncServer),
     removeLogMessageListener: () => ipcRenderer.removeAllListeners('log-message'),
     getDefaultDownloadPath: () => ipcRenderer.invoke('get-default-download-path'),
     selectDirectory: () => ipcRenderer.invoke('select-directory'),
