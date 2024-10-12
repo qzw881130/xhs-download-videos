@@ -92,9 +92,11 @@ class XiaohongshuDownloader {
     }
 
     async init() {
-        const user_id = await this.getUserId();
-        console.log('test user_id======', user_id);
-        this.sendMessage('test user_id======' + user_id);
+        if (this.syncNewRecord) {
+            const user_id = await this.getUserId();
+            console.log('test user_id======', user_id);
+            this.sendMessage('test user_id======' + user_id);
+        }
 
         await downloadBrowsers();
         this.sendMessage('startingBrowser');
@@ -192,13 +194,6 @@ class XiaohongshuDownloader {
         `);
 
         this.sendMessage('databaseOpened');
-
-        // const token = await this.getAuthToken();
-        // if (token) {
-        //     console.log('supabase token==', token)
-        //     const { data: { user } } = await this.supabase.auth.getUser(token);
-        //     console.log('user===', user)
-        // }
     }
 
     setupLogging() {
@@ -528,6 +523,7 @@ class XiaohongshuDownloader {
                     this.sendMessage('databaseConnectionClosed');
                 }
             });
+            process.exit(0);
         }
     }
 
