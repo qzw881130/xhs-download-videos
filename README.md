@@ -6,7 +6,7 @@
 > Set the download type and related parameters on the "Download Config" page, then click the "Download" button to start downloading.
 >Downloaded videos will be saved to the "Downloaded Videos" page, where you can view and play the downloaded videos.
 
-## About Ios/Android Player
+## About iOS/Android Player
 > https://github.com/qzw881130/xhs-download-player
 
 ## Demo
