@@ -2,11 +2,9 @@
 
 ## About
 
-该软件用于下载"您"在小红书APP的点赞视频、收藏视频、视频笔记。
-
-通过"下载配置"页面，设置下载类型及相关参数，然后点击"下载"按钮，即可下载。
-
-下载的视频会保存到"下载的视频"页面，您可以在这里查看及播放下载的视频。
+> This software is used to download "your" liked videos, collected videos, and video notes from the Xiaohongshu APP.
+> Set the download type and related parameters on the "Download Config" page, then click the "Download" button to start downloading.
+>Downloaded videos will be saved to the "Downloaded Videos" page, where you can view and play the downloaded videos.
 
 ## Demo
 
