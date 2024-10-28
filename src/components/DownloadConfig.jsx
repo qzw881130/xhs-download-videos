@@ -1,19 +1,24 @@
 import React, { useEffect, useState, useRef } from 'react';
 import '../styles/DownloadConfig.css';
-import { getTranslation } from '../i18n';
+import { getTranslation } from '../i18n';  // Make sure this import is correct
+import { useAuth } from '../contexts/AuthContext';
+import LoginModal from './LoginModal';
 
 function DownloadConfig({ language }) {
     const t = (key) => getTranslation(language, key);
+    const { user, showLoginModal, login, openLoginModal, closeLoginModal } = useAuth();
 
     const [downloadType, setDownloadType] = useState('liked');
     const [startPosition, setStartPosition] = useState(0);
     const [endPosition, setEndPosition] = useState(10);
     const [downloadPath, setDownloadPath] = useState('');
+    const [isDownloadVideo, setIsDownloadVideo] = useState(false);
+    const [syncServer, setSyncServer] = useState('no');
     const [logs, setLogs] = useState([]);
     const logTextareaRef = useRef(null);
 
     useEffect(() => {
-        async function fetchDownloadPath() {
+        async function fetchSettings() {
             const storedPath = await window.electron.getStoredDownloadPath();
             if (storedPath) {
                 setDownloadPath(storedPath);
@@ -21,8 +26,23 @@ function DownloadConfig({ language }) {
                 const defaultPath = await window.electron.getDefaultDownloadPath();
                 setDownloadPath(defaultPath);
             }
+
+            const isDownloadVideo = await window.electron.getIsDownloadVideo();
+            setIsDownloadVideo(isDownloadVideo);
+
+            // 从本地存储读取 downloadType
+            const storedDownloadType = localStorage.getItem('downloadType');
+            if (storedDownloadType) {
+                setDownloadType(storedDownloadType);
+            }
+
+            // 从本地存储读取 syncServer
+            const storedSyncServer = localStorage.getItem('syncServer');
+            if (storedSyncServer) {
+                setSyncServer(storedSyncServer);
+            }
         }
-        fetchDownloadPath();
+        fetchSettings();
 
         window.electron.onLogMessage((message) => {
             setLogs((prevLogs) => [...prevLogs, message + '\n']);
@@ -34,9 +54,21 @@ function DownloadConfig({ language }) {
     }, []);
 
     const handleStartDownload = async () => {
+        if (!user) {
+            openLoginModal();
+            return;
+        }
+
         try {
-            await window.electron.startDownloader(startPosition, endPosition, downloadType);
-            setLogs(prevLogs => [...prevLogs, t('startDownloadLog', { type: t(downloadType), start: startPosition, end: endPosition }).replace('{type}', t(downloadType)).replace('{start}', startPosition).replace('{end}', endPosition)]);
+            await window.electron.startDownloader(startPosition, endPosition, downloadType, syncServer);
+            setLogs(prevLogs => [...prevLogs,
+            t('startDownloadLog',
+                { type: t(downloadType), start: startPosition, end: endPosition, syncServer })
+                .replace('{type}', t(downloadType))
+                .replace('{start}', startPosition)
+                .replace('{end}', endPosition)
+                .replace('{syncServer}', syncServer)
+            ]);
         } catch (error) {
             console.error('Error starting downloader:', error);
             setLogs(prevLogs => [...prevLogs, t('downloadUnavailable')]);
@@ -55,10 +87,37 @@ function DownloadConfig({ language }) {
         await window.electron.openDirectory(downloadPath);
     };
 
+    const handleIsDownloadVideo = async (evt) => {
+        console.log('isDownloadVideo===', isDownloadVideo, !!evt.target.checked)
+        setIsDownloadVideo(!!evt.target.checked);
+        await window.electron.storeIsDownloadVideo(!!evt.target.checked);
+    }
+
+    const handleDownloadTypeChange = (e) => {
+        const newValue = e.target.value;
+        setDownloadType(newValue);
+        localStorage.setItem('downloadType', newValue);
+    };
+
+    const handleSyncServerChange = (e) => {
+        const newValue = e.target.value;
+        setSyncServer(newValue);
+        localStorage.setItem('syncServer', newValue);
+    };
+
     return (
         <div className="download-configd">
             <h2 className="text-xl font-bold mb-4">{t('downloadConfig')}</h2>
+            <div className="mt-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700">
+                <h4 className="font-bold mb-2">{t('noticeTitle')}</h4>
+                <ul className="list-disc list-inside">
+                    <li>{t('noticePoint1')}</li>
+                    <li>{t('noticePoint2')}</li>
+                    <li>{t('noticePoint3')}</li>
+                </ul>
+            </div>
             <div className="control-panel">
+
                 <div className="form-row w-2/3">
                     <div className="form-group flex items-center">
                         <label htmlFor="downloadPath" className="mr-2 whitespace-nowrap">{t('downloadPath')}</label>
@@ -83,13 +142,30 @@ function DownloadConfig({ language }) {
                         </button>
                     </div>
                 </div>
+                <div className="form-row mt-3 flex">
+                    <div className="form-group flex flex-row items-center w-1/6">
+                        <label htmlFor="downloadVideo" className=''>{t('DownloadVideoToLocal')}</label>
+                        <input
+                            type="checkbox"
+                            id="downloadVideo"
+                            checked={isDownloadVideo}
+                            onChange={handleIsDownloadVideo}
+                            className="mr-2 flex-1"
+                        />
+                    </div>
+                    <div className='w-5/6'>
+                        <p className="text-sm bg-yellow-100 border-yellow-500 text-yellow-700 p-2 ml-2 inline-block">
+                            {t('remoteVideoReminder', '提醒：视频播放链接来自远程，不受本地影响。因此可以选择不下载到本地。')}
+                        </p>
+                    </div>
+                </div>
                 <div className="form-row mt-3">
                     <div className="form-group">
                         <label htmlFor="downloadType">{t('downloadType')}</label>
                         <select
                             id="downloadType"
                             value={downloadType}
-                            onChange={(e) => setDownloadType(e.target.value)}
+                            onChange={handleDownloadTypeChange}
                         >
                             <option value="liked">{t('likedVideos')}</option>
                             <option value="collected">{t('collectedVideos')}</option>
@@ -119,6 +195,17 @@ function DownloadConfig({ language }) {
                         />
                     </div>
                     <div className="form-group">
+                        <label htmlFor="syncServer">{t('syncServer')}</label>
+                        <select
+                            id="syncServer"
+                            value={syncServer}
+                            onChange={handleSyncServerChange}
+                        >
+                            <option value="yes">{t('yes')}</option>
+                            <option value="no">{t('no')}</option>
+                        </select>
+                    </div>
+                    <div className="form-group">
                         <label>&nbsp;</label>
                         <button onClick={handleStartDownload} className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 m-1 rounded transition duration-300 ease-in-out">
                             {t('loginAndDownload')}
@@ -136,6 +223,12 @@ function DownloadConfig({ language }) {
                     rows="10"
                 />
             </div>
+            <LoginModal
+                language={language}
+                isOpen={showLoginModal}
+                onClose={closeLoginModal}
+                onLoginSuccess={login}
+            />
         </div>
     );
 }

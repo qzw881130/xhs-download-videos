@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getRandomInt } from '../utils/helpers';
+import ReactPlayer from 'react-player';
 import { getTranslation } from '../i18n';
 
 function VideoPlayer({ language }) {
@@ -17,9 +17,12 @@ function VideoPlayer({ language }) {
         return storedAutoPlay === 'true';
     });
     const [videoType, setVideoType] = useState('liked');
+    const [playerError, setPlayerError] = useState(null);
+    const [playbackRate, setPlaybackRate] = useState(1);
 
     const { vid } = useParams();
     const navigate = useNavigate();
+    const playerRef = useRef(null);
 
     const t = (key) => getTranslation(language, key);
 
@@ -46,6 +49,17 @@ function VideoPlayer({ language }) {
         localStorage.setItem('autoPlayNext', autoPlayNext);
     }, [autoPlayNext]);
 
+    useEffect(() => {
+        // 添加这个效果来监听来自主进程的日志消息
+        window.electron.onLogMessage((message) => {
+            console.log('Log from main process:', message);
+        });
+
+        return () => {
+            window.electron.removeLogMessageListener();
+        };
+    }, []);
+
     const checkAdjacentVideos = async (currentVid, type) => {
         try {
             const prevVid = await window.electron.navigateVideo(currentVid, 'prev', type);
@@ -58,10 +72,6 @@ function VideoPlayer({ language }) {
             setHasNext(false);
         }
     };
-
-    if (!videoDetails) {
-        return <div>Loading...</div>;
-    }
 
     const handleNavigation = async (direction, randomPlay = false) => {
         try {
@@ -94,11 +104,11 @@ function VideoPlayer({ language }) {
                 handleNavigation('next');
             }
         } else {
-            const video = document.querySelector('video');
-            if (video) {
-                video.currentTime = 0;
+            const player = playerRef.current;
+            if (player) {
+                player.seekTo(0);
                 if (localStorage.getItem('autoPlayNext') !== 'true') {
-                    video.play();
+                    player.play();
                 }
             }
         }
@@ -120,6 +130,36 @@ function VideoPlayer({ language }) {
         }
     };
 
+    const getProxyUrl = (url) => {
+        return `video-proxy://proxy?url=${encodeURIComponent(url)}`;
+    };
+
+    const handlePlayerError = (error) => {
+        console.error('ReactPlayer error:', error);
+        if (error && error.target) {
+            console.error('Video error details:', {
+                error: error.target.error,
+                src: error.target.src,
+                readyState: error.target.readyState,
+                networkState: error.target.networkState
+            });
+            setPlayerError(`Error: ${error.target.error ? error.target.error.message : 'Unknown error'}`);
+        } else {
+            setPlayerError('An unknown error occurred');
+        }
+    };
+
+    const handlePlaybackRateChange = (rate) => {
+        setPlaybackRate(rate);
+        if (playerRef.current) {
+            playerRef.current.getInternalPlayer().playbackRate = rate;
+        }
+    };
+
+    if (!videoDetails) {
+        return <div>Loading...</div>;
+    }
+
     return (
         <div className="video-player p-2 h-screen flex flex-col bg-gray-100 rounded-lg">
             <div className="flex justify-between items-center mb-5 bg-white p-4 rounded-lg shadow-md">
@@ -139,14 +179,42 @@ function VideoPlayer({ language }) {
             <div className="flex mb-4 flex-grow" style={{ minHeight: 0, maxHeight: '60vh' }}>
                 <div className="w-3/4 pr-4">
                     <div className="h-full bg-black rounded-lg overflow-hidden shadow-lg">
-                        <video
-                            src={videoDetails.video_src}
-                            controls
-                            autoPlay={localStorage.getItem('autoPlay') === 'true'}
-                            className="w-full h-full object-contain"
-                            onEnded={handleVideoEnd}
-                            onError={handleVideoEnd}
-                        ></video>
+                        {playerError ? (
+                            <div className="w-full h-full flex items-center justify-center text-white bg-red-500">
+                                <p>{playerError}</p>
+                                <button
+                                    onClick={() => setPlayerError(null)}
+                                    className="ml-4 bg-white text-red-500 px-4 py-2 rounded"
+                                >
+                                    Retry
+                                </button>
+                            </div>
+                        ) : (
+                            <ReactPlayer
+                                ref={playerRef}
+                                url={getProxyUrl(videoDetails.video_src)}
+                                controls
+                                playing={localStorage.getItem('autoPlay') === 'true'}
+                                width="100%"
+                                height="100%"
+                                onEnded={handleVideoEnd}
+                                onError={handlePlayerError}
+                                onReady={() => console.log('ReactPlayer is ready')}
+                                onStart={() => console.log('ReactPlayer started')}
+                                onPlay={() => console.log('ReactPlayer is playing')}
+                                onPause={() => console.log('ReactPlayer is paused')}
+                                onBuffer={() => console.log('ReactPlayer is buffering')}
+                                playbackRate={playbackRate}
+                                config={{
+                                    file: {
+                                        forceVideo: true,
+                                        attributes: {
+                                            crossOrigin: "anonymous"
+                                        }
+                                    }
+                                }}
+                            />
+                        )}
                     </div>
                 </div>
                 <div className="w-1/4 bg-white p-4 rounded-lg shadow-md flex flex-col justify-between">
@@ -167,14 +235,8 @@ function VideoPlayer({ language }) {
                                     {[0.5, 1, 1.5, 2].map((rate) => (
                                         <button
                                             key={rate}
-                                            className={`bg-blue-500 text-white px-3 py-1 rounded-md text-sm ${document.querySelector('video')?.playbackRate === rate ? 'bg-blue-700' : 'hover:bg-blue-600'}`}
-                                            onClick={() => {
-                                                const video = document.querySelector('video');
-                                                if (video) {
-                                                    video.playbackRate = rate;
-                                                    setVideoDetails(prev => ({ ...prev, playbackRate: rate }));
-                                                }
-                                            }}
+                                            className={`bg-blue-500 text-white px-3 py-1 rounded-md text-sm ${playbackRate === rate ? 'bg-blue-700' : 'hover:bg-blue-600'}`}
+                                            onClick={() => handlePlaybackRateChange(rate)}
                                         >
                                             {rate}x
                                         </button>
@@ -193,9 +255,10 @@ function VideoPlayer({ language }) {
                                             checked={!autoPlayNext}
                                             onChange={() => {
                                                 setAutoPlayNext(false);
-                                                const video = document.querySelector('video');
-                                                if (video) {
-                                                    video.loop = true;
+                                                const player = playerRef.current;
+                                                if (player) {
+                                                    player.seekTo(player.getCurrentTime());
+                                                    player.setLoop(true);
                                                 }
                                             }}
                                         />
@@ -210,10 +273,11 @@ function VideoPlayer({ language }) {
                                             checked={autoPlayNext}
                                             onChange={() => {
                                                 setAutoPlayNext(true);
-                                                const video = document.querySelector('video');
-                                                if (video) {
-                                                    video.loop = false;
-                                                    video.onended = () => {
+                                                const player = playerRef.current;
+                                                if (player) {
+                                                    player.seekTo(player.getCurrentTime());
+                                                    player.setLoop(false);
+                                                    player.onEnded = () => {
                                                         handleNavigation('next');
                                                     };
                                                 }

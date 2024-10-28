@@ -1,6 +1,7 @@
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import fs from 'fs/promises';
+import { writeFile, readFile } from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
@@ -9,6 +10,8 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { getTranslation } from './i18n.mjs';
 import { downloadBrowsers } from "puppeteer/internal/node/install.js";
+import { createClient } from '@supabase/supabase-js';
+import { existsSync } from 'fs';
 puppeteer.use(StealthPlugin());
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,8 +23,10 @@ let fetch;
     fetch = module.default;
 })();
 
+
 class XiaohongshuDownloader {
-    constructor(scrollAttempts = 0, maxScrollAttempts = 200, type, downloadDir, dbPath, userDataPath, language) {
+    constructor(scrollAttempts = 0, maxScrollAttempts = 200, type, downloadDir, downloadConfigPath, dbPath, userDataPath, language, isDownloadVideo = false, isSyncServer) {
+        console.log({ scrollAttempts, maxScrollAttempts, type, downloadDir, downloadConfigPath, dbPath, userDataPath, language, isDownloadVideo, isSyncServer })
         this.baseUrl = 'https://www.xiaohongshu.com';
         this.loginUrl = `${this.baseUrl}/login`;
         this.likedNotesUrl = `${this.baseUrl}/user/profile/liked`;
@@ -43,6 +48,7 @@ class XiaohongshuDownloader {
         };
         this.deviceId = this.generateDeviceId();
         this.downloadDir = downloadDir || path.join(__dirname, 'downloads');
+        this.downloadConfigPath = downloadConfigPath;
         this.dbPath = dbPath;
         this.scrollAttempts = scrollAttempts;
         this.maxScrollAttempts = maxScrollAttempts;
@@ -56,13 +62,42 @@ class XiaohongshuDownloader {
         this.userDataPath = userDataPath;
         this.cookiesPath = path.join(this.userDataPath, 'cookies.json');
         this.language = language;
+        this.isDownloadVideo = isDownloadVideo;
+        this.isSyncServer = isSyncServer;
+        // console.log(this);
+        this.supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY, {
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: false,
+            },
+        });
+
     }
 
     generateDeviceId() {
         return crypto.createHash('md5').update(Date.now().toString()).digest('hex');
     }
 
+    async getAuthToken() {
+        try {
+            if (existsSync(this.downloadConfigPath)) {
+                const config = JSON.parse(await readFile(this.downloadConfigPath, 'utf8'));
+                return config.authToken;
+            }
+        } catch (error) {
+            console.error('Error reading auth token from storage:', error);
+        }
+        return null;
+    }
+
     async init() {
+        if (this.syncNewRecord) {
+            const user_id = await this.getUserId();
+            console.log('test user_id======', user_id);
+            this.sendMessage('test user_id======' + user_id);
+        }
+
         await downloadBrowsers();
         this.sendMessage('startingBrowser');
         this.browser = await puppeteer.launch({
@@ -206,6 +241,13 @@ class XiaohongshuDownloader {
             }
 
             await this.page.waitForFunction(() => document.readyState === 'complete');
+            // 修改页面标题为 xhs
+            await this.page.evaluate(() => {
+                setTimeout(() => {
+                    document.title = 'xhs';
+                }, 2000);
+            });
+            this.sendMessage('pageTitleChanged', { newTitle: 'xhs' });
 
             await this.replacePersonalInfoWithAsterisks();
 
@@ -338,7 +380,11 @@ class XiaohongshuDownloader {
             const vid = urlParams.get('xsec_token') || 'unknown';
             this.sendMessage('vidExtracted', { vid });
 
-            if (await this.videoExists(vid)) {
+
+            const imagePath = path.join(this.downloadDir, `img_${vid}.jpg`);
+            const imageExists = await fs.access(imagePath).then(() => true).catch(() => false);
+            console.log('imageExists ===', imageExists);
+            if (await this.videoExists(vid) && imageExists) {
                 this.sendMessage('videoExists', { vid });
                 return null;
             }
@@ -355,11 +401,15 @@ class XiaohongshuDownloader {
                 title: detailInfo.title,
                 vid: vid,
                 type: this.type,
-                savePath: path.join(this.downloadDir, `video_${vid}.mp4`)
+                savePath: path.join(this.downloadDir, `video_${vid}.mp4`),
+                is_synced: false,
             };
 
-            await this.saveVideoData(videoData);
+            const recordId = await this.saveVideoData(videoData);
             this.sendMessage('videoAddedToDatabase', { vid });
+
+            // 同步新记录
+            await this.syncNewRecord(recordId);
 
             return videoData;
         } catch (error) {
@@ -388,21 +438,52 @@ class XiaohongshuDownloader {
         }
     }
 
-    async downloadImage(imageUrl, savePath) {
-        this.sendMessage('startingImageDownload', { url: imageUrl, savePath });
+    async downloadImage(url, savePath, maxRetries = 3) {
+        const timeoutDuration = 5000; // 5秒超时
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
 
-        try {
-            const response = await fetch(imageUrl);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            try {
+                // 使用 fetch 请求图片数据，传入 AbortController 来处理超时
+                const proxyUrl = `${process.env.SUPABASE_URL}/functions/v1/proxyImageDownload?imageUrl=${encodeURIComponent(url)}`;
+                const response = await fetch(proxyUrl + '&' + attempt, {
+                    signal: controller.signal,
+                    headers: {
+                        'Referer': 'https://www.xiaohongshu.com/',
+                        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+                    },
+                });
+                clearTimeout(timeoutId); // 如果请求成功，清除超时定时器
 
-            const buffer = await response.arrayBuffer();
-            await fs.writeFile(savePath, Buffer.from(buffer));
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
-            this.sendMessage('imageDownloadComplete', { savePath });
-            return true;
-        } catch (error) {
-            this.sendMessage('imageDownloadError', { error: error.message });
-            return false;
+                // 将响应数据转换为 ArrayBuffer
+                const buffer = await response.arrayBuffer();
+                // 将 ArrayBuffer 转换为 Buffer 并写入文件
+                await writeFile(savePath, Buffer.from(buffer));
+
+                this.sendMessage('imageDownloadComplete', { savePath });
+                return true;
+            } catch (error) {
+                clearTimeout(timeoutId); // 如果请求失败，清除定时器
+
+                if (error.name === 'AbortError') {
+                    this.sendMessage('imageDownloadTimeout');
+                } else {
+                    this.sendMessage('imageDownloadAttemptFailed', { attempt, error: error.message });
+                }
+
+                if (attempt === maxRetries) {
+                    this.sendMessage('imageDownloadError', { error: error.message });
+                    return false;
+                }
+
+                // 如果下载失败，等待1秒后重试
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
         }
     }
 
@@ -419,8 +500,8 @@ class XiaohongshuDownloader {
 
             this.sendMessage('allContentProcessed');
 
-            this.sendMessage('waitingForUserInput');
-            await new Promise(resolve => process.stdin.once('data', resolve));
+            // this.sendMessage('waitingForUserInput');
+            // await new Promise(resolve => process.stdin.once('data', resolve));
 
         } catch (error) {
             if (error.message.includes(this.t('loginTimeout'))) {
@@ -442,6 +523,7 @@ class XiaohongshuDownloader {
                     this.sendMessage('databaseConnectionClosed');
                 }
             });
+            process.exit(0);
         }
     }
 
@@ -543,8 +625,10 @@ class XiaohongshuDownloader {
         let videoDownloaded = false;
         let imageDownloaded = false;
 
-        if (videoData.videoSrc && videoData.videoSrc.startsWith('http')) {
+        if (this.isDownloadVideo && videoData.videoSrc && videoData.videoSrc.startsWith('http')) {
             videoDownloaded = await this.downloadVideo(videoData.videoSrc, videoData.savePath);
+        } else if (!this.isDownloadVideo) {
+            this.sendMessage('videoDownloadSkipped', { url: videoData.url });
         } else {
             this.sendMessage('videoNoSource', { url: videoData.url });
         }
@@ -556,7 +640,7 @@ class XiaohongshuDownloader {
             this.sendMessage('imageNoSource', { url: videoData.url });
         }
 
-        return videoDownloaded || imageDownloaded;
+        return this.isDownloadVideo ? (videoDownloaded || imageDownloaded) : imageDownloaded;
     }
 
     async saveVideoDataIfDownloaded(videoData) {
@@ -568,8 +652,10 @@ class XiaohongshuDownloader {
             const imageExists = await fs.access(imagePath).then(() => true).catch(() => false);
 
             if (videoExists || imageExists) {
-                await this.saveVideoData(videoData);
+                const recordId = await this.saveVideoData(videoData);
                 this.sendMessage('videoSavedToDatabase', { vid: videoData.vid });
+                // 同步新记录
+                if (imageExists) await this.syncNewRecord(recordId);
             } else {
                 this.sendMessage('videoDownloadFailed', { vid: videoData.vid });
             }
@@ -615,15 +701,156 @@ class XiaohongshuDownloader {
     async saveVideoData(videoData) {
         return new Promise((resolve, reject) => {
             this.db.run(`
-                INSERT OR REPLACE INTO videos (vid, title, page_url, video_src, image_src, type)
-                VALUES (?, ?, ?, ?, ?, ?)
-            `, [videoData.vid, videoData.title, videoData.url, videoData.videoSrc, videoData.imageSrc, this.type], (err) => {
+                INSERT OR REPLACE INTO videos (vid, title, page_url, video_src, image_src, type, is_synced)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            `, [videoData.vid, videoData.title, videoData.url, videoData.videoSrc, videoData.imageSrc, this.type, videoData.is_synced], function (err) {
                 if (err) {
                     this.sendMessage('saveVideoDataError', { error: err.message });
                     reject(err);
                 } else {
-                    resolve();
+                    resolve(this.lastID); // 返回插入或更新的记录ID
                 }
+            });
+        });
+    }
+
+    async getUserId() {
+        // 获取当前用户的 ID
+        const token = await this.getAuthToken();
+        const { data: { user } } = await this.supabase.auth.getUser(token);
+        if (!user) {
+            // throw new Error('User not logged in');
+            this.sendMessage('User not logged in');
+            return '';
+        }
+        return user.id;
+    }
+
+    async syncNewRecord(recordId) {
+        this.sendMessage('enter syncNewRecord=' + this.isSyncServer + ',recordId==' + recordId);
+        if (!this.isSyncServer) {
+            return;
+        }
+
+        let record;
+        try {
+            record = await this.getRecordById(recordId);
+            if (!record) {
+                this.sendMessage('Record not found');
+                return;
+            }
+
+            const user_id = await this.getUserId();
+            if (!user_id) return;
+
+            // 上传图片到 Supabase Storage
+            const imagePath = path.join(this.downloadDir, `img_${record.vid}.jpg`);
+            const isExist = await fs.access(imagePath).then(() => true).catch(() => false);
+            if (!isExist) {
+                console.log(`Image file not found[1]: ${imagePath}`);
+                this.sendMessage('imageFileNotFound[1]', { path: imagePath });
+            }
+            const imageUrl = await this.uploadImageToSupabase(imagePath, record.vid);
+
+
+            // 生成 UUID
+            const uuid = `${user_id}_${record.vid}`;
+
+            // 准备要同步的数据
+            const processedRecord = {
+                vid: record.vid,
+                title: record.title,
+                page_url: record.page_url,
+                video_src: record.video_src,
+                image_src: imageUrl, // 使用上传后的图片 URL
+                type: record.type,
+                created_at: record.created_at,
+                user_id: user_id,
+                uuid: uuid
+            };
+
+            // 更新或插入记录到 Supabase
+            const { data, error } = await this.supabase
+                .from('videos')
+                .upsert([processedRecord], { onConflict: 'uuid' });
+
+            if (error) {
+                console.error('Error inserting/updating data:', error.message);
+                // 如果是重复键错误，我们仍然需要标记这条记录为已同步
+                if (error.message.includes('duplicate key value violates')) {
+                    await this.updateSyncStatus(recordId, true);
+                    this.sendMessage('recordSyncedWithConflict', { vid: record.vid });
+                } else {
+                    throw error;
+                }
+            } else {
+                // 更新本地记录的同步状态
+                await this.updateSyncStatus(recordId, true);
+                this.sendMessage('recordSynced', { vid: record.vid });
+            }
+        } catch (error) {
+            console.error('Sync error:', error);
+            this.sendMessage('syncError', { error: error.message, vid: record?.vid });
+        }
+    }
+
+    async uploadImageToSupabase(imagePath, vid) {
+        try {
+            // 使用 existsSync 检查文件是否存在
+            if (!existsSync(imagePath)) {
+                console.log(`Image file not found: ${imagePath}`);
+                this.sendMessage('imageFileNotFound', { path: imagePath });
+                return null; // Return null if the file doesn't exist
+            }
+            console.log(`Uploading image: ${imagePath}`);
+            let image_src = '';
+            const fileBuffer = await fs.readFile(imagePath);
+            const { data: storageData, error: storageError } = await this.supabase
+                .storage
+                .from(process.env.SUPABASE_STORAGE_BUCKET)
+                .upload(`images/${vid}.jpg`, fileBuffer, {
+                    contentType: 'image/jpeg',
+                    cacheControl: '3600',
+                    upsert: true
+                });
+
+            if (storageError) {
+                console.error('Error uploading image to Supabase storage:', storageError.message);
+            } else {
+                const { data: publicUrlData, error: publicUrlError } = this.supabase
+                    .storage
+                    .from(process.env.SUPABASE_STORAGE_BUCKET)
+                    .getPublicUrl(`images/${vid}.jpg`);
+
+                if (publicUrlError) {
+                    console.error('Error getting public URL:', publicUrlError.message);
+                } else {
+                    // 公共URL
+                    image_src = publicUrlData.publicUrl;
+                    console.log('Public URL:', image_src);
+                    return image_src;
+                }
+            }
+        } catch (error) {
+            this.sendMessage('imageUploadError', { error: error.message });
+            throw error;
+        }
+    }
+
+    async getRecordById(id) {
+        return new Promise((resolve, reject) => {
+            this.db.get('SELECT * FROM videos WHERE id = ?', [id], (err, row) => {
+                if (err) reject(err);
+                resolve(row);
+            });
+        });
+    }
+
+    async updateSyncStatus(id, isSynced) {
+        return new Promise((resolve, reject) => {
+            this.db.run('UPDATE videos SET is_synced = ? WHERE id = ?', [isSynced ? 1 : 0, id], (err) => {
+                if (err) reject(err);
+                resolve();
             });
         });
     }
@@ -634,7 +861,9 @@ class XiaohongshuDownloader {
     }
 
     t(key, params = {}) {
-        return getTranslation(this.language, key, params);
+        const msg = getTranslation(this.language, key, params);
+        console.log(msg)
+        return msg;
     }
 }
 
@@ -664,6 +893,12 @@ const argv = yargs(hideBin(process.argv))
         type: 'string',
         required: true
     })
+    .option('downloadConfigPath', {
+        alias: 'dcp',
+        description: '下载配置路径',
+        type: 'string',
+        required: true
+    })
     .option('dbPath', {
         alias: 'db',
         description: '数据库文件路径',
@@ -681,6 +916,18 @@ const argv = yargs(hideBin(process.argv))
         type: 'string',
         default: 'zh'
     })
+    .option('isDownloadVideo', {
+        alias: 'dv',
+        description: '是否下载视频',
+        type: 'boolean',
+        default: false
+    })
+    .option('isSyncServer', {
+        alias: 'ss',
+        description: '是否同步到服务器',
+        type: 'boolean',
+        default: true
+    })
     .argv;
 
 const downloader = new XiaohongshuDownloader(
@@ -688,8 +935,16 @@ const downloader = new XiaohongshuDownloader(
     argv.maxScrollAttempts,
     argv.type,
     argv.downloadDir,
+    argv.downloadConfigPath,
     argv.dbPath,
     argv.userDataPath,
-    argv.language
+    argv.language,
+    argv.isDownloadVideo,
+    argv.isSyncServer
 );
-downloader.run().catch(error => downloader.sendMessage('downloaderError', { error: error.message }));
+downloader.init().then(() => {
+    downloader.run().catch(error => {
+        console.log(error);
+        downloader.sendMessage('downloaderError', { error: error.message });
+    });
+});

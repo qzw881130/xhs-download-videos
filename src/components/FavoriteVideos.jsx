@@ -25,6 +25,7 @@ function FavoriteVideos({ type, language }) {
         setIsLoading(true);
         try {
             const result = await window.electron.getLikedVideos(page, pagination.pageSize, type, keyword);
+            console.log('result.videos===', result.videos)
             setVideos(result.videos);
             setPagination(result.pagination);
             setInputPage(result.pagination.currentPage.toString());

@@ -19,6 +19,7 @@ const translations = {
         videoMp4NotFound: '未找到视频 {vid} 的 MP4 源',
         videoAddedToDatabase: '视频 {vid} 已添加到数据库',
         processVideoPageError: '处理视频页面时出错：{error}',
+        processVideoError: '处理视频时出错：{error}',
         startingVideoDownload: '开始下载视频：{url}，保存路径：{savePath}',
         videoDownloadComplete: '视频下载完成，保存路径：{savePath}',
         videoDownloadError: '视频下载出错：{error}',
@@ -40,7 +41,7 @@ const translations = {
         cookiesLoaded: 'Cookies 已加载',
         cookiesFileNotFound: 'Cookies 文件不存在，将在首次登录后创建',
         saveVideoDataError: '保存视频数据到数据库时出错：{error}',
-        gettingVideos: '���在获取{type}视频...',
+        gettingVideos: '在获取{type}视频...',
         startingPreScroll: '开始预滚动，共 {attempts} 次',
         preScrollComplete: '完成第 {attempt} 次预滚动',
         preScrollSectionMarked: '已标记第 {attempt} 次滚动加载的内容为已处理',
@@ -63,6 +64,8 @@ const translations = {
         downloaderError: '下载器错误: {error}',
         downloaderProcessExited: '下载器进程退出，退出码 {code}, 信号 {signal}',
         generalError: '发生错误: {error}',
+        videoDownloadSkipped: '视频下载已跳过',
+        imageDownloadAttemptFailed: '图片下载尝试 {attempt} 失败。正在重试...',
     },
     en: {
         startingBrowser: 'Starting browser...',
@@ -84,6 +87,7 @@ const translations = {
         videoMp4NotFound: 'MP4 source not found for video {vid}',
         videoAddedToDatabase: 'Video {vid} added to database',
         processVideoPageError: 'Error processing video page: {error}',
+        processVideoError: 'rror processing video: {error}',
         startingVideoDownload: 'Starting video download: {url}, save path: {savePath}',
         videoDownloadComplete: 'Video download complete, save path: {savePath}',
         videoDownloadError: 'Video download error: {error}',
@@ -128,6 +132,7 @@ const translations = {
         downloaderError: 'Downloader error: {error}',
         downloaderProcessExited: 'Downloader process exited with code {code}, signal {signal}',
         generalError: 'An error occurred: {error}',
+        imageDownloadAttemptFailed: 'Image download attempt {attempt} failed. Retrying...',
     }
 };
 

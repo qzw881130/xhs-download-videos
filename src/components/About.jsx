@@ -10,14 +10,17 @@ function About({ language }) { // 添加 language 参数
 
     const [configPath, setConfigPath] = useState('');
     const [dbPath, setDbPath] = useState('');
+    const [appPath, setAppPath] = useState('');
 
     useEffect(() => {
         async function fetchPaths() {
             try {
                 const config = await window.electron.getConfigPath();
                 const db = await window.electron.getDbPath();
+                const app = await window.electron.appPath();
                 setConfigPath(config);
                 setDbPath(db);
+                setAppPath(app);
             } catch (error) {
                 console.error('Error fetching paths:', error);
                 setConfigPath('Error fetching path');
@@ -42,6 +45,7 @@ function About({ language }) { // 添加 language 参数
                     <p>{t('currentVersion')}: <span className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">{packageInfo.version}</span></p>
                     <p>{t('configPath')}: <span className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">{configPath}</span></p>
                     <p>{t('dbPath')}: <span className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">{dbPath}</span></p>
+                    <p>{t('appPath')}: <span className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">{appPath}</span></p>
                 </div>
                 <div className="mb-6">
                     <h2 className="text-xl font-semibold mb-2">{t('features')}</h2>

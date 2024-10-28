@@ -1,14 +1,16 @@
 const { app, BrowserWindow, protocol, shell, ipcMain } = require('electron');
 const path = require('path');
 const isDev = require('electron-is-dev');
-const { setupIpcHandlers, getStoredDownloadPath } = require('./ipcHandlers.cjs');
-require('./ipcHandlers.cjs');  // 确保这行存在，它会加载所有的 IPC 处理程序
+const { setupIpcHandlers } = require('./ipcHandlers.cjs');
+const { setupSyncServerHandlers, getSyncStatistics, setupOAuth } = require('./syncServer.cjs');
+const { getStoredDownloadPath, loadEnv } = require('./utils.cjs');
+const { setupVideoProxy } = require('./videoProxy.cjs');
 
-const { fork } = require('child_process');
 console.log('Electron main process starting...');
 
-let win;
+loadEnv();
 
+let win;
 function createWindow() {
     console.log('Creating Electron window...');
     win = new BrowserWindow({
@@ -22,7 +24,7 @@ function createWindow() {
         },
     });
 
-    const url = isDev ? 'http://localhost:5173' : `file://${path.join(__dirname, '../dist/index.html')}`;
+    const url = isDev ? 'http://localhost:3000' : `file://${path.join(__dirname, '../dist/index.html')}`;
     console.log('Loading URL:', url);
 
     const loadURL = () => {
@@ -66,8 +68,9 @@ function createWindow() {
         // win.webContents.send('log-message', 'Window loaded successfully');
     });
 
-    // 在这里调用 setupIpcHandlers，并传入 win 对象
+    // 在这调用 setupIpcHandlers，并传入 win 对象
     setupIpcHandlers(win);
+    setupSyncServerHandlers(win);
 
     // 添加这些 IPC 监听器
     ipcMain.on('log', (event, message) => {
@@ -77,6 +80,15 @@ function createWindow() {
     ipcMain.on('error', (event, message) => {
         win.webContents.send('console-error', message);
     });
+
+    ipcMain.on('requestSyncStatistics', async (event) => {
+        const stats = await getSyncStatistics();
+        // console.log('Sync statistics:', stats);
+        event.sender.send('syncStatisticsUpdate', stats);
+    });
+
+    // 设置视频代理
+    setupVideoProxy();
 }
 
 app.whenReady().then(async () => {

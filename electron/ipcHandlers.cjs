@@ -6,9 +6,21 @@ const { getLikedVideos, getVideoDetails, getAdjacentVideo, getStatistics, getRan
 const isDev = require('electron-is-dev');
 const { getTranslation } = require('./i18n.cjs');
 const database = require('./database.cjs');
+const { setupSyncServerHandlers } = require('./syncServer.cjs');
+const { getStoredDownloadPath, getIsDownloadVideo, storeIsDownloadVideo } = require('./utils.cjs');
+const { getUserEmail, storeUserEmail } = require('./utils.cjs');
+const { createClient } = require('@supabase/supabase-js');
 
 let win;
 let currentLanguage = 'zh'; // 默认语言
+let authToken = null;
+
+// 创建 Supabase 客户端
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY, {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false,
+});
 
 function sendTranslatedMessage(key, params = {}) {
     const message = getTranslation(currentLanguage, key, params);
@@ -31,11 +43,24 @@ async function getLanguageSetting() {
     }
 }
 
+// 添加这个函数来处理本地存储
+function setAuthTokenToStorage(token) {
+    const downloadConfigPath = getDownloadPathFile();
+    try {
+        const config = fs.existsSync(downloadConfigPath) ? JSON.parse(fs.readFileSync(downloadConfigPath, 'utf8')) : {};
+        config.authToken = token;
+        fs.writeFileSync(downloadConfigPath, JSON.stringify(config, null, 2));
+    } catch (error) {
+        console.error('Error setting auth token to storage:', error);
+    }
+}
+
 function setupIpcHandlers(browserWindow) {
     win = browserWindow;
 
     ipcMain.handle('get-liked-videos', async (event, page, pageSize, type, keyword) => {
         try {
+            console.log('page, pageSize, type, keyword==', page, pageSize, type, keyword)
             const downloadDir = await getStoredDownloadPath();
             console.log('Attempting to get liked videos');
             const result = await getLikedVideos(page, pageSize, type, keyword);
@@ -47,7 +72,7 @@ function setupIpcHandlers(browserWindow) {
                     image_src: `local-file://${path.join(downloadDir, `img_${video.vid}.jpg`).replace(/\\/g, '/')}`
                 }))
             };
-            console.log('get-liked-videos result:', modifiedResult);
+            // console.log('get-liked-videos result:', modifiedResult);
             return modifiedResult;
         } catch (error) {
             console.error('Error in get-liked-videos handler:', error);
@@ -62,13 +87,13 @@ function setupIpcHandlers(browserWindow) {
             const modifiedVideoDetails = {
                 ...videoDetails,
                 image_src: `local-file://${path.join(downloadDir, `img_${videoDetails.vid}.jpg`).replace(/\\/g, '/')}`,
-                video_src: `local-file://${path.join(downloadDir, `video_${videoDetails.vid}.mp4`).replace(/\\/g, '/')}`,
+                // video_src: `local-file://${path.join(downloadDir, `video_${videoDetails.vid}.mp4`).replace(/\\/g, '/')}`,
                 adjacentVideos: videoDetails.adjacentVideos.map(v => ({
                     ...v,
                     image_src: `local-file://${path.join(downloadDir, `img_${v.vid}.jpg`).replace(/\\/g, '/')}`
                 }))
             };
-            console.log('get-video-details result:', modifiedVideoDetails);
+            // console.log('get-video-details result:', modifiedVideoDetails);
             return modifiedVideoDetails;
         } catch (error) {
             console.error('Error getting video details:', error);
@@ -111,7 +136,7 @@ function setupIpcHandlers(browserWindow) {
 
     ipcMain.handle('open-video-player', (event, vid) => {
         const url = isDev
-            ? `http://localhost:5173/#/video-player/${vid}`
+            ? `http://localhost:3000/#/video-player/${vid}`
             : `file://${path.join(__dirname, '../dist/index.html')}#/video-player/${vid}`;
 
         if (playerWindow && !playerWindow.isDestroyed()) {
@@ -134,19 +159,22 @@ function setupIpcHandlers(browserWindow) {
                 playerWindow = null;
             });
 
-            // 可选：打开开发者工具
+            // 选择：打开开发者工具
             if (isDev) playerWindow.webContents.openDevTools();
         }
     });
 
-    ipcMain.handle('start-downloader', async (event, startPosition, endPosition, type) => {
+    ipcMain.handle('start-downloader', async (event, startPosition, endPosition, type, syncServer) => {
         // 向页面发送测试消息
         // if (win && !win.isDestroyed()) {
-        //     win.webContents.send('log-message', '这是一条来自 ipcHandlers.cjs [start-downloader]的测试消息');
+        //     win.webContents.send('log-message', '是一条来自 ipcHandlers.cjs [start-downloader]的测试消息');
         // }
         const downloadDir = await getStoredDownloadPath();
         const dbPath = getDbPath();
-        await xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type);
+        const isSyncServer = syncServer == 'yes';
+        const downloadConfigPath = await getDownloadPathFile();
+
+        await xiaohongshuDownloader(startPosition, endPosition, downloadDir, downloadConfigPath, dbPath, type, isSyncServer);
     });
 
     ipcMain.handle('get-default-download-path', () => {
@@ -173,15 +201,16 @@ function setupIpcHandlers(browserWindow) {
         } catch (error) {
             console.error('Error reading download path file:', error);
         }
+        win.webContents.send('console-log', `New download path file: ${newPath}`);
 
-        const oldPath = data.downloadPath;
+        const oldPath = data.downloadPath || await getStoredDownloadPath();
 
         if (oldPath !== newPath) {
             try {
                 // 确保新路径存在
                 await fs.ensureDir(newPath);
 
-                // 如果旧路径存在且不为空，则复文件
+                // 如果旧路径存在不为空，则复文件
                 if (oldPath && fs.existsSync(oldPath)) {
                     const files = await fs.readdir(oldPath);
                     for (const file of files) {
@@ -192,20 +221,24 @@ function setupIpcHandlers(browserWindow) {
                         }
                     }
                     console.log(`Image and video files moved from ${oldPath} to ${newPath}`);
+                    win.webContents.send('console-log', `Image and video files moved from ${oldPath} to ${newPath}`);
                 }
 
                 // 更新存储的下载路径
                 data.downloadPath = newPath;
                 await fs.writeFile(downloadPathFile, JSON.stringify(data, null, 2));
                 console.log(`Download path updated to ${newPath}`);
+                win.webContents.send('console-log', `Download path updated to ${newPath}`);
 
                 return true;
             } catch (error) {
                 console.error('Error updating download path:', error);
+                win.webContents.send('console-error', `Error updating download path: ${error.message}`);
                 throw error;
             }
         } else {
             console.log('New path is the same as the old path. No changes made.');
+            win.webContents.send('console-log', 'New path is the same as the old path. No changes made.');
             return false;
         }
     });
@@ -232,9 +265,14 @@ function setupIpcHandlers(browserWindow) {
         return getDownloadPathFile();
     });
 
-    // 假设这个已经存在
+    // 假这个已经存在
     ipcMain.handle('get-db-path', () => {
         return getDbPath();
+    });
+
+    ipcMain.handle('app-path', () => {
+        console.log('app-path', app.getAppPath());
+        return app.getAppPath();
     });
 
     ipcMain.on('log', (event, message) => {
@@ -284,15 +322,82 @@ function setupIpcHandlers(browserWindow) {
             return { success: false, error: error.message };
         }
     });
+
+    ipcMain.handle('get-is-download-video', async (event) => {
+        return await getIsDownloadVideo();
+    })
+
+    ipcMain.handle('store-is-download-video', async (event, isDownloadVideo) => {
+        try {
+            console.log('main isDownloadVideo==', isDownloadVideo);
+            await storeIsDownloadVideo(isDownloadVideo);
+            return { success: true };
+        } catch (error) {
+            console.error('Error store-is-download-video:', error);
+            return { success: false, error: error.message };
+        }
+    })
+
+    ipcMain.handle('set-auth-token', (event, token) => {
+        setAuthTokenToStorage(token);
+        console.log('authToken saved to storage');
+        console.log(`save supabase token==\n`, token)
+    });
+
+    ipcMain.handle('supabase-get-user', async () => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            // console.log('Supabase user:', user);
+            return user;
+        } catch (error) {
+            console.error('Error getting user:', error);
+            throw error;
+        }
+    });
+
+    ipcMain.handle('supabase-sign-in', async (event, email, password) => {
+        try {
+            console.log('Supabase URL:', process.env.SUPABASE_URL);
+            console.log('Supabase Key:', process.env.SUPABASE_KEY.substring(0, 5) + '...');
+            console.log('Attempting to sign in with email:', email);
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+            if (error) {
+                console.error('Supabase sign in error:', error);
+                throw error;
+            }
+            console.log('Sign in successful:', data);
+            return data;
+        } catch (error) {
+            console.error('Error in supabase-sign-in handler:', error);
+            throw error;
+        }
+    });
+
+    ipcMain.handle('supabase-sign-out', async () => {
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+            setAuthTokenToStorage('');
+            console.log('User signed out successfully');
+            return { success: true };
+        } catch (error) {
+            console.error('Error signing out:', error);
+            throw error;
+        }
+    });
 }
 
 // 在 xiaohongshuDownloader 函数中使用 sendTranslatedMessage
-async function xiaohongshuDownloader(startPosition, endPosition, downloadDir, dbPath, type) {
+async function xiaohongshuDownloader(startPosition, endPosition, downloadDir, downloadConfigPath, dbPath, type, isSyncServer) {
     try {
         sendTranslatedMessage('startingDownloader_2', { start: startPosition, end: endPosition });
         const downloaderPath = path.join(__dirname, 'xiaohongshu_downloader.mjs');
 
         const language = await getLanguageSetting();
+        const downloadVideo = await getIsDownloadVideo();
 
         let downloader;
         try {
@@ -300,10 +405,13 @@ async function xiaohongshuDownloader(startPosition, endPosition, downloadDir, db
                 '--scrollAttempts', startPosition,
                 '--maxScrollAttempts', endPosition,
                 '--downloadDir', downloadDir,
+                '--downloadConfigPath', downloadConfigPath,
                 '--dbPath', dbPath,
                 '--type', type,
                 '--userDataPath', app.getPath('userData'),
-                '--language', language
+                '--language', language,
+                '--isDownloadVideo', downloadVideo,
+                '--isSyncServer', isSyncServer
             ], {
                 env: {
                     ...process.env,
@@ -345,7 +453,7 @@ function ensureConfigFileExists() {
 
 function getDownloadPathFile() {
     const configFile = isDev ? 'download_path.json' : 'download_path_prod.json';
-    console.log('Getting download path file', path.join(app.getPath('userData'), configFile));
+    // console.log('Getting download path file', path.join(app.getPath('userData'), configFile));
     return path.join(app.getPath('userData'), configFile);
 }
 
@@ -356,16 +464,8 @@ function ensureDownloadPathFileExists() {
     }
 }
 
-async function getStoredDownloadPath() {
-    ensureDownloadPathFileExists();
-    const downloadPathFile = getDownloadPathFile();
-    try {
-        const data = JSON.parse(await fs.readFile(downloadPathFile, 'utf8'));
-        return data.downloadPath || path.join(app.getPath('userData'), 'downloads');
-    } catch (error) {
-        console.error('Error reading download path file:', error);
-        return path.join(app.getPath('userData'), 'downloads');
-    }
-}
-
-module.exports = { setupIpcHandlers, getStoredDownloadPath, getLanguageSetting };
+// 修改模块导出
+module.exports = {
+    setupIpcHandlers,
+    getLanguageSetting
+};

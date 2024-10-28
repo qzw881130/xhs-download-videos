@@ -22,12 +22,12 @@ function error(message) {
 
 function openDatabase() {
     const dbPath = getDbPath();
-    log(`Attempting to open database at: ${dbPath}`);
+    // log(`Attempting to open database at: ${dbPath}`);
     return new sqlite3.Database(dbPath, (err) => {
         if (err) {
             error(`Error opening database: ${err.message}`);
         } else {
-            log(`Database opened successfully: ${dbPath}`);
+            // log(`Database opened successfully: ${dbPath}`);
         }
     });
 }
@@ -53,20 +53,36 @@ function dbAll(db, query, params) {
 async function getLikedVideos(page = 1, pageSize = 20, type = 'liked', keyword = '') {
     const db = openDatabase();
     const offset = (page - 1) * pageSize;
-    let query = `
+    let query, countQuery, params;
+    if (!!type) {
+        query = `
+            SELECT * FROM videos
+            WHERE type = ? AND is_hidden = 0
+        `;
+        countQuery = `
+            SELECT COUNT(*) as total FROM videos
+            WHERE type = ? AND is_hidden = 0
+        `;
+        params = [type];
+    } else {
+        query = `
         SELECT * FROM videos
-        WHERE type = ? AND is_hidden = 0
-    `;
-    let countQuery = `
-        SELECT COUNT(*) as total FROM videos
-        WHERE type = ? AND is_hidden = 0
-    `;
-    let params = [type];
+        WHERE is_hidden = 0
+        `;
+        countQuery = `
+            SELECT COUNT(*) as total FROM videos
+            WHERE is_hidden = 0
+        `;
+        params = [];
+    }
 
     if (keyword) {
-        query += ` AND title LIKE ?`;
-        countQuery += ` AND title LIKE ?`;
-        params.push(`%${keyword}%`);
+        query += ` AND (title LIKE ? OR id = ?)`;
+        countQuery += ` AND (title LIKE ? OR id = ?)`;
+        if (!!type) {
+            params.push(`%${keyword}%`);
+            params.push(keyword);
+        }
     }
 
     query += `
@@ -242,13 +258,13 @@ async function ensureDatabaseExists() {
         if (err) {
             console.error('Error opening database:', err.message);
         } else {
-            console.log('Database opened successfully');
+            // console.log('Database opened successfully');
             try {
                 await initializeDatabase(db);
                 await updateDatabaseSchema(db);
                 console.log('Database initialized and schema updated successfully');
             } catch (initError) {
-                console.error('Error initializing or updating database:', initError);
+                console.error('Error initializing or updating database:', initError.message);
             } finally {
                 db.close();
             }
@@ -273,7 +289,9 @@ async function initializeDatabase(db) {
                 video_src TEXT,
                 image_src TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                is_hidden BOOLEAN DEFAULT FALSE
+                is_hidden BOOLEAN DEFAULT FALSE,
+                updated_at DATETIME,
+                is_synced BOOLEAN DEFAULT FALSE
             )
         `, (err) => {
             if (err) {
@@ -293,7 +311,7 @@ async function updateDatabaseSchema(db) {
         await new Promise((resolve, reject) => {
             db.run(`ALTER TABLE videos ADD COLUMN ${column} TEXT;`, (err) => {
                 if (err && !err.message.includes('duplicate column name')) {
-                    console.error(`Error adding ${column} column:`, err);
+                    console.error(`Error adding ${column} column:`, err.message);
                     reject(err);
                 } else {
                     console.log(`Column ${column} added or already exists`);
@@ -304,12 +322,36 @@ async function updateDatabaseSchema(db) {
     }
     // Check if is_hidden column exists, if not, add it
     await new Promise((resolve, reject) => {
-        db.run("ALTER TABLE videos ADD COLUMN is_hidden BOOLEAN DEFAULT FALSE", (err) => {
-            if (err) {
-                console.error('Error adding is_hidden column:', err);
+        db.run("ALTER TABLE videos ADD COLUMN is_hidden BOOLEAN DEFAULT FALSE;", (err) => {
+            if (err && !err.message.includes('duplicate column name')) {
+                console.error('Error adding is_hidden column:', err.message);
                 reject(err);
             } else {
                 console.log('Column is_hidden added successfully');
+                resolve();
+            }
+        });
+    });
+
+    await new Promise((resolve, reject) => {
+        db.run("ALTER TABLE videos ADD COLUMN updated_at DATETIME;", (err) => {
+            if (err && !err.message.includes('duplicate column name')) {
+                console.error('Error adding updated_at column:', err.message);
+                reject(err);
+            } else {
+                console.log('Column updated_at added or already exists');
+                resolve();
+            }
+        });
+    });
+
+    await new Promise((resolve, reject) => {
+        db.run("ALTER TABLE videos ADD COLUMN is_synced BOOLEAN DEFAULT FALSE;", (err) => {
+            if (err && !err.message.includes('duplicate column name')) {
+                console.error('Error adding is_synced column:', err.message);
+                reject(err);
+            } else {
+                console.log('Column is_synced added successfully');
                 resolve();
             }
         });
@@ -319,11 +361,60 @@ async function updateDatabaseSchema(db) {
 async function hideVideo(vid) {
     const db = openDatabase();
     try {
-        const query = 'UPDATE videos SET is_hidden = TRUE WHERE vid = ?';
+        const query = 'UPDATE videos SET is_hidden = TRUE, updated_at = CURRENT_TIMESTAMP, is_synced = FALSE WHERE vid = ?';
         await new Promise((resolve, reject) => {
             db.run(query, [vid], function (err) {
                 if (err) reject(err);
                 else resolve(this);
+            });
+        });
+    } finally {
+        db.close();
+    }
+}
+
+async function getLocalTotal() {
+    // console.log('getLocalTotal function called'); // 添加日志
+    const db = openDatabase();
+    try {
+        const countResult = await dbGet(db, "SELECT COUNT(*) as count FROM videos", []);
+        // console.log('countResult:', countResult); // 添加日志
+        return countResult.count;
+    } catch (err) {
+        console.error('Error fetching total count from videos table:', err.message);
+        throw err;
+    } finally {
+        db.close();
+    }
+}
+
+async function getUnSyncedCount() {
+    const db = openDatabase();
+    try {
+        const countResult = await dbGet(db, "SELECT COUNT(*) as count FROM videos WHERE is_synced = false", []);
+        return countResult.count;
+    } catch (err) {
+        console.error('Error fetching synced count from videos table:', err.message);
+        throw err;
+    } finally {
+        db.close();
+    }
+}
+
+async function markVideoAsSynced(id) {
+    // console.log('markVideoAsSynced function called with id:', id); // 添加日志
+    const db = openDatabase();
+    try {
+        const query = 'UPDATE videos SET is_synced = TRUE, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
+        await new Promise((resolve, reject) => {
+            db.run(query, [id], function (err) {
+                if (err) {
+                    console.error('Error marking video as synced:', err.message);
+                    reject(err);
+                } else {
+                    // console.log('Video marked as synced:', id);
+                    resolve(this);
+                }
             });
         });
     } finally {
@@ -338,5 +429,11 @@ module.exports = {
     getStatistics,
     getRandomVideo,
     getDbPath,
-    hideVideo
+    hideVideo,
+    openDatabase,
+    dbGet,
+    dbAll,
+    getLocalTotal,
+    getUnSyncedCount,
+    markVideoAsSynced
 };
