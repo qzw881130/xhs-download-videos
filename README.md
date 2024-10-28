@@ -15,6 +15,50 @@
 <p><img src='src/assets/demo/3.png' width="550" /></p>
 <p><img src='src/assets/demo/4.png' width="550" /></p>
 
+## Preparation
+
+1. create project `xhs-video` in supabase
+2. create table `videos` in supabase
+
+```
+#table videos
+CREATE TABLE videos (
+    id bigint PRIMARY KEY,
+    user_id text NOT NULL,
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    is_hidden boolean,
+    is_synced boolean,
+    video_src character varying,
+    image_src character varying,
+    uuid character varying,
+    vid character varying,
+    title character varying,
+    type character varying,
+    page_url character varying
+);
+```
+
+3. change videos policies
+
+<p><img src='src/assets/demo/disable-table-tls.png' width="550" /></p>
+
+4. create bucket `xhs-videos-storage` in supabase storage.
+5. create folder `images` in `xhs-videos-storage` bucket
+6. change bucket to be `public`
+
+<p><img src='src/assets/demo/bucket.png' width="550" /></p>
+
+4. copy `.env.example` to generate `.env`, change .env paramaters
+
+```
+# get these paramaters from supabase Project Settings->Project API Keys
+
+SUPABASE_URL=Project URL
+SUPABASE_KEY=anon public
+SUPABASE_STORAGE_BUCKET=xhs-videos-storage
+```
+
 ## Installation
 
 ```
@@ -31,13 +75,17 @@ yarn run dist-mac
 ## Package for windows
 
 > maybe, it'll fail in mac. so please view .github/workflows/release.yml)
+>
+> You can package it in github->action.
+> when you create a new release, it will trigger github action to package it.
 
 ```
 yarn run build
 yarn run dist-mac
 ```
 
-## Make Icon
+## Make Icon(maybe, you don't need it)
+
 ```
 mkdir icons/icon.iconset
 #download .png variant size icon from https://www.iconarchive.com
@@ -45,6 +93,10 @@ cd icons
 iconutil -c icns icon.iconset
 rename icon.icns Custom-Icon-Design-Happy-Easter-Flower.icns
 ```
+
+## Contact me
+* Mail: qianzhiwei5921@gmail.com
+* Telegram group: [https://t.me/xhs_video_downloader](https://t.me/xhs_video_downloader)
 
 ## Reference
 
